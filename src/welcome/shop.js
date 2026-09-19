@@ -15,11 +15,77 @@ import { phrases, askPhraseFor } from "../journey.js";
 import { languages } from "../data.js";
 
 /**
- * Build the lesson. Andrei's `phrases()` returns five rows in a fixed order:
+ * Conversation the seller leads, for intermediate and advanced learners.
+ * Each turn is what the seller says (with a gloss) and what the learner replies.
+ * Unlike the beginner script these are NEW target-language sentences, not Andrei's
+ * `phrases()` rows, so they are unreviewed and need a speaker before the demo.
+ * Learner lines avoid words that change with the learner (gender, singular or
+ * plural), so no line can be wrong for whoever is speaking it.
+ */
+const EXCHANGE = {
+  ca: {
+    open: ["Bon dia! Digui.", "Good morning! Go ahead."],
+    more: ["Alguna cosa més?", "Anything else?"],
+    sure: ["I tant! Què necessiteu?", "Of course! What do you need?"],
+    best: ["Aquests són els millors avui.", "These are the best today."],
+    amount: ["Sí, en tenim! Quant en voleu?", "Yes, we have some! How much do you want?"],
+    bye: ["Aquí ho teniu.", "Here you are."],
+    askFor: (word) => `Bon dia! Teniu ${word}?`,
+    half: "Me'n poseu mig quilo, si us plau?",
+    total: "No, res més, gràcies. Quant és tot?",
+    thanks: "Moltes gràcies! Que tingueu un bon dia!",
+    cooking: (dish) => `Aquesta nit cuino ${dish}. Què em recomaneu?`,
+    perfect: "Perfecte! Me'n poseu mig quilo, si us plau?",
+  },
+  it: {
+    open: ["Buongiorno! Mi dica.", "Good morning! Go ahead."],
+    more: ["Altro?", "Anything else?"],
+    sure: ["Certo! Cosa le serve?", "Of course! What do you need?"],
+    best: ["Questi sono i migliori oggi.", "These are the best today."],
+    amount: ["Sì, ne abbiamo! Quanto ne vuole?", "Yes, we have some! How much do you want?"],
+    bye: ["Ecco a lei.", "Here you are."],
+    askFor: (word) => `Buongiorno! Avete ${word}?`,
+    half: "Ne vorrei mezzo chilo, per favore.",
+    total: "No, nient'altro, grazie. Quanto viene in tutto?",
+    thanks: "Grazie mille! Buona giornata!",
+    cooking: (dish) => `Stasera cucino ${dish}. Cosa mi consiglia?`,
+    perfect: "Perfetto! Ne vorrei mezzo chilo, per favore.",
+  },
+  pt: {
+    open: ["Bom dia! Diga.", "Good morning! Go ahead."],
+    more: ["Mais alguma coisa?", "Anything else?"],
+    sure: ["Claro! O que precisa?", "Of course! What do you need?"],
+    best: ["Estes estão ótimos hoje.", "These are excellent today."],
+    amount: ["Tenho, sim! Quanto quer?", "Yes, I have some! How much do you want?"],
+    bye: ["Aqui tem.", "Here you are."],
+    askFor: (word) => `Bom dia! Tem ${word}?`,
+    half: "Queria meio quilo, por favor.",
+    total: "Não, é tudo. Quanto fica?",
+    thanks: "Tenha um bom dia!",
+    cooking: (dish) => `Hoje à noite vou cozinhar ${dish}. O que me aconselha?`,
+    perfect: "Perfeito! Queria meio quilo, por favor.",
+  },
+};
+
+const EN = {
+  askFor: (en) => `Good morning! Do you have ${en}?`,
+  half: "Could you give me half a kilo, please?",
+  total: "No, nothing else, thanks. How much is it altogether?",
+  thanks: "Thank you very much! Have a good day!",
+  cooking: (dish) => `I'm cooking ${dish} tonight. What do you recommend?`,
+  perfect: "Perfect! Could you give me half a kilo, please?",
+};
+
+/**
+ * Build the market lesson for a level (0 beginner, 1 elementary, 2 intermediate,
+ * 3 advanced). Andrei's `phrases()` returns five rows in a fixed order:
  * 0 greeting · 1 "do you have X?" · 2 "how much?" · 3 "half a kilo please"
  * · 4 "I'm learning X, can we speak X?"
- * A beginner needs to be understood; an advanced learner needs the door opened
- * into a real conversation, which is what row 4 is for.
+ *
+ * 0 and 1 are single phrases said back one at a time, built only from those rows.
+ * 2 and 3 are a back and forth with the seller, who speaks first each turn:
+ * intermediate is a short shop, advanced adds telling them you are learning and
+ * asking what to buy for tonight's dish.
  */
 export function shopScript(language, level, recipe) {
   const first = recipe?.words?.[0] || ["", ""];
@@ -28,17 +94,42 @@ export function shopScript(language, level, recipe) {
 
   const line = (i, why) => ({ target: rows[i][0], en: rows[i][1], why });
 
-  if (level >= 2) {
+  if (level <= 0) {
+    return [
+      line(0, "Say this walking up to the stall. It is the whole greeting."),
+      line(1, `Point if you need to. Naming ${first[1] || "what you need"} is enough.`),
+      line(2, "You will hear a number back. You do not have to catch it the first time."),
+    ];
+  }
+  if (level === 1) {
     return [
       line(0, "Start the way everyone there starts."),
-      line(4, "This one line usually changes the whole exchange. Most people slow down and help."),
-      line(3, "Now ask for what you need, as you would at home."),
+      line(1, `Point if you need to. Naming ${first[1] || "what you need"} is enough.`),
+      line(3, "Now the amount. This one works for anything you buy by weight."),
+    ];
+  }
+
+  const x = EXCHANGE[language];
+  if (!x) return [];
+  const turn = (seller, target, en, why) => ({ seller: { target: seller[0], en: seller[1] }, target, en, why });
+  const dish = (recipe?.name || "").toLowerCase();
+  const total = turn(x.more, x.total, EN.total, "Say you are done, and ask what you owe, in one go.");
+  const thanks = turn(x.bye, x.thanks, EN.thanks, "Leave the way you came in: warmly.");
+
+  if (level === 2) {
+    return [
+      turn(x.open, x.askFor(first[0]), EN.askFor(first[1]), "The seller speaks first. Greet, then ask for what you came for."),
+      turn(x.amount, x.half, EN.half, "Ask for the amount as a question. It sounds friendlier than a demand."),
+      total,
+      thanks,
     ];
   }
   return [
-    line(0, "Say this walking up to the stall. It is the whole greeting."),
-    line(1, `Point if you need to. Naming ${first[1] || "what you need"} is enough.`),
-    line(2, "You will hear a number back. You do not have to catch it the first time."),
+    turn(x.open, rows[4][0], rows[4][1], "One line that usually changes the whole exchange. People slow down and help."),
+    turn(x.sure, x.cooking(dish), EN.cooking(dish), "Tell them what you are making and let them advise you."),
+    turn(x.best, x.perfect, EN.perfect, "Take the advice, then ask for the amount."),
+    total,
+    thanks,
   ];
 }
 

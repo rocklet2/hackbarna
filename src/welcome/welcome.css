@@ -142,3 +142,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .recap .why { color: var(--orange); font-size: 12px; }
 
 .lesson-actions { display: flex; justify-content: space-between; align-items: center; }
+
+.bubble.seller { background: #ebe6d8; border-color: #ebe6d8; align-self: flex-start; border-bottom-left-radius: 6px; }
+.bubble .who { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }

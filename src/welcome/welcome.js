@@ -308,9 +308,10 @@ function lessonFor() {
 function startShop() {
   state.step = "shop";
   state.line = 0; state.thread = []; state.tries = 0;
+  const count = lessonFor().script.length;
   state.thread.push({ who: "sys", text: state.level >= 2
-    ? "At the market, the useful thing is not ordering. It is getting them to speak to you."
-    : "Three things to say at the stall. Say each one back to me." });
+    ? "A real exchange at the stall. The seller speaks first and you reply. Say each reply back to me."
+    : `${count} things to say at the stall. Say each one back to me.` });
   renderLesson();
   setTimeout(() => sayLessonLine(), 400);
 }
@@ -319,9 +320,12 @@ function sayLessonLine() {
   const { script } = lessonFor();
   const line = script[state.line];
   if (!line) return;
-  state.thread.push({ who: "coach", target: line.target, en: line.en, why: line.why });
+  if (line.seller) state.thread.push({ who: "seller", target: line.seller.target, en: line.seller.en });
+  state.thread.push({ who: "coach", target: line.target, en: line.en, why: line.why, reply: !!line.seller });
   renderLesson();
-  say(line.target, byId(state.language).voice);
+  const voice = byId(state.language).voice;
+  if (line.seller) say(line.seller.target, voice, () => setTimeout(() => say(line.target, voice), 300));
+  else say(line.target, voice);
 }
 
 function renderLesson() {
@@ -331,7 +335,9 @@ function renderLesson() {
     if (m.who === "me") return `<div class="bubble me">${esc(m.text)}</div>`;
     if (m.who === "sys") return `<div class="bubble sys">${esc(m.text)}</div>`;
     if (m.who === "ack") return `<div class="bubble coach ack">${esc(m.text)}</div>`;
-    return `<div class="bubble coach"><div class="target">${esc(m.target)}</div>
+    if (m.who === "seller") return `<div class="bubble seller"><div class="who">Seller</div>
+      <div class="target">${esc(m.target)}</div><div class="en">${esc(m.en)}</div></div>`;
+    return `<div class="bubble coach">${m.reply ? `<div class="who">Your reply</div>` : ""}<div class="target">${esc(m.target)}</div>
       <div class="en">${esc(m.en)}</div>
       ${m.why ? `<div class="why">${esc(m.why)}</div>` : ""}</div>`;
   }).join("");
