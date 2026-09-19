@@ -1,15 +1,9 @@
 export const STORAGE_KEY = 'taula-journeys-v3';
-export const cities = ['Barcelona', 'Girona', 'Tarragona', 'Milan', 'Roma', 'Bologna', 'Porto', 'Lisbon', 'Rio'];
 export const dayNames = ['Discover & shop', 'Cook & connect', 'Remember & celebrate'];
 export function freshJourney() {
-  return { day: 0, unlocked: 0, discoverStage: 0, wantsShopHelp: null, shoppingReady: false, checked: [], step: 0, drafts: {}, day1Date: null, day2Date: null, quizAnswers: {}, quizSubmitted: false, completed: false };
+  return { day: 0, unlocked: 0, discoverStage: 0, shoppingReady: false, checked: [], step: 0, drafts: {}, day1Date: null, day2Date: null, quizAnswers: {}, quizSubmitted: false, completed: false };
 }
-export function discoverStages(j) {
-  const stages = ['about', 'culture', 'ask'];
-  if (j.wantsShopHelp) stages.push('shops');
-  stages.push('list', 'phrases');
-  return stages;
-}
+export const discoverStages = ['about', 'culture', 'list'];
 export function readJourneys(storage) {
   try {
     const raw = JSON.parse(storage.getItem(STORAGE_KEY) || '{}');
@@ -22,8 +16,7 @@ export function restoreJourney(value, recipe) {
   for (const key of ['shoppingReady','quizSubmitted','completed']) j[key] = value[key] === true;
   j.unlocked = Number.isInteger(value.unlocked) ? Math.max(0,Math.min(2,value.unlocked)) : 0;
   j.day = Number.isInteger(value.day) ? Math.max(0,Math.min(j.unlocked,value.day)) : 0;
-  j.wantsShopHelp = value.wantsShopHelp === true ? true : value.wantsShopHelp === false ? false : null;
-  j.discoverStage = Number.isInteger(value.discoverStage) ? Math.max(0,Math.min(discoverStages(j).length-1,value.discoverStage)) : 0;
+  j.discoverStage = Number.isInteger(value.discoverStage) ? Math.max(0,Math.min(discoverStages.length-1,value.discoverStage)) : 0;
   j.step = Number.isInteger(value.step) ? Math.max(0,Math.min(recipe.steps.length-1,value.step)) : 0;
   j.checked = Array.isArray(value.checked) ? [...new Set(value.checked.filter(n=>Number.isInteger(n)&&n>=0&&n<recipe.ingredients.length))] : [];
   for (const key of ['day1Date','day2Date']) if(typeof value[key]==='string' && !Number.isNaN(Date.parse(value[key]))) j[key]=value[key];
@@ -49,20 +42,16 @@ export function nextDate(iso) {
   const d=new Date(iso||Date.now());d.setDate(d.getDate()+1);
   return d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'});
 }
-export function phrases(language, word) {
+export function phrases(language, word, wordEn) {
+  const en = wordEn || word;
   const rows={
-    ca: [['Bon dia!','Good morning!'],[`Teniu ${word}?`,`Do you have ${word}?`],['Quant costa?','How much does it cost?'],['En voldria mig quilo, si us plau.','I would like half a kilo, please.'],['Estic aprenent català. Podem parlar en català?','I’m learning Catalan. Can we speak in Catalan?']],
-    it: [['Buongiorno!','Good morning!'],[`Avete ${word}?`,`Do you have ${word}?`],['Quanto costa?','How much does it cost?'],['Ne vorrei mezzo chilo, per favore.','I would like half a kilo, please.'],['Sto imparando l’italiano. Possiamo parlare in italiano?','I’m learning Italian. Can we speak in Italian?']],
-    pt: [['Bom dia!','Good morning!'],[`Tem ${word}?`,`Do you have ${word}?`],['Quanto custa?','How much does it cost?'],['Queria meio quilo, por favor.','I would like half a kilo, please.'],['Estou a aprender português. Podemos falar em português?','I’m learning Portuguese. Can we speak in Portuguese?']],
+    ca: [['Bon dia!','Good morning!'],[`Teniu ${word}?`,`Do you have ${en}?`],['Quant costa?','How much does it cost?'],['En voldria mig quilo, si us plau.','I would like half a kilo, please.'],['Estic aprenent català. Podem parlar en català?','I’m learning Catalan. Can we speak in Catalan?']],
+    it: [['Buongiorno!','Good morning!'],[`Avete ${word}?`,`Do you have ${en}?`],['Quanto costa?','How much does it cost?'],['Ne vorrei mezzo chilo, per favore.','I would like half a kilo, please.'],['Sto imparando l’italiano. Possiamo parlare in italiano?','I’m learning Italian. Can we speak in Italian?']],
+    pt: [['Bom dia!','Good morning!'],[`Tem ${word}?`,`Do you have ${en}?`],['Quanto custa?','How much does it cost?'],['Queria meio quilo, por favor.','I would like half a kilo, please.'],['Estou a aprender português. Podemos falar em português?','I’m learning Portuguese. Can we speak in Portuguese?']],
   };
   return rows[language];
 }
-export function shopsFor(city, language, recipe) {
-  const map = query => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-  if(city!=='Barcelona') return [{ name: `Food markets in ${city}`, detail: `Look for fresh produce and ask about: ${recipe.ingredients.slice(0,2).join(', ')}.`, url: map(`food market ${city}`), label:'Explore on Maps · not a verified shop selection' },{name: `${language==='it'?'Italian':language==='pt'?'Portuguese / Brazilian':'Local'} groceries in ${city}`, detail: 'Search for specialty ingredients. Confirm availability before making the trip.',url:map(`${language==='it'?'Italian grocery':language==='pt'?'Portuguese Brazilian grocery':'grocery'} ${city}`),label:'Search suggestion · stock not checked'}];
-  const shops=[{name:'Mercat de la Boqueria',detail:`La Rambla, 91. A starting point for fresh produce and pantry shopping for ${recipe.name}. Ask individual stalls about your list.`,url:'https://www.boqueria.barcelona/direccion-del-mercado-p-11225-es',label:'Official market website · stock varies by stall'}];
-  if(language==='it') shops.push({name:'La Dispensa',detail:'Italian specialty shop whose catalogue includes pasta, flour and olive oil. A useful place to check Italian pantry ingredients.',url:'https://www.ladispensabcn.es/es/productos',label:'Shop catalogue · confirm specific ingredients'});
-  if(language==='pt') shops.push({name:'A Casa Portuguesa',detail:'Carrer de l’Or, 8, Gràcia. Portuguese products and prepared specialties; the catalogue includes cod, cheese and canned sardines. Visit for cultural discovery; confirm any recipe ingredient first.',url:'https://acasaportuguesa.com/en/tienda-online/',label:'Official shop website · not a full ingredient supplier'});
-  if(language==='ca') shops.push({name:'Your neighborhood market',detail:'Find a convenient local market for vegetables, eggs, nuts and other basics. Bring your list and practice one short exchange.',url:map('mercat municipal Barcelona'),label:'Explore local markets on Maps'});
-  return shops;
+export function askPhraseFor(language, ingredient, words) {
+  const match = words.find(([, en]) => ingredient.toLowerCase().includes(en.toLowerCase()));
+  return match ? phrases(language, match[0], match[1])[1] : null;
 }

@@ -1,30 +1,22 @@
 # Handoff: 2026-09-19 (from Andrei via Claude Code)
 
 ## Finished
-- Rebuilt setup as a mobile-first wizard, one question per screen: language → level → place → meal (`src/main.js`). Level is a short 3-question conversational check using real target-language phrases, with a manual picker fallback. Preferences and onboarding status persist to `localStorage`, so a returning visit skips straight to the recipe menu; "Edit preferences" replays the wizard pre-filled.
-- Rebuilt Day 1 ("Discover & shop") the same way. It used to be 4 tabs (story / words / at the shop / shopping list) you could jump between freely — now it's a focused, sequential flow, one thing per screen (`src/journey.js`'s `discoverStages`, `src/journey-view.js`'s `discoverFlow`):
-  1. About the recipe (description, quick facts, the video card)
-  2. The culture/history/tradition behind it
-  3. "Want a hand finding ingredients?" — yes/no, with a shopping-city picker right there
-  4. Shop recommendations (only shown if you said yes)
-  5. Your shopping list (checkable, downloadable)
-  6. How to ask for those ingredients at the shop, in the target language
-- Dropped the standalone "learn 3 words" quiz that used to be its own tab — decided vocabulary comes through naturally via the shop-conversation phrases at the end instead, keeping Day 1 focused on recipe + culture + shopping rather than a fourth mini-activity.
-- Removed the "ONE RECIPE. THREE LITTLE ADVENTURES." eyebrow line above the recipe name.
-- Cleaned up the now-dead CSS and journey state from the old tab UI. Bumped the localStorage key to `taula-journeys-v3` since the saved-journey shape changed shape (old in-progress lessons reset cleanly rather than trying to migrate — this is a prototype, no real user data at stake).
-- All 10 tests pass (`npm test`), production build is clean (`npm run build`). Walked the entire flow — setup wizard, all 6 discover-stage screens in both branches of the shop-recommendation question, shopping list, phrases, day 2 cooking, day 3 quiz — in a real 375px mobile browser.
+- Setup is a mobile-first, one-question-per-screen wizard: language → level → place → meal (`src/main.js`). Level is a short 3-question conversational check using real target-language phrases. Preferences persist to `localStorage`, so a returning visit skips straight to the recipe menu.
+- Simplified Day 1 ("Discover & shop") down to 3 focused screens, one thing at a time: about the recipe → culture/history/traditions → your shopping list. That's it — no more tabs, no more sub-activities.
+- Removed the shop-recommendation feature entirely (the "want a hand finding ingredients?" question, and the Mercat de la Boqueria / La Dispensa / A Casa Portuguesa suggestions). Once that was gone, the shopping-city concept had no remaining purpose either, so I removed it too rather than leave a dead setting.
+- Removed the "download shopping list" button.
+- The shopping list is now the last step of Day 1. Each ingredient shows its own "How do I ask for this?" line directly beneath it, in the target language — e.g. under "2 slices of rustic bread" it shows "Teniu pa? / Do you have bread?" This is matched automatically: an ingredient gets a phrase if its English text contains one of the recipe's known vocabulary words (see `askPhraseFor` in `src/journey.js`). A few ingredients per recipe won't match anything (e.g. "Salt" alone, or "Lemon zest") since the word list is a curated vocabulary, not a full translation of every ingredient — that's expected, not a bug.
+- While rebuilding this I found and fixed a content bug in the phrase generator: the English translation of "Do you have X?" was showing the Catalan/Italian/Portuguese word instead of the English one (e.g. "Do you have pa?" instead of "Do you have bread?").
+- All 10 tests pass (`npm test`), production build is clean (`npm run build`). Verified the full simplified flow — 3 discover screens, per-ingredient phrases, day 2 cooking, day 3 quiz — in a real 375px mobile browser.
 
 ## Started but unfinished
 - No voice, AI assessment, or photo checks yet — still future work per the brief's build order.
-- The extra sample recipes (`src/more-recipes.js`) are demo-menu variety, not specifically vetted for the panellets/Catalonia demo path.
-- The level-test is self-reported honesty, not graded by anything — worth a call on whether the pitch should say "quick check" rather than "test" so we don't overclaim assessment.
+- The level-test is self-reported honesty, not graded by anything.
 
 ## Open questions for the other person
-- None of the copy (shop-conversation phrases, quiz text, culture notes, the 3 level-test prompts) has been speaker-checked yet — please review before any of it goes near a judge.
-- The shop recommendations (Mercat de la Boqueria, La Dispensa, A Casa Portuguesa) are real places with real links, but I did not verify current stock, hours, or staff language — the UI already says so, flagging for the pitch too.
-- Worth deciding together whether dropping the dedicated word-practice quiz from Day 1 is the right call for the demo story, or whether it should come back in some lighter form.
+- None of the copy (per-ingredient phrases, culture notes, level-test prompts) has been speaker-checked yet — please review before any of it goes near a judge.
+- Worth a quick look together: is the word-matching for "how do I ask for this" good enough, or should the recipe data eventually pair each ingredient with its own word explicitly instead of relying on substring matching?
 
 ## Watch out for
-- I saw a harmless Vite build warning: `content/catalonia.json` is imported with `type: "json"` in `src/data.js` but apparently without that attribute somewhere in `src/talk/` — worth a quick fix if you have a minute, doesn't break the build.
 - `src/data.js` still has design-preview fixtures separate from `config/catalonia.yaml` — unchanged from before, still needs reconciling after review.
-- Saved journeys before today reset (localStorage key changed from v2 to v3 because the Day 1 data shape changed) — nothing to do, just don't be surprised if an old in-progress lesson looks fresh again.
+- The journey localStorage key is `taula-journeys-v3` (bumped in an earlier pass when the Day 1 data shape changed) — nothing to do here, just context if you see it in devtools.

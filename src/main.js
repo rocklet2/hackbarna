@@ -1,11 +1,10 @@
 import "./style.css";
 import { languages, levels, recommend, recipes } from "./data.js";
-import { STORAGE_KEY, cities, freshJourney, readJourneys, restoreJourney, dayOneReady, canStartDay, discoverStages, quizFor, quizScore, phrases } from "./journey.js";
+import { STORAGE_KEY, freshJourney, readJourneys, restoreJourney, dayOneReady, canStartDay, discoverStages, quizFor, quizScore, phrases } from "./journey.js";
 import { dayBar, videoPlayer, journeyPage, pausePage } from "./journey-view.js";
 
 const app = document.querySelector("#app");
 const state = {
-  city: "Barcelona",
   journey: freshJourney(),
   lessonKey: null,
   paused: false,
@@ -42,7 +41,7 @@ function saveProgress() {
     state.journey.drafts = state.drafts;
     lessonStore[state.lessonKey] = state.journey;
   }
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ lessons: lessonStore, preferences: { language: state.language, region: state.region, level: state.level, diet: state.diet, quick: state.quick, city: state.city, onboarded: state.onboarded }, last: state.screen === 2 ? state.recipe?.id : null })); }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ lessons: lessonStore, preferences: { language: state.language, region: state.region, level: state.level, diet: state.diet, quick: state.quick, onboarded: state.onboarded }, last: state.screen === 2 ? state.recipe?.id : null })); }
   catch { storageFailed = true; }
 }
 function openRecipe(r) {
@@ -201,7 +200,7 @@ function lesson() {
   if (state.completed) return completion(r);
   if (state.paused) return pausePage(r, state.journey);
   if (state.journey.day === 1) return cookingLesson();
-  return journeyPage({ r, j: state.journey, languageName: language().name, language: state.language, city: state.city, videoUrl: videoUrls[r.id], culture });
+  return journeyPage({ r, j: state.journey, languageName: language().name, language: state.language, videoUrl: videoUrls[r.id], culture });
 }
 function cookingLesson() {
   const r = state.recipe;
@@ -340,28 +339,15 @@ app.addEventListener("click", (event) => {
       break;
     case "restart-lesson":
       state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};state.paused=false;focus=true;break;
-    case "discover-next": {
-      const stages = discoverStages(state.journey);
-      state.journey.discoverStage = Math.min(state.journey.discoverStage + 1, stages.length - 1);
+    case "discover-next":
+      state.journey.discoverStage = Math.min(state.journey.discoverStage + 1, discoverStages.length - 1);
       focus = true;
       break;
-    }
     case "discover-back":
       state.journey.discoverStage = Math.max(0, state.journey.discoverStage - 1);
       focus = true;
       break;
-    case "discover-shop-help":
-      state.journey.wantsShopHelp = value === "yes";
-      state.journey.discoverStage += 1;
-      focus = true;
-      break;
     case "make-list": state.journey.shoppingReady = true; break;
-    case "download-list": {
-      const text = `${state.recipe.name} — shopping in ${state.city}\n\n`+state.recipe.ingredients.map((v,i)=>`${state.checked.includes(i)?'[x]':'[ ]'} ${v}`).join('\n');
-      const url = URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));
-      const a = document.createElement('a'); a.href=url; a.download=`taula-${state.recipe.id}-shopping-list.txt`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
-      return;
-    }
     case "finish-discovery":
       if(!dayOneReady(state.journey)) return;
       state.journey.unlocked = Math.max(1,state.journey.unlocked);
@@ -452,7 +438,6 @@ app.addEventListener("input", (event) => {
     { state.drafts[state.step] = event.target.value; saveProgress(); }
 });
 app.addEventListener("change", (event) => {
-  if (event.target.id === "shopping-city") {state.city=event.target.value;render();}
   if (event.target.matches('[data-quiz]')) {state.journey.quizAnswers[Number(event.target.dataset.quiz)]=Number(event.target.value);saveProgress();}
   if (event.target.matches('[data-shopping]')) {
     const i=Number(event.target.dataset.shopping);
@@ -486,7 +471,6 @@ if(prefs && typeof prefs==='object') {
   if(Number.isInteger(prefs.level)&&prefs.level>=0&&prefs.level<4)state.level=prefs.level;
   if(['all','vegetarian','vegan','gluten-free'].includes(prefs.diet))state.diet=prefs.diet;
   state.quick=prefs.quick===true;
-  if(cities.includes(prefs.city))state.city=prefs.city;
   state.onboarded=prefs.onboarded===true;
 }
 const last = recipes.find(r=>r.id===saved.last&&r.language===state.language);
