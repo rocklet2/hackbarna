@@ -7,6 +7,12 @@
 - **Step checks rebuilt** in `src/lesson-challenge.js` (`challengeFor` has the same signature, `submitAnswer` now grades fuzzily, new `isCorrect`, `stepWords`, `stepVerb`). Beginner: recall a word from this step, three options. Intermediate: the step's sentence with the key word missing. Advanced: the verb goes too, asked in the target language only. The agent asks the question, a correct answer auto-advances, two misses give a clue, a third gives the answer.
 - Smaller: "or choose" divider gone from the language screen, the market lesson opens with a spoken introduction, "A cuinar!" only appears once the ingredient list is finished.
 
+## Also in this pass: Spanish is now four countries
+- The place question for Spanish is Spain, Mexico, Peru and Argentina. Twelve new dishes, four per country, in `src/more-recipes.js`, with Spanish step copy per country in `src/lesson-translations.js` (Argentina in voseo). Spain's dishes now carry Spanish regions instead of an empty list, so they stop showing up everywhere.
+- Each country has its own sourced culture note in `src/data.js` (`mexicanTable`, `peruvianTable`, `argentineTable`).
+- The guide speaks the local variety: `REGIONAL_VOICE` in `src/agent-instructions.js`, keyed by the country code of the place's city ("Lima, PE"). The lesson page sends the recipe's own place, so the accent matches the dish. Portuguese gets BR vs PT from the same map.
+- Catalan is first in the language list now, Spanish second.
+
 ## Started but unfinished
 - Nothing mid-flight. 89 tests pass and the build is clean.
 
