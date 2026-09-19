@@ -128,3 +128,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .hello-cycle span { animation: hellofade 2s ease-in-out both; }
 .hello-cycle span.still { animation: none; }
 @keyframes hellofade { 0% { opacity: 0; transform: translateY(8px); } 18%, 78% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-8px); } }
+
+.sayrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sayrow .hint { margin: 0; }
+.sayrow .micoff { background: transparent; border: 0; color: var(--green); text-decoration: underline; font-size: 13px; padding: 6px 0; }
+.sayrow .micoff:disabled { color: var(--muted); text-decoration: none; }

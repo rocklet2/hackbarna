@@ -72,30 +72,19 @@ const SR = speechSupported;
 let micState = { on: false, hearing: false, text: "", error: null };
 const mic = createMic({ onState: (st) => { micState = st; paintMicBar(); } });
 
-/** The one status line the learner can always see: is this thing listening? */
+/** The mic switch sits beside the typed answer on the shop screen; no transcript is shown. */
 function paintMicBar() {
-  const bar = document.getElementById("micbar");
-  if (!bar) return;
-  // Nothing to say before the learner has begun.
-  if (!micState.touched) { bar.className = "micbar gone"; bar.innerHTML = ""; return; }
-  const label = !SR ? "Voice is not available in this browser"
-    : micState.error === "blocked" ? "Microphone blocked. Tap to answer instead."
-    : !micState.on ? "Microphone off"
-    : micState.text ? micState.text
-    : "Listening";
-  bar.className = `micbar${micState.on ? " on" : ""}${micState.hearing ? " hearing" : ""}`;
-  bar.innerHTML = `<span class="dot"></span><span class="what">${esc(label)}</span>` +
-    (SR ? `<button class="micoff" id="micoff">${micState.on ? "Turn off" : "Turn on"}</button>` : "");
-  const off = document.getElementById("micoff");
-  if (off) off.onclick = () => mic.toggle();
+  const btn = document.getElementById("micoff");
+  if (!btn) return;
+  btn.textContent = micState.error === "blocked" ? "Mic blocked" : micState.on ? "Mic on · turn off" : "Mic off · turn on";
+  btn.disabled = micState.error === "blocked";
 }
 
 /* ---------- small helpers ---------- */
 const el = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const chrome = (inner) => `<div class="app"><div><div class="brand">taula<b>*</b></div>
-  <div class="notice">Prototype · target-language text pending native review</div>
-  <div class="micbar" id="micbar"></div></div>${inner}</div>`;
+  <div class="notice">Prototype · target-language text pending native review</div></div>${inner}</div>`;
 
 /* ---------- step 1: which language ---------- */
 const QUESTION = "Which language would you like to cook in?";
@@ -349,7 +338,8 @@ function renderShop() {
       <span>Shop &amp; connect</span>
     </div>
     <div class="thread" id="thread">${bubbles}</div>
-    <p class="hint centred">Say it back.</p>
+    <div class="sayrow"><p class="hint centred">Say it back.</p>
+      ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
     <form class="typed" id="typed">
       <input id="shopInput" autocomplete="off" placeholder="Or type it" />
       <button type="submit">Send</button>
@@ -364,6 +354,8 @@ function renderShop() {
     const v = el("shopInput").value.trim();
     if (v) submitShop(v);
   };
+  const off = el("micoff");
+  if (off) off.onclick = () => mic.toggle();
   paintMicBar();
   mic.setLang(lang.speech);
   mic.listenFor((text) => submitShop(text), "answer");
