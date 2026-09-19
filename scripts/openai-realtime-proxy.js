@@ -25,13 +25,14 @@ function sessionConfig(params) {
   const language = languageName(params.get("language")) ? params.get("language") : null;
   const rawLevel = Number(params.get("level"));
   const level = language && [0, 1, 2].includes(rawLevel) && params.has("level") ? rawLevel : null;
+  const region = params.get("region"); // a city like "Lima, PE"; picks the way we speak
   const transcription = { model: "gpt-4o-mini-transcribe" };
   // Knowing the language makes single spoken words (quiz answers) transcribe far better.
   if (language && level !== null) transcription.language = language;
   return {
     type: "realtime",
     model: "gpt-realtime",
-    instructions: instructionsFor(context, { language, level }),
+    instructions: instructionsFor(context, { language, level, region }),
     output_modalities: ["audio"],
     audio: {
       input: {

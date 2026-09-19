@@ -18,6 +18,16 @@ export const SUPPORTED = [
     speech: "ca-ES",
   },
   {
+    id: "es",
+    name: "Spanish",
+    endonym: "Español",
+    mark: "▤",
+    aliases: ["spanish", "espanol", "español", "castilian", "castellano", "spain"],
+    greeting: (name) => (name ? `¡Hola, ${name}!` : "¡Hola!"),
+    voice: "es",
+    speech: "es-ES",
+  },
+  {
     id: "it",
     name: "Italian",
     endonym: "Italiano",
@@ -36,16 +46,6 @@ export const SUPPORTED = [
     greeting: (name) => (name ? `Olá, ${name}!` : "Olá!"),
     voice: "pt",
     speech: "pt-PT",
-  },
-  {
-    id: "es",
-    name: "Spanish",
-    endonym: "Español",
-    mark: "▤",
-    aliases: ["spanish", "espanol", "español", "castilian", "castellano", "spain"],
-    greeting: (name) => (name ? `¡Hola, ${name}!` : "¡Hola!"),
-    voice: "es",
-    speech: "es-ES",
   },
 ];
 

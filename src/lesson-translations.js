@@ -213,7 +213,87 @@ const copy = {
     'Añade el arroz|Rehoga el arroz un minuto, vierte el caldo caliente y la sal, hierve y cocina a fuego suave sin remover unos 18 minutos.',
     'Reposa y sirve|Retira la sartén del fuego, tápala y déjala reposar 5 minutos antes de servir.',
   ],
+  // Mexico. Mexican Spanish: jitomate, elote, aguacate. UNREVIEWED.
+  guacamole: [
+    'Prepara los ingredientes|Pica finamente la cebolla, el chile y el cilantro. Parte los aguacates por la mitad y quítales el hueso.',
+    'Machaca el aguacate|Saca la pulpa del aguacate a un tazón y machácala con un tenedor, dejando algunos trozos.',
+    'Mezcla y sazona|Agrega la cebolla, el chile y el cilantro, exprime el limón y añade sal.',
+    'Prueba y sirve|Pruébalo, ajusta el limón y la sal, y sírvelo con tortillas calientes.',
+  ],
+  esquites: [
+    'Desgrana el elote|Corta los granos del elote con un cuchillo, con la mazorca bien apoyada en la tabla.',
+    'Cocina los granos|Cocina el elote en un poco de aceite a fuego medio unos 8 minutos, moviéndolo, hasta que esté tierno y dorado.',
+    'Sazona el elote|Retira la olla del fuego. Añade sal, chile en polvo y un chorrito de limón.',
+    'Sirve en vasos|Sírvelo en vasos, pon el queso desmoronado encima y más limón al gusto.',
+  ],
+  'sopa-tortilla': [
+    'Dora las tortillas|Corta las tortillas en tiras y fríelas en un poco de aceite hasta que estén crujientes. Escúrrelas sobre papel.',
+    'Suaviza el chile|Calienta el chile seco en una sartén sin aceite unos segundos y remójalo en agua caliente 10 minutos.',
+    'Licúa la base|Licúa los jitomates, la cebolla, el ajo y el chile escurrido hasta que quede terso.',
+    'Cocina la sopa|Cocina la base licuada en aceite 5 minutos, agrega el caldo y déjalo hervir suavemente 15 minutos. Añade sal al gusto.',
+    'Sirve con las tiras|Sirve la sopa en tazones y agrega las tiras de tortilla justo antes de comer.',
+  ],
+
+  // Peru. Peruvian Spanish: papa, palta, choclo, ají. UNREVIEWED.
+  'ensalada-quinua': [
+    'Lava la quinua|Lava la quinua con agua fría hasta que el agua salga clara.',
+    'Cocina la quinua|Cocínala en el doble de su volumen de agua con sal unos 15 minutos, hasta que los granos se abran. Escúrrela y déjala enfriar.',
+    'Pica las verduras|Corta el tomate y la cebolla en cubos pequeños y pica el culantro.',
+    'Mezcla y aliña|Mezcla todo con el choclo, el jugo de limón, el aceite y la sal.',
+  ],
+  'papa-huancaina': [
+    'Sancocha las papas|Sancocha las papas enteras en agua con sal unos 20 minutos, hasta que estén tiernas. Déjalas entibiar, pélalas y córtalas en rodajas.',
+    'Licúa la salsa|Licúa el queso, la pasta de ají amarillo, la leche y las galletas hasta que quede una salsa suave.',
+    'Sazona la salsa|Prueba la salsa y añade sal. Debe quedar cremosa, no líquida; agrega un poco más de leche si está muy espesa.',
+    'Sirve la papa|Acomoda las rodajas de papa sobre hojas de lechuga y báñalas con la salsa. Sírvela fría o a temperatura ambiente.',
+  ],
+  'causa-limena': [
+    'Sancocha y prensa|Sancocha las papas hasta que estén tiernas, pélalas y prénsalas todavía tibias hasta que no queden grumos.',
+    'Sazona la masa|Incorpora la pasta de ají amarillo, el jugo de limón, el aceite y la sal hasta que la masa quede suave y amarilla. Déjala enfriar.',
+    'Prepara el relleno|Corta la palta y el tomate en láminas finas y sazónalos ligeramente.',
+    'Arma las capas|Extiende la mitad de la masa en un molde, pon la palta y el tomate, y cúbrelo con el resto de la masa. Alisa la superficie.',
+    'Enfría y sirve|Enfríala al menos 30 minutos y sírvela fría. Este tiempo de refrigeración es adicional a la lección.',
+  ],
+
+  // Argentina. Rioplatense Spanish, with voseo in the instructions. UNREVIEWED.
+  chimichurri: [
+    'Picá las hierbas|Picá finamente el perejil y el ajo.',
+    'Mezclá el chimichurri|Mezclalos con el orégano, el vinagre, el aceite y la sal. Dejalo reposar 10 minutos.',
+    'Asá las verduras|Cortá el zapallito y el morrón en láminas y asalos en una sartén bien caliente unos minutos de cada lado, hasta que estén marcados y tiernos.',
+    'Serví con la salsa|Poné el chimichurri sobre las verduras calientes y serví.',
+  ],
+  provoleta: [
+    'Condimentá el queso|Espolvoreá la rodaja de queso con orégano y ají molido y rociala con un poco de aceite.',
+    'Derretila despacio|Cocinala en una sartén chica de fondo grueso a fuego medio unos 3 minutos, hasta que la base esté dorada.',
+    'Dala vuelta una vez|Dala vuelta con cuidado y cociná el otro lado hasta que el centro esté blando y el borde crocante.',
+    'Serví bien caliente|Pasala a un plato y serví enseguida con pan.',
+  ],
+  'empanadas-verdura': [
+    'Cociná el relleno|Rehogá la cebolla picada en aceite, agregá la espinaca lavada y cocinala hasta que se reduzca. Dejala enfriar.',
+    'Herví los huevos|Herví los huevos 10 minutos, enfrialos en agua fría, pelalos y picalos.',
+    'Mezclá el relleno|Escurrí el líquido de la espinaca y mezclala con los huevos, el queso y la sal.',
+    'Rellená y cerrá|Poné una cucharada en cada tapa, mojá el borde con agua, doblala y cerrala repulgando el borde.',
+    'Horneá las empanadas|Horneálas a 200°C unos 20 minutos, hasta que estén doradas.',
+  ],
+  frijoles: [
+    'Pica el recaudo|Pica finamente la cebolla y el ajo.',
+    'Fríelos despacio|Cocínalos en el aceite a fuego medio unos 5 minutos, hasta que estén suaves y olorosos.',
+    'Agrega los frijoles|Agrega los frijoles con un poco de su caldo y cocínalos 5 minutos.',
+    'Machácalos|Machácalos con una cuchara o un prensador hasta que queden espesos y cremosos, agregando caldo si se secan. Añade sal y sírvelos con queso desmoronado.',
+  ],
+  'choclo-queso': [
+    'Sancocha el choclo|Sancocha los choclos en agua con sal unos 15 minutos, hasta que los granos estén tiernos.',
+    'Corta el queso|Corta el queso fresco en rodajas gruesas mientras se cocina el choclo.',
+    'Sirve juntos|Escurre el choclo, córtalo por la mitad y sírvelo caliente con el queso al lado.',
+  ],
+  humita: [
+    'Rallá el choclo|Cortá los granos de los choclos y procesalos o rallalos de forma gruesa.',
+    'Rehogá las verduras|Picá la cebolla y el morrón bien chiquitos y cocinalos en aceite a fuego medio unos 10 minutos.',
+    'Agregá el choclo|Sumá el pimentón, después el choclo y la leche, y cociná a fuego bajo 15 minutos, revolviendo seguido, hasta que espese.',
+    'Terminá con el queso|Sacala del fuego, mezclá el queso hasta que se derrita y agregá sal. Serví bien caliente.',
+  ],
 };
+
 export function translatedStep(recipe, index) {
   const [title, instruction] = copy[recipe.id][index].split('|');
   return { title, instruction };

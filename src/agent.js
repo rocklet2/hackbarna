@@ -86,9 +86,10 @@ export function createAgent({ onState, onUserTranscript } = {}) {
    * @param {string} [opts.language] Language id when already known (the lesson page). Locks the
    *   session to it from the start and tells transcription what to expect.
    * @param {number} [opts.level] Onboarding-scale level (0 beginner, 1 intermediate, 2 advanced).
+   * @param {string} [opts.region] The place's city ("Lima, PE"), which sets how the guide speaks.
    */
   async function connect(opts = {}) {
-    const { listen = true, context, language, level } = opts;
+    const { listen = true, context, language, level, region } = opts;
     if (pc || state.status === "connecting") return state.status === "connected";
     state.status = "connecting";
     state.error = null;
@@ -126,6 +127,7 @@ export function createAgent({ onState, onUserTranscript } = {}) {
       if (context) params.set("context", context);
       if (language) params.set("language", language);
       if (Number.isInteger(level)) params.set("level", String(level));
+      if (region) params.set("region", region);
       const url = `/api/realtime-session${params.size ? `?${params}` : ""}`;
       const res = await fetch(url, {
         method: "POST",

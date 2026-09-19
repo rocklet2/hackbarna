@@ -75,18 +75,29 @@ export function pickForPlan(dishes, plan) {
   return dishes.slice(0, Math.min(wanted, dishes.length));
 }
 
-// Words that do not tell dishes apart ("a la catalana", "amb", "de").
-const FILLER = new Set(["a", "la", "el", "de", "amb", "i", "al", "catalana", "alla", "con", "e", "com", "y", "con"]);
+// Words that do not tell dishes apart ("a la catalana", "con", "de", "en").
+const FILLER = new Set(["a", "la", "el", "los", "las", "de", "del", "amb", "i", "al", "en",
+  "catalana", "alla", "con", "e", "com", "y", "the"]);
+
+/** A dish's words, without the ones every second dish shares. */
+const keyWords = (name) => {
+  const words = tokens(name).filter((w) => !FILLER.has(w));
+  return words.length ? words : tokens(name);
+};
 
 /**
- * Which of the dishes on screen did the learner just say? Only those dishes can
- * match, and an answer that fits two of them equally ("catalana") matches none.
+ * Which of the dishes on screen did the learner just say? Only those dishes can match.
+ * Its first word is usually the dish itself ("humita" in "Humita en olla"), so hearing that
+ * alone is enough, as long as no other dish on screen answers to it too. An answer that fits
+ * two of them equally matches neither.
  */
 export function matchDish(transcript, dishes) {
-  const scored = dishes.map((d) => {
-    const key = tokens(d.name).filter((w) => !FILLER.has(w)).join(" ") || d.name;
-    return { d, score: overlap(transcript, key) };
-  }).sort((a, b) => b.score - a.score);
+  const byHead = dishes.filter((d) => overlap(transcript, keyWords(d.name)[0]) === 1);
+  if (byHead.length === 1) return byHead[0];
+  if (byHead.length > 1) return null; // "ensalada" could be either of two dishes here
+  const scored = dishes
+    .map((d) => ({ d, score: overlap(transcript, keyWords(d.name).join(" ")) }))
+    .sort((a, b) => b.score - a.score);
   if (!scored.length || scored[0].score < 0.5) return null;
   if (scored[1] && scored[1].score === scored[0].score) return null;
   return scored[0].d;

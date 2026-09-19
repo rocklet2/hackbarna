@@ -41,8 +41,8 @@ export const languages = [
     name: "Spanish",
     hello: "¡Hola!",
     flag: "▤",
-    regionLabel: "Spain",
-    regions: ["Madrid, ES", "Sevilla, ES", "Valencia, ES"],
+    regionLabel: "Spain & Latin America",
+    regions: ["Madrid, ES", "Sevilla, ES", "Valencia, ES", "Ciudad de México, MX", "Lima, PE", "Buenos Aires, AR"],
     words: [
       ["pan", "bread"],
       ["tomate", "tomato"],
@@ -585,6 +585,32 @@ const spanishTable = {
     url: "https://en.wikipedia.org/wiki/Spanish_cuisine",
   },
 };
+// One curated, sourced note per Spanish-speaking country. Never generated at run time
+// (see CLAUDE.md): each is written from the page it cites.
+const mexicanTable = {
+  title: "A cuisine built on corn.",
+  text: "UNESCO lists traditional Mexican cuisine as intangible cultural heritage: a whole system founded on corn, beans and chilli, with farming methods such as the milpa and techniques such as nixtamalization, kept alive by collectives of cooks.",
+  source: {
+    name: "UNESCO · Traditional Mexican cuisine",
+    url: "https://ich.unesco.org/en/RL/traditional-mexican-cuisine-ancestral-ongoing-community-culture-the-michoacan-paradigm-00400",
+  },
+};
+const peruvianTable = {
+  title: "The Andes on the plate.",
+  text: "Peru's tourism board describes Andean cooking as built on tubers, grains and herbs, with the potato and corn at its centre. Dishes such as papa a la huancaína, and corn preparations like humitas and cancha, are staples of Andean tables.",
+  source: {
+    name: "Peru Travel · Andean cuisine",
+    url: "https://www.peru.travel/gastronomy/en/peruvian-cuisine/andean-cuisine.html",
+  },
+};
+const argentineTable = {
+  title: "The table as a gathering.",
+  text: "Argentina's foreign ministry describes its gastronomy as a celebration of tradition, family and regional identity, around dishes such as the asado, empanadas and dulce de leche. Our dishes here are the vegetarian side of that table.",
+  source: {
+    name: "Argentine Embassy · Argentinian gastronomy",
+    url: "https://ecana.cancilleria.gob.ar/en/argentinian-gastronomy",
+  },
+};
 const portugueseTable = {
   title: "An invitation to the table.",
   text: "Portuguese hospitality is part of the country’s food culture, in traditional taverns as well as award-winning restaurants. Imagine welcoming someone to your table: what would you offer them first?",
@@ -615,7 +641,14 @@ for (const r of recipes) {
       },
     };
   else if (r.language === "pt" && !r.story) r.story = portugueseTable;
-  else if (r.language === "es" && !r.story) r.story = spanishTable;
+  else if (r.language === "es" && !r.story) {
+    // Which country's table this dish belongs to, so the culture note matches the place.
+    const where = r.regions?.[0] || "";
+    r.story = where.endsWith(", MX") ? mexicanTable
+      : where.endsWith(", PE") ? peruvianTable
+      : where.endsWith(", AR") ? argentineTable
+      : spanishTable;
+  }
 }
 
 const culturalOverrides = {

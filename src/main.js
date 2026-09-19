@@ -456,7 +456,9 @@ const agent = createAgent({
 });
 /** The lesson's four levels, as the agent's three (see src/agent-instructions.js). */
 const agentLevel = () => (state.level >= 3 ? 2 : state.level >= 2 ? 1 : 0);
-const agentOptions = () => ({ context: "lesson", language: state.language, level: agentLevel() });
+// The recipe's own place, so the guide speaks the Spanish of the country the dish comes from.
+const agentRegion = () => state.recipe?.regions?.[0] || state.region;
+const agentOptions = () => ({ context: "lesson", language: state.language, level: agentLevel(), region: agentRegion() });
 const langName = (id) => languages.find((l) => l.id === id)?.name || id;
 
 function paintAgent() {

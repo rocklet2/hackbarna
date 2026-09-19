@@ -182,8 +182,11 @@ function chooseLanguage(id) {
  * short spoken answers far more reliable. Before that the learner may answer in English.
  */
 function lockAgent() {
+  // The place decides how the guide speaks: Mexican, Peruvian, Rioplatense or peninsular
+  // Spanish, matching the dishes we teach from that country.
+  const region = state.place ? placeById(state.language, state.place)?.cities?.[0] : null;
   agent.updateSession({
-    instructions: instructionsFor("onboarding", { language: state.language, level: state.level }),
+    instructions: instructionsFor("onboarding", { language: state.language, level: state.level, region }),
     transcriptionLanguage: state.language && state.level !== null ? state.language : null,
   });
 }
@@ -271,7 +274,7 @@ function renderPlace(message = "") {
       aria-pressed="${state.place === p.id}">
       <span class="mark">${p.ready ? "◆" : "◇"}</span>
       <span class="name">${esc(p.name)}</span>
-      <span class="endonym">${esc(p.country)} · ${esc(p.endonym)}</span>
+      <span class="endonym">${esc(p.country === p.endonym ? p.country : `${p.country} · ${p.endonym}`)}</span>
       <span class="detail">${esc(p.detail)}</span></button>`;
 
   app.innerHTML = chrome(`<div class="stage">
@@ -312,6 +315,7 @@ function choosePlace(id) {
   }
   state.place = id;
   agent.clearQueue();
+  lockAgent();
   state.plan = "today"; // Demo focuses on one day
   saveProfile({ level: state.level, place: id, cities: place.cities, plan: "today" });
   startDishes();

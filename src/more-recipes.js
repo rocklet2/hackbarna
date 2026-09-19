@@ -1,6 +1,11 @@
 // Internal prototype recipes: cooking and language content awaiting editorial review.
 const it = ['Milan, IT', 'Roma, IT', 'Bologna, IT'];
 const pt = ['Porto, PT', 'Lisbon, PT'];
+// Spanish is taught from four countries, so a Spanish dish belongs to one of them, never to all.
+const spain = ['Madrid, ES', 'Sevilla, ES', 'Valencia, ES'];
+const mexico = ['Ciudad de México, MX'];
+const peru = ['Lima, PE'];
+const argentina = ['Buenos Aires, AR'];
 function dish(id, language, name, minLevel, minutes, regions, ingredients, words, directions, tags = ['vegetarian'], image = 'vegetables') {
   return { id, language, name, minLevel, minutes, regions, ingredients, words, tags, image,
     description: `${name}: a new plate, a new conversation, and a little local discovery.`,
@@ -70,15 +75,15 @@ export const moreRecipes = [
     [['leite condensado','condensed milk'],['cacau','cocoa'],['manteiga','butter'],['chocolate','chocolate']],
     [['Mix the base','Combine condensed milk, cocoa and butter in a heavy pan.'],['Keep stirring','Cook over low heat, stirring, until thick enough to pull away from the pan.'],['Cool completely','Transfer to a buttered plate. Allow to cool completely before handling; cooling adds time beyond the lesson.'],['Roll and finish','With buttered hands, roll into small balls and coat with sprinkles.']], ['vegetarian'], 'bakery'),
 
-  dish('ensalada-tomate', 'es', 'Ensalada de tomate', 0, 10, [],
+  dish('ensalada-tomate', 'es', 'Ensalada de tomate', 0, 10, spain,
     ['3 ripe tomatoes', '½ onion', '2 tbsp olive oil', '1 tbsp vinegar', 'A pinch of salt'],
     [['tomate','tomato'],['cebolla','onion'],['aceite','oil'],['sal','salt']],
     [['Prepare the vegetables','Slice the tomatoes and cut the onion into thin rings.'],['Dress the salad','Arrange on a plate, drizzle with olive oil and vinegar and add a pinch of salt.'],['Let it rest','Leave for 5 minutes so the flavours mix, then serve.']], ['vegan','gluten-free']),
-  dish('pisto', 'es', 'Pisto', 1, 35, [],
+  dish('pisto', 'es', 'Pisto', 1, 35, spain,
     ['1 courgette', '1 red pepper', '1 onion', '2 ripe tomatoes', '3 tbsp olive oil', 'Salt'],
     [['calabacín','courgette'],['pimiento','pepper'],['cebolla','onion'],['tomate','tomato']],
     [['Chop the vegetables','Cut the courgette, pepper and onion into small, even pieces.'],['Start with the onion','Soften the onion and pepper in olive oil over a medium heat for about 10 minutes.'],['Add the courgette','Add the courgette and cook for 10 minutes, stirring now and then.'],['Simmer with tomato','Grate in the tomatoes, add salt and simmer gently for 15 minutes until thick.']], ['vegan','gluten-free']),
-  dish('tortilla', 'es', 'Tortilla de patatas', 2, 45, [],
+  dish('tortilla', 'es', 'Tortilla de patatas', 2, 45, spain,
     ['500 g potatoes', '1 onion', '5 eggs', '100 ml olive oil', 'Salt'],
     [['patatas','potatoes'],['cebolla','onion'],['huevos','eggs'],['aceite','oil']],
     [['Slice the potatoes and onion','Peel the potatoes and slice them thinly. Slice the onion too.'],['Poach in oil','Gently cook the potatoes and onion in olive oil over a low heat for about 20 minutes, until soft but not browned. Drain them, keeping a little oil.'],['Mix with the eggs','Beat the eggs with salt, stir in the warm potatoes and onion and let it sit for 5 minutes.'],['Set and flip','Cook in a pan over a medium heat for about 4 minutes, place a plate over the pan and carefully flip it, then cook the other side for 3 minutes.']], ['vegetarian','gluten-free']),
@@ -106,4 +111,60 @@ export const moreRecipes = [
     ['300 g paella rice', '1 red pepper', '200 g green beans', '2 ripe tomatoes', '1 litre vegetable stock', 'A pinch of saffron', '4 tbsp olive oil', 'Salt'],
     [['arroz','rice'],['pimiento','pepper'],['judías verdes','green beans'],['azafrán','saffron']],
     [['Prepare the vegetables','Chop the pepper, trim the green beans and grate the tomatoes. Warm the stock with the saffron.'],['Fry the vegetables','Fry the pepper and green beans in olive oil in a wide pan for 8 minutes. Add the tomato and cook for 5 minutes.'],['Add the rice','Stir in the rice for a minute, then pour in the hot stock and add salt. Bring to a boil, then simmer without stirring for about 18 minutes.'],['Rest and serve','Take the pan off the heat, cover it and let it rest for 5 minutes before serving from the pan.']], ['vegan','gluten-free']),
+
+  // Mexico. Corn, beans and chilli, the base UNESCO describes in its listing (see data.js).
+  dish('guacamole', 'es', 'Guacamole', 0, 10, mexico,
+    ['2 ripe avocados', '½ white onion', '1 serrano chilli', 'Coriander', '1 lime', 'Salt'],
+    [['aguacate','avocado'],['cebolla','onion'],['chile','chilli'],['limón','lime']],
+    [['Prepare the ingredients','Finely chop the onion, the chilli and the coriander. Halve the avocados and remove the stones.'],['Mash the avocado','Scoop the avocado into a bowl and mash it with a fork, leaving some texture.'],['Mix and season','Stir in the onion, chilli and coriander, squeeze in the lime and add salt.'],['Taste and serve','Taste it, adjust the lime and the salt, and serve it with warm tortillas.']], ['vegan','gluten-free']),
+  dish('esquites', 'es', 'Esquites', 1, 20, mexico,
+    ['3 corn cobs, or 400 g sweetcorn', '1 tbsp oil', '1 tsp chilli powder', '1 lime', '50 g crumbled fresh cheese', 'Salt'],
+    [['elote','corn'],['queso','cheese'],['limón','lime'],['chile','chilli']],
+    [['Cut the corn','Cut the kernels off the cobs with a knife, with the cob steady on the board.'],['Cook the kernels','Cook the corn in a little oil over a medium heat for about 8 minutes, stirring, until tender and lightly browned.'],['Season the corn','Take the pan off the heat. Add salt, chilli powder and a squeeze of lime.'],['Serve in cups','Spoon it into cups, add the crumbled cheese on top and more lime to taste.']], ['vegetarian','gluten-free']),
+  dish('sopa-tortilla', 'es', 'Sopa de tortilla', 2, 40, mexico,
+    ['4 corn tortillas', '3 ripe tomatoes', '½ onion', '1 garlic clove', '1 dried guajillo chilli', '1 litre vegetable stock', '2 tbsp oil', 'Salt'],
+    [['tortilla','tortilla'],['jitomate','tomato'],['caldo','stock'],['chile','chilli']],
+    [['Crisp the tortillas','Cut the tortillas into strips and fry them in a little oil until crisp, then drain them on paper.'],['Soften the chilli','Warm the dried chilli in a dry pan for a few seconds, then soak it in hot water for 10 minutes.'],['Blend the base','Blend the tomatoes, the onion, the garlic and the drained chilli until smooth.'],['Simmer the soup','Cook the blended base in oil for 5 minutes, add the stock and simmer gently for 15 minutes. Add salt to taste.'],['Serve with the strips','Ladle the soup into bowls and add the crisp tortilla strips just before eating.']], ['vegetarian','gluten-free']),
+
+  dish('frijoles', 'es', 'Frijoles refritos', 1, 30, mexico,
+    ['400 g cooked pinto beans with a little of their liquid', '½ onion', '1 garlic clove', '2 tbsp oil', 'Salt', 'Fresh cheese to serve'],
+    [['frijol','bean'],['cebolla','onion'],['ajo','garlic'],['aceite','oil']],
+    [['Chop the aromatics','Finely chop the onion and the garlic.'],['Fry them gently','Cook them in the oil over a medium heat for about 5 minutes, until soft and fragrant.'],['Add the beans','Add the beans with a little of their liquid and cook for 5 minutes.'],['Mash to a paste','Mash them with a spoon or a masher until thick and creamy, adding liquid if they dry out. Add salt and serve with crumbled cheese.']], ['vegetarian','gluten-free']),
+
+  // Peru. Tubers and grains, with the potato and corn at the centre (see data.js).
+  dish('ensalada-quinua', 'es', 'Ensalada de quinua', 0, 20, peru,
+    ['150 g quinoa', '1 tomato', '½ red onion', '100 g cooked corn kernels', '1 lime', 'Coriander', '2 tbsp olive oil', 'Salt'],
+    [['quinua','quinoa'],['choclo','corn'],['tomate','tomato'],['limón','lime']],
+    [['Rinse the quinoa','Rinse the quinoa under cold water until the water runs clear.'],['Cook the quinoa','Simmer it in twice its volume of salted water for about 15 minutes, until the grains open. Drain it and let it cool.'],['Chop the vegetables','Dice the tomato and the onion and chop the coriander.'],['Mix and dress','Mix everything with the corn, the lime juice, the oil and the salt.']], ['vegan','gluten-free']),
+  dish('papa-huancaina', 'es', 'Papa a la huancaína', 1, 30, peru,
+    ['4 potatoes', '200 g fresh cheese', '2 tbsp ají amarillo paste', '100 ml evaporated milk', '4 crackers', 'Lettuce leaves', 'Salt'],
+    [['papa','potato'],['queso','cheese'],['ají','chilli'],['leche','milk']],
+    [['Boil the potatoes','Boil the potatoes whole in salted water for about 20 minutes, until tender. Let them cool a little, then peel and slice them.'],['Blend the sauce','Blend the cheese, the ají amarillo paste, the milk and the crackers until smooth and pourable.'],['Season the sauce','Taste the sauce and add salt. It should be creamy, not runny; add a little more milk if it is too thick.'],['Plate and serve','Arrange the potato slices on lettuce leaves and pour the sauce over them. Serve it cold or at room temperature.']], ['vegetarian']),
+  dish('causa-limena', 'es', 'Causa limeña', 2, 50, peru,
+    ['700 g yellow potatoes', '2 tbsp ají amarillo paste', '1 lime', '3 tbsp oil', '1 avocado', '1 tomato', 'Salt'],
+    [['papa','potato'],['palta','avocado'],['ají','chilli'],['limón','lime']],
+    [['Boil and mash','Boil the potatoes until tender, then peel them and mash them while still warm until smooth.'],['Season the potato','Work in the ají amarillo paste, the lime juice, the oil and the salt until the mash is smooth and yellow. Let it cool.'],['Prepare the filling','Slice the avocado and the tomato thinly and season them lightly.'],['Build the layers','Spread half the potato in a dish, add the avocado and the tomato, and cover it with the rest of the potato. Smooth the top.'],['Chill and serve','Chill it for at least 30 minutes and serve it cold. This is extra chilling time beyond the active lesson.']], ['vegan','gluten-free']),
+
+  dish('choclo-queso', 'es', 'Choclo con queso', 0, 20, peru,
+    ['2 corn cobs', '200 g fresh cheese', 'Salt'],
+    [['choclo','corn'],['queso','cheese'],['sal','salt'],['agua','water']],
+    [['Boil the corn','Boil the corn cobs in salted water for about 15 minutes, until the kernels are tender.'],['Slice the cheese','Cut the fresh cheese into thick slices while the corn cooks.'],['Serve them together','Drain the corn, cut each cob in half and serve it hot with the cheese beside it.']], ['vegetarian','gluten-free']),
+
+  // Argentina. The step copy uses voseo, the way Buenos Aires speaks (see lesson-translations.js).
+  dish('chimichurri', 'es', 'Chimichurri con verduras', 0, 20, argentina,
+    ['1 bunch of parsley', '3 garlic cloves', '1 tsp dried oregano', '2 tbsp red wine vinegar', '6 tbsp olive oil', '1 courgette', '1 red pepper', 'Salt'],
+    [['perejil','parsley'],['ajo','garlic'],['orégano','oregano'],['vinagre','vinegar']],
+    [['Chop the herbs','Finely chop the parsley and the garlic.'],['Mix the chimichurri','Mix them with the oregano, the vinegar, the oil and the salt. Let it sit for 10 minutes.'],['Grill the vegetables','Slice the courgette and the pepper and grill them in a hot pan for a few minutes on each side, until marked and tender.'],['Dress and serve','Spoon the chimichurri over the hot vegetables and serve.']], ['vegan','gluten-free']),
+  dish('provoleta', 'es', 'Provoleta', 1, 15, argentina,
+    ['1 thick slice of vegetarian provolone, about 200 g', '1 tsp dried oregano', '½ tsp chilli flakes', '1 tbsp olive oil', 'Bread, to serve'],
+    [['queso','cheese'],['orégano','oregano'],['pan','bread'],['aceite','oil']],
+    [['Season the cheese','Sprinkle the slice of cheese with the oregano and the chilli flakes and drizzle it with a little oil.'],['Melt it slowly','Cook it in a small heavy pan over a medium heat for about 3 minutes, until the underside is golden.'],['Turn it once','Turn it carefully and cook the other side until it is soft in the middle and crisp outside.'],['Serve it hot','Slide it onto a plate and serve it straight away with bread.']], ['vegetarian']),
+  dish('empanadas-verdura', 'es', 'Empanadas de verdura', 2, 50, argentina,
+    ['12 empanada discs', '400 g spinach', '1 onion', '2 eggs', '100 g grated cheese', '2 tbsp oil', 'Salt'],
+    [['masa','dough'],['espinaca','spinach'],['cebolla','onion'],['huevo','egg']],
+    [['Cook the filling','Soften the chopped onion in oil, add the washed spinach and cook it until it has wilted. Let it cool.'],['Boil the eggs','Boil the eggs for 10 minutes, cool them in cold water, peel them and chop them.'],['Mix it together','Drain any liquid from the spinach, then mix it with the eggs, the cheese and the salt.'],['Fill and close','Put a spoonful on each disc, wet the edge with water, fold it over and seal it by pressing and folding the edge.'],['Bake the empanadas','Bake them at 200°C for about 20 minutes, until golden.']], ['vegetarian'], 'bakery'),
+  dish('humita', 'es', 'Humita en olla', 2, 40, argentina,
+    ['4 corn cobs, or 500 g sweetcorn', '1 onion', '1 red pepper', '200 ml milk', '100 g grated cheese', '1 tsp sweet paprika', '2 tbsp oil', 'Salt'],
+    [['choclo','corn'],['cebolla','onion'],['morrón','pepper'],['queso','cheese']],
+    [['Grate the corn','Cut the kernels off the cobs and blend or grate them coarsely.'],['Soften the vegetables','Chop the onion and the pepper finely and cook them in oil over a medium heat for about 10 minutes.'],['Add the corn','Stir in the paprika, then the corn and the milk, and cook over a low heat for 15 minutes, stirring often, until thick.'],['Finish with cheese','Take it off the heat, stir in the cheese until it melts and add salt. Serve it hot.']], ['vegetarian','gluten-free']),
 ];
