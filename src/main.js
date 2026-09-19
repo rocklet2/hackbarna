@@ -316,10 +316,10 @@ function toast(message) {
 }
 /* ---------- the voice agent: a tiny character, bottom-right ---------- */
 // Same shared agent as welcome.html's onboarding (src/agent.js, OpenAI's Realtime API over
-// WebRTC), used here purely for output: it reads recipe steps and phrases aloud. No browser
-// speech-synthesis fallback — if it can't connect, the step just stays silent and, for a
-// manual tap, says so. connect({listen:false}) skips publishing a mic track entirely, so this
-// page never has to ask for microphone permission just to hear something spoken.
+// WebRTC): it reads recipe steps and phrases aloud on request, and also listens — the learner
+// can ask it something (e.g. "what does this mean?") and it replies, per the "lesson" context's
+// instructions in scripts/openai-realtime-proxy.js. No browser speech-synthesis fallback — if
+// it can't connect, the step just stays silent and, for a manual tap, says so.
 let agentState = { status: "idle", speaking: false, error: null };
 const agent = createAgent({ onState: (st) => { agentState = st; paintAgent(); } });
 const langName = (id) => languages.find((l) => l.id === id)?.name || id;
@@ -347,12 +347,12 @@ function mountAgentWidget() {
   document.body.append(...wrap.children);
   document.getElementById("agentOrb").onclick = () => {
     if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect();
-    else agent.connect({ context: "lesson", listen: false });
+    else agent.connect({ context: "lesson" });
   };
 }
 
 async function speak(text, lang, notify = true) {
-  const ok = await agent.connect({ context: "lesson", listen: false });
+  const ok = await agent.connect({ context: "lesson" });
   if (!ok) { if (notify) toast("Couldn't reach the voice agent."); return; }
   agent.prompt(`Say exactly, in ${langName(lang)}: "${text}"`);
 }
