@@ -1,5 +1,7 @@
 # Handoff: 2026-09-19 (from Romi via Claude)
 
+**Update:** PR #1 is merged. We work on `main` only from now on, no separate branches. Run `git checkout main && git pull`.
+
 ## Finished
 - Branch `conversational`: mobile-first conversational prototype at `/talk.html` (talk to a Catalan coach while cooking panellets; voice via browser speech recognition, typing fallback, photo button, timers, tutor-notes summary). Scripted replies, no AI yet. Your `index.html` prototype is untouched.
 - **One source of truth for content:** `content/catalonia.json`. It now holds the Catalan recipes from your `src/data.js`, the conversation script, glossary, vocabulary by level, photo rubrics, questions and culture facts. `config/catalonia.yaml` is deleted.
@@ -10,7 +12,8 @@
 - SLNG key not working yet (401), so voice runs on browser speech for now.
 
 ## Open questions for the other person
-- Please review the branch before we merge to `main`. Do you want the conversational version to become the main entry point?
+- Do you want the conversational page (`/talk.html`) to become the main entry point?
+- Your three new Catalan recipes (coca, mongetes, crema) are in `src/more-recipes.js`. Please move them into `content/catalonia.json` so Catalan stays in one source.
 - Edit Catalan content only in `content/catalonia.json` from now on.
 
 ## Watch out for
