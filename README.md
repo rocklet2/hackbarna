@@ -25,7 +25,8 @@ Levels are a user-selected estimate. This mockup does not assess skill or automa
 - `src/data.js`: languages, regions, recipes, cultural source links, recommendation logic.
 - `src/style.css`, `src/fonts.css`: responsive visual design and local fonts.
 - `src/data.test.js`: data/selection checks.
-- `config/catalonia.yaml`: Romi's existing production-content draft, untouched. The prototype uses its own sample content; reconcile it after editorial review.
+- `content/catalonia.json`: single source of truth for all Catalan content (recipes, steps, vocabulary, culture notes, conversation script, rubrics). `src/data.js` reads Catalan from it; Italian and Portuguese fixtures stay in `src/data.js`.
+- `talk.html` and `src/talk/`: mobile-first conversational version (branch `conversational`), open at `/talk.html`.
 
 ## Content status
 

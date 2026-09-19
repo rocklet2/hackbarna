@@ -1,7 +1,7 @@
 # Progress Design: how AI judges learning
 
 **Decided 2026-09-19.** Demo: Catalonia, Catalan, panellets. Product is a language learning app that also teaches a place and its culture through food.
-**Related:** [PROJECT_BRIEF.md](PROJECT_BRIEF.md) | [config/catalonia.yaml](../config/catalonia.yaml)
+**Related:** [PROJECT_BRIEF.md](PROJECT_BRIEF.md) | [content/catalonia.json](../content/catalonia.json)
 
 ## The idea
 Early levels teach language through very simple recipes: ingredient words, numbers, some actions, kitchen objects. As the learner levels up, the conversation gets more fluid, and while cooking they learn fun facts about the place, the history of the recipe and its cultural significance. The app asks questions as you cook, to judge language level, and you can send photos of your progress.
