@@ -12,12 +12,15 @@ import {
   placesFor, placeById, matchPlace, placeQuestionFor,
   PLANS, planById, matchPlan, planQuestionFor,
 } from "./places.js";
+import { dishesFor, pickForPlan, complexityLabel, nextOptions } from "./dishes.js";
+import { shopScript, gradeRepetition, feedbackFor } from "./shop.js";
 
 const app = document.querySelector("#app");
 const state = {
   step: "language", language: null, name: null,
   turn: 0, grades: [], thread: [],
   level: null, place: null, plan: null,
+  dishes: [], shopLine: 0, shopThread: [], shopTries: 0,
 };
 
 /* ---------- remembering the learner ---------- */
@@ -515,30 +518,185 @@ function choosePlan(id) {
   if (!plan) return;
   stopListening();
   state.plan = id;
-  state.step = "done";
   saveProfile({
     level: state.level, place: state.place,
     cities: placeById(state.language, state.place)?.cities || [], plan: id,
   });
-  renderSummary();
+  startDishes();
 }
 
-function renderSummary() {
-  const lang = byId(state.language);
+/* ---------- step 5: choosing the dish ---------- */
+function startDishes() {
+  state.step = "dishes";
   const place = placeById(state.language, state.place);
+  const ranked = dishesFor({ language: state.language, cities: place?.cities || [], level: state.level });
+  state.dishes = pickForPlan(ranked, planById(state.plan));
+  renderDishes(ranked);
+}
+
+function renderDishes(ranked) {
   const plan = planById(state.plan);
+  const place = placeById(state.language, state.place);
+  const chosen = state.dishes;
+
+  if (!chosen.length) {
+    app.innerHTML = chrome(`<div class="stage">
+      <h1 class="ask">Nothing to cook here yet.</h1>
+      <p class="hint">We have no dishes for ${esc(place.name)} at your level.</p>
+      <button class="mic" id="back">Pick somewhere else</button>
+    </div>`);
+    el("back").onclick = startPlace;
+    return;
+  }
+
+  const many = chosen.length > 1;
+  const card = (r) => `<div class="card" style="cursor:default">
+      <span class="name">${esc(r.name)}</span>
+      <span class="endonym">${esc(complexityLabel(r))}</span>
+      <span class="detail">${esc(r.description)}</span>
+      <span class="words">${r.words.slice(0, 4).map((w) => esc(w[0])).join(" · ")}</span>
+    </div>`;
+  // Offer one alternative, but only for a single dish: "instead" is ambiguous
+  // when three are listed, and swapping should not silently collapse a week.
+  const spare = many ? null : ranked.find((r) => !chosen.includes(r));
+
   app.innerHTML = chrome(`<div class="stage">
-    <h1 class="ask">Ready, ${esc(state.name)}.</h1>
+    <h1 class="ask">${many ? `Your week in ${esc(place.name)}` : `Tonight, in ${esc(place.name)}`}</h1>
+    <p class="hint">${many
+      ? `${chosen.length} dishes, one shopping trip, chosen for ${esc(LEVEL_NAMES[state.level])}.`
+      : `Chosen for ${esc(LEVEL_NAMES[state.level])}: ${esc(complexityLabel(chosen[0]))}.`}</p>
+    <div class="cards" style="grid-template-columns:1fr">${chosen.map(card).join("")}</div>
+    ${spare ? `<button class="say" id="swap">Rather cook ${esc(spare.name)} instead</button>` : ""}
+    <div class="mic-row" style="gap:10px">
+      ${nextOptions(chosen.length).map((o) => `<button class="mic ${o.id === "shop" ? "" : "alt"}"
+        data-next="${o.id}">${esc(o.name)}</button>`).join("")}
+    </div>
+  </div>`);
+
+  if (spare) el("swap").onclick = () => { state.dishes = [spare]; renderDishes(ranked); };
+  app.querySelectorAll("[data-next]").forEach((b) => {
+    b.onclick = () => (b.dataset.next === "shop" ? startShop() : renderHandoff("cook"));
+  });
+}
+
+/* ---------- step 6: shop and connect ---------- */
+function startShop() {
+  state.step = "shop";
+  state.shopLine = 0; state.shopThread = []; state.shopTries = 0;
+  const script = shopScript(state.language, state.level, state.dishes[0]);
+  state.shopThread.push({ who: "sys", text: state.level >= 2
+    ? "At the market, the useful thing is not ordering. It is getting them to speak to you."
+    : "Three things to say at the stall. Say each one back to me." });
+  renderShop();
+  setTimeout(() => sayShopLine(script), 400);
+}
+
+function sayShopLine(script) {
+  const line = script[state.shopLine];
+  if (!line) return;
+  state.shopThread.push({ who: "coach", target: line.target, en: line.en, why: line.why });
+  renderShop();
+  say(line.target, byId(state.language).voice);
+}
+
+function renderShop(listening = false) {
+  const lang = byId(state.language);
+  const script = shopScript(state.language, state.level, state.dishes[0]);
+  const bubbles = state.shopThread.map((m) => {
+    if (m.who === "me") return `<div class="bubble me">${esc(m.text)}</div>`;
+    if (m.who === "sys") return `<div class="bubble sys">${esc(m.text)}</div>`;
+    if (m.who === "ack") return `<div class="bubble coach ack">${esc(m.text)}</div>`;
+    return `<div class="bubble coach"><div class="target">${esc(m.target)}</div>
+      <div class="en">${esc(m.en)}</div>
+      ${m.why ? `<div class="why">${esc(m.why)}</div>` : ""}</div>`;
+  }).join("");
+
+  app.innerHTML = chrome(`<div class="stage">
+    <div class="turnbar">
+      ${script.map((_, i) => `<i class="${i < state.shopLine ? "done" : ""} ${i === state.shopLine ? "current" : ""}"></i>`).join("")}
+      <span>Shop &amp; connect</span>
+    </div>
+    <div class="thread" id="thread">${bubbles}</div>
+    <div class="mic-row">
+      <button class="mic ${listening ? "rec" : ""}" id="mic">🎙️ <span>${
+        listening ? "Listening… tap to stop" : "Say it back"
+      }</span></button>
+      <div class="heard" id="heard"></div>
+    </div>
+    <form class="typed" id="typed">
+      <input id="shopInput" autocomplete="off" placeholder="Or type it" />
+      <button type="submit">Send</button>
+    </form>
+    <button class="say" id="hear">▸ Hear it again</button>
+  </div>`);
+
+  el("thread").scrollTop = el("thread").scrollHeight;
+  el("mic").onclick = toggleShopMic;
+  el("hear").onclick = () => say(script[state.shopLine]?.target, lang.voice);
+  el("typed").onsubmit = (e) => {
+    e.preventDefault();
+    const v = el("shopInput").value.trim();
+    if (v) submitShop(v);
+  };
+  if (!SR) el("heard").textContent = "Voice is not available here, so type it.";
+}
+
+function toggleShopMic() {
+  if (recActive) { stopListening(); return; }
+  speechSynthesis?.cancel?.();
+  const started = listen({
+    lang: byId(state.language).speech,
+    onText: (t) => { const h = el("heard"); if (h) h.textContent = t; },
+    onDone: (text, err) => {
+      renderShop(false);
+      if (err === "blocked") { el("heard").textContent = "Microphone blocked. Type it instead."; return; }
+      if (!text) { el("heard").textContent = "I did not catch that. Try again, or type it."; return; }
+      submitShop(text);
+    },
+  });
+  if (!started) { el("heard").textContent = "Voice did not start. Type it instead."; return; }
+  renderShop(true);
+}
+
+function submitShop(text) {
+  stopListening();
+  const script = shopScript(state.language, state.level, state.dishes[0]);
+  const line = script[state.shopLine];
+  const { verdict } = gradeRepetition(text, line.target);
+  state.shopTries += 1;
+  // Never let someone get stuck on one phrase: after two goes we move on anyway.
+  const forced = state.shopTries >= 2;
+  const { text: reply, advance } = feedbackFor(forced && verdict === "again" ? "moveon" : verdict, line.target);
+
+  state.shopThread.push({ who: "me", text });
+  state.shopThread.push({ who: "ack", text: reply });
+  renderShop();
+
+  if (!advance && !forced) { setTimeout(() => say(line.target, byId(state.language).voice), 600); return; }
+  state.shopLine += 1; state.shopTries = 0;
+  setTimeout(() => {
+    if (state.shopLine >= script.length) { renderHandoff("shop"); return; }
+    sayShopLine(script);
+  }, 1100);
+}
+
+/* ---------- the end of onboarding ---------- */
+function renderHandoff(via) {
+  state.step = "done";
+  const place = placeById(state.language, state.place);
+  const lang = byId(state.language);
+  const list = state.dishes.map((d) => esc(d.name)).join(", ");
+  app.innerHTML = chrome(`<div class="stage">
+    <h1 class="ask">${via === "shop" ? "You are ready for the market." : `Let's cook, ${esc(state.name)}.`}</h1>
     <div class="summary-rows">
       <div class="row"><span>Language</span><b>${esc(lang.name)}</b></div>
       <div class="row"><span>Starting point</span><b>${esc(LEVEL_NAMES[state.level])}</b></div>
       <div class="row"><span>Cooking in</span><b>${esc(place.name)}</b></div>
-      <div class="row"><span>Planning</span><b>${esc(plan.name)}</b></div>
+      <div class="row"><span>${state.dishes.length > 1 ? "Dishes" : "Dish"}</span><b>${list}</b></div>
     </div>
     <div class="note" style="background:var(--paper);border:1px solid var(--line)">
-      <b>Next: steps 5 and 6</b>
-      Choosing the ${plan.dishes === 1 ? "dish" : `${plan.dishes} dishes`}, then shop and connect.
-      Not built yet: the recipe app has the dishes for ${esc(place.name)}.
+      <b>Next: step 7, the recipe lesson</b>
+      That is the existing app, with the shopping list, the cooking steps and the culture notes.
     </div>
     <div class="mic-row">
       <a class="mic" href="/" style="text-decoration:none">Open the recipe app</a>
@@ -547,6 +705,7 @@ function renderSummary() {
   </div>`);
   el("again").onclick = restart;
 }
+
 
 /** The "let me just pick" escape hatch, so nobody is trapped in a conversation. */
 function renderPicker() {

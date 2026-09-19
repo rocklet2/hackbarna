@@ -1,6 +1,6 @@
 # Onboarding Journey: from opening the app to the recipe lesson
 
-**Status:** spec from Romi, 2026-09-19. Steps 1 to 6 are not built yet. Step 7 is Andrei's existing lesson work.
+**Status:** spec from Romi, 2026-09-19. **Steps 1 to 6 are built** in `src/welcome/` behind `welcome.html`, awaiting Romi's approval to ship. Step 7 is Andrei's existing lesson work. See section 8 for what shipping would change in Andrei's work.
 **Related:** [PROJECT_BRIEF.md](PROJECT_BRIEF.md) | [PROGRESS_DESIGN.md](PROGRESS_DESIGN.md) | [../src/main.js](../src/main.js) (current wizard) | [../src/journey.js](../src/journey.js) (Day 1 to 3)
 
 ## The principle
@@ -149,3 +149,43 @@ Steps 1 to 6 live in `src/main.js` today (the `onboard*` functions), which Andre
 2. Which languages appear as "coming soon" cards, and do we show 6 or 10?
 3. Does the demo run the full 90 seconds, or skip to step 5 with panellets preselected?
 4. Rewrite `main.js` in place, or build steps 1 to 6 as a new module and switch the entry point when it is ready?
+
+---
+
+## 8. What shipping this would change in Andrei's work
+Steps 1 to 6 are built without editing a single file of Andrei's. Everything below
+is **flagged, not done**, and needs a decision before the front door moves.
+
+### Decisions
+1. **Two ranking functions now disagree.** Andrei's `recommend()` (`src/data.js`)
+   ranks on `minLevel` then minutes. The new `dishesFor()` (`src/welcome/dishes.js`)
+   ranks on complexity relative to the catalogue, because Romi asked for fewer
+   steps at beginner and more technique at advanced, and minutes measure patience
+   rather than difficulty. For the same learner they suggest different dishes.
+   One should win. Merging them means editing `src/data.js`.
+2. **Entry point.** `/` is Andrei's wizard, `/welcome.html` is this. Both now ask
+   language, level and place, and both choose a dish. Shipping both means two
+   front doors that contradict each other.
+3. **Steps 3 and 4 duplicate his place and meal screens** with different meaning:
+   place as somewhere you travel rather than a city filter, and planning (today
+   or the week) instead of diet and time chips. His versions would be retired,
+   not kept alongside.
+
+### Data gaps, not changed
+4. **Escalivada has no `regions`** in `content/catalonia.json`, while the other
+   five Catalan dishes list Barcelona, Girona and Tarragona. Both `recommend()`
+   and `dishesFor()` read a region-less recipe as available everywhere, so it
+   appears even for a place with no content. One line to fix, in the shared
+   content file, and it changes what shows in Andrei's menu. A test documents
+   the current behaviour rather than hiding it.
+5. **`src/more-recipes.js` still holds 12 dishes in code**, not in
+   `content/catalonia.json`. The single-source rule in CLAUDE.md says Catalan
+   content lives in one file. Step 5 reads them fine, so this is tidiness, not a
+   bug, but it is still an open promise.
+
+### Coupling to watch
+6. **Step 6 imports `phrases()` from `src/journey.js` on purpose**, so shop
+   language has one source. It indexes fixed rows: 0 greeting, 1 "do you have X",
+   2 "how much", 3 "half a kilo", 4 "I'm learning X". Reordering those rows
+   silently changes what the shop lesson teaches. Worth a comment in
+   `journey.js`, or named keys instead of positions.
