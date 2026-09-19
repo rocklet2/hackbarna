@@ -12,10 +12,11 @@ import "./welcome.css";
 import { SUPPORTED, COMING_SOON, matchLanguage, greetingFor, byId } from "./catalogue.js";
 import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor, levelLabelFor } from "./levelcheck.js";
 import { placesFor, placeById, matchPlace, placeQuestionFor, dishQuestionFor } from "./places.js";
-import { dishesFor, complexityLabel } from "./dishes.js";
+import { dishesFor, complexityLabel, matchDish } from "./dishes.js";
 import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, marketHeadingFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
 import { createAgent } from "../agent.js";
+import { instructionsFor } from "../agent-instructions.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -115,7 +116,7 @@ const el = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // Each screen is one brand colour block (see BRAND.md); the other colour is its accent.
 const TONES = { start: "pink", language: "mint", level: "pink", place: "mint", dishes: "pink", shop: "mint", done: "pink" };
-const chrome = (inner, tone = TONES[state.step] || "pink") => `<div class="app" data-tone="${tone}"><div><div class="brand">taula<b>*</b></div>
+const chrome = (inner, tone = TONES[state.step] || "pink") => `<div class="app" data-tone="${tone}" data-level="${state.level ?? ""}"><div><div class="brand">taula<b>*</b></div>
   </div>${inner}</div>`;
 
 /* ---------- step 1: which language ---------- */
@@ -130,9 +131,8 @@ function renderLanguage(message = "") {
 
   app.innerHTML = chrome(`<div class="stage">
     <h1 class="ask">${QUESTION}</h1>
-    <p class="hint">Just say it. Or pick one below.</p>
+    <p class="hint">Just say it.</p>
     <div id="msg">${message}</div>
-    <div class="or">or choose</div>
     <div class="cards">
       ${SUPPORTED.map((l) => card(l, false)).join("")}
       ${COMING_SOON.map((l) => card(l, true)).join("")}
@@ -148,8 +148,10 @@ function renderLanguage(message = "") {
   mic.listenFor((text) => {
     const lang = matchLanguage(text);
     if (lang) chooseLanguage(lang.id);
+    else nudge(`The learner said "${text}", which is not a language we recognise. In one short English sentence, ask them again which language they would like to cook in. Do not name or list any languages.`);
   });
-  agent.prompt("The learner just reached the language screen and hasn't chosen a language yet, so speak in English. In one short, warm sentence, ask which language they'd like to cook in — Catalan, Italian, Portuguese, or Spanish.");
+  // The languages are on screen and the catalogue will grow, so the agent never reads them out.
+  if (!message && agentReady()) agent.prompt("The learner is on the language screen. In one short, warm English sentence, ask which language they would like to cook in. Do not name or list any languages: they can see them on screen.");
 }
 
 function chooseLanguage(id) {
@@ -160,33 +162,48 @@ function chooseLanguage(id) {
   if (!supported) {
     // Honest, not fake: we say we cannot teach it yet rather than pretending.
     state.language = null;
+    agent.clearQueue();
+    if (agentReady()) agent.prompt(`In one short English sentence, say that ${lang.name} is not ready yet and ask them to say another language. Do not list the languages.`);
     renderLanguage(`<div class="soon-msg"><b>${esc(lang.name)} is not ready yet.</b>
       We only have real lessons for ${SUPPORTED.map((l) => l.name).join(", ")} so far,
       and we would rather say so than fake it.</div>`);
     return;
   }
   state.language = id;
+  agent.clearQueue();
+  lockAgent();
   startCheck();
 }
 
 /**
- * Every agent.prompt() after a language is chosen goes through here so each instruction
- * re-anchors the language the agent should be speaking (see the "language you speak in" note
- * in scripts/openai-realtime-proxy.js's INSTRUCTIONS) — cheap insurance against it drifting
- * to a different language over a long session, and avoids racing two response.create calls
- * back to back the way a one-off "you've switched languages" message would.
- *
- * At Beginner level it also asks for a quick English gloss after anything said in the target
- * language, so early word associations have something to latch onto — Intermediate and
- * Advanced stay fully in the target language, same as before.
+ * The language lock, set on the live session (see src/agent-instructions.js): from here the
+ * agent speaks only this language, plus English as the level allows, and will not switch
+ * even if asked. Transcription is told the language once the level is known, which makes
+ * short spoken answers far more reliable. Before that the learner may answer in English.
  */
+function lockAgent() {
+  agent.updateSession({
+    instructions: instructionsFor("onboarding", { language: state.language, level: state.level }),
+    transcriptionLanguage: state.language && state.level !== null ? state.language : null,
+  });
+}
+
+/** When nothing on screen matched what was heard, the agent asks again (only if it heard it). */
+function nudge(instruction) {
+  if (agentState.status === "connected") agentSay(instruction);
+}
+
+/**
+ * Every agent.prompt() after a language is chosen goes through here. The real lock is on the
+ * session (lockAgent); this one-line reminder per prompt is cheap insurance against drift.
+ */
+const agentReady = () => agentState.status === "connected" || agentState.status === "connecting";
+
 function agentSay(instruction) {
+  if (!agentReady()) return; // nothing is queued for an agent that is off, or that failed
   const lang = state.language ? byId(state.language) : null;
   if (!lang) { agent.prompt(instruction); return; }
-  const beginnerNote = state.level === 0
-    ? ` Since they're a beginner, briefly add the English meaning right after anything you say in ${lang.name}, to help the words stick.`
-    : "";
-  agent.prompt(`(Keep speaking in ${lang.name}.${beginnerNote}) ${instruction}`);
+  agent.prompt(`(Language lock: ${lang.name}. Follow your English rule for this learner's level.) ${instruction}`);
 }
 
 /* ---------- step 2: pick a starting point ---------- */
@@ -196,7 +213,10 @@ function startCheck() {
   const lang = byId(state.language);
   renderLevel();
   const q = levelQuestionFor(state.language);
-  agentSay(`Say exactly, in ${lang.name}: "${q.target}"`);
+  // We cannot know yet whether they understand any of the language, so this one is always
+  // said in both: the question, then the three levels, each in the language and in English.
+  const levels = LEVELS.map((l) => `${levelLabelFor(state.language, l.id)} (${l.name.toLowerCase()})`).join(", ");
+  agentSay(`Say exactly, in ${lang.name}: "${q.target}" Then say exactly, in English: "${q.en}" Then ask whether they are ${levels}, saying each level in ${lang.name} and then in English.`);
 }
 
 function renderLevel() {
@@ -224,6 +244,7 @@ function renderLevel() {
   mic.listenFor((text) => {
     const level = matchLevel(text);
     if (level) chooseLevel(level.id);
+    else nudge(`The learner said "${text}", which was not a level. Briefly ask again, in ${lang.name} and in English, whether they are a beginner, intermediate or advanced.`);
   });
 }
 
@@ -231,6 +252,8 @@ function chooseLevel(id) {
   if (!levelById(id)) return;
   mic.listenFor(null);
   state.level = id;
+  agent.clearQueue();
+  lockAgent();
   saveProfile({ level: id });
   startPlace();
 }
@@ -270,8 +293,9 @@ function renderPlace(message = "") {
   mic.listenFor((text) => {
     const place = matchPlace(text, state.language);
     if (place) choosePlace(place.id);
+    else nudge(`The learner said "${text}", which is not one of the places on screen. Briefly ask again where they would like to cook. Do not list the places.`);
   });
-  agentSay(`Say exactly, in ${lang.name}: "${q.target}"`);
+  if (!message) agentSay(`Say exactly, in ${lang.name}: "${q.target}" Do not list the places: they are on screen.`);
 }
 
 function choosePlace(id) {
@@ -287,6 +311,7 @@ function choosePlace(id) {
     return;
   }
   state.place = id;
+  agent.clearQueue();
   state.plan = "today"; // Demo focuses on one day
   saveProfile({ level: state.level, place: id, cities: place.cities, plan: "today" });
   startDishes();
@@ -331,13 +356,23 @@ function renderDishes(ranked) {
     <div class="cards" style="grid-template-columns:1fr;margin-top:14px">${ranked.slice(0, 4).map(card).join("")}</div>
   </div>`);
 
-  // Tapping a dish is the answer, like every other question: it moves on.
+  // Saying a dish, or tapping it, is the answer: it moves on.
+  const shown = ranked.slice(0, 4);
+  const choose = (dish) => { mic.listenFor(null); agent.clearQueue(); state.dishes = [dish]; startShop(); };
   app.querySelectorAll("[data-dish]").forEach((b) => {
-    b.onclick = () => {
-      state.dishes = [ranked.find((r) => r.id === b.dataset.dish)];
-      startShop();
-    };
+    b.onclick = () => choose(ranked.find((r) => r.id === b.dataset.dish));
   });
+  const names = shown.map((r) => r.name).join(", ");
+  const lang = byId(state.language);
+  paintMicBar();
+  mic.setLang(lang.speech);
+  mic.listenFor((text) => {
+    const dish = matchDish(text, shown);
+    if (dish) choose(dish);
+    else nudge(`The learner said "${text}", which did not clearly match one dish. Briefly ask again which of these they would like to cook: ${names}. Name no other dish.`);
+  });
+  // Only the dishes on screen: the agent must not suggest anything we cannot teach.
+  agentSay(`Say exactly, in ${lang.name}: "${question.target}" Then mention these dishes, and only these, by exactly these names: ${names}. Never suggest, describe or name any other dish.`);
 }
 
 /* ---------- step 6: the stall conversation ---------- */
@@ -350,6 +385,12 @@ function startShop() {
   state.step = "shop";
   state.line = 0; state.thread = []; state.tries = 0;
   renderLesson();
+  // A short introduction before the first line, so the learner knows what the exercise is.
+  const dish = state.dishes[0]?.name || "the dish";
+  const how = state.level >= 1
+    ? "the seller speaks first, and the learner answers with the reply shown on screen, out loud"
+    : "you say a phrase, and the learner says it back out loud";
+  agentSay(`Introduce this exercise in one or two short sentences, without saying any of its phrases yet: we are at a market stall buying the ingredients for ${dish}; ${how}; when they get it, we move on by ourselves.`);
   setTimeout(() => sayLessonLine(), 400);
 }
 
@@ -444,11 +485,12 @@ function submitLesson(text) {
 // learner says it back, and the row ticks off. The way out ("A cuinar!") is always
 // on screen, so nobody is held here.
 
-function cta() {
+/** "Let's start cooking" appears only once the whole list has been learned. */
+function cta(done) {
   const c = cookCtaFor(state.language);
   const href = state.dishes[0] ? recipeUrl(state.dishes[0]) : "/";
-  return `<a class="cta" href="${href}"><span class="cta-target">${esc(c.target)}</span>
-    <span class="cta-en">${esc(c.en)}</span></a>
+  return `${done ? `<a class="cta" href="${href}"><span class="cta-target">${esc(c.target)}</span>
+    <span class="cta-en">${esc(c.en)}</span></a>` : ""}
     <button class="say" id="again">Start over</button>`;
 }
 
@@ -464,7 +506,7 @@ function renderHandoff() {
   // Advanced learners already know the basic ingredient vocabulary, so they go
   // directly from the market exchange to the recipe instead of repeating words.
   if (state.level >= 2) { goToRecipe(); return; }
-  state.wordLine = 0; state.tries = 0; state.wordAck = null;
+  state.wordLine = 0; state.tries = 0; state.wordAck = null; state.listAnnounced = false;
   const { taught } = ingredientWords(state.language, state.dishes[0]);
   if (!taught.length) { goToRecipe(); return; }
   renderWords();
@@ -513,11 +555,18 @@ function renderWords() {
   app.innerHTML = chrome(`<div class="stage">
     <h1 class="ask"><span class="target">${esc(h.target)}</span><span class="en">${esc(h.en)}</span></h1>
     ${body}
-    ${cta()}
+    ${cta(done)}
   </div>`);
 
   el("again").onclick = restart;
-  if (done) { mic.listenFor(null); return; }
+  if (done) {
+    mic.listenFor(null);
+    if (!state.listAnnounced) {
+      state.listAnnounced = true;
+      agentSay(`In one short sentence, tell them this is their whole shopping list, and that when they are ready they can tap the button to start cooking. Say the button's words exactly: "${cookCtaFor(state.language).target}".`);
+    }
+    return;
+  }
   el("hear").onclick = () => agentSay(`Say exactly, in ${lang.name}: "${current.target}"`);
   el("skipword").onclick = () => {
     mic.listenFor(null);
@@ -552,6 +601,9 @@ function submitWord(text) {
 
 function restart() {
   try { localStorage.removeItem(STORE); } catch {}
+  agent.clearQueue();
+  // Starting over is the one way to change language, so the lock comes off here.
+  agent.updateSession({ instructions: instructionsFor("onboarding"), transcriptionLanguage: null });
   Object.assign(state, { step: "language", language: null,
     level: null, place: null, plan: null, dishes: [], wordLine: 0, wordAck: null });
   renderLanguage();
@@ -561,6 +613,8 @@ function restart() {
 function renderWelcomeBack(profile) {
   state.step = "start";
   const lang = byId(profile.language);
+  state.level = profile.level;
+  lockAgent();
   mic.listenFor(null);
   app.innerHTML = chrome(`<div class="greet">
     <div class="hello">${esc(greetingFor(profile.language))}</div>

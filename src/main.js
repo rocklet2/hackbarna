@@ -40,6 +40,9 @@ const state = {
   drafts: {},
   collected: new Set(),
   lastAutoSpokenKey: null,
+  quizTries: 0,
+  lastQuizAskedKey: null,
+  heard: null,
   finishBeat: 0,
   finishPhoto: null,
   finishCheck: null,
@@ -249,28 +252,70 @@ function cultureFact(recipe, index) {
   if (state.level === 2) return { title: "A local note", text: `In ${place}, ${first[0]} and ${second[0]} are useful words to notice. ${base}`, lang: "en", source };
   return { title: "A little local note", text: `In ${place}, ${first[0]} means ${first[1]}. ${base}`, lang: "en", source };
 }
+/**
+ * One spoken check per step. The agent asks the question (see maybeAskQuiz), the learner says
+ * the answer, and a correct one moves to the next step on its own. Tapping an option or typing
+ * still works: voice can be unavailable, and the room can be loud.
+ */
 function exercise(r, cookIndex) {
   const challenge = challengeFor(r, cookIndex, state.level);
   const passed = stepPassed(state.journey, cookIndex);
+  const tries = state.quizTries;
   const selected = passed ? challenge.answer : state.answer;
-  const feedback = passed ? `${uiText("correct") || "Correct!"} ${challenge.success}` : state.answer !== null ? (uiText("retry") || "Not quite. Check the guide and try again.") : challenge.kind === "write" ? (state.level >= 3 ? "Completa la instrucció per continuar." : "Type the missing word to continue.") : (state.level >= 3 ? "Tria una resposta per continuar." : "Choose an answer to continue.");
-  const content = challenge.kind === "write"
-    ? `<p class="quiz-sentence" lang="${state.language}">${escapeHtml(challenge.sentence)}</p><form id="quiz-form"><label for="quiz-answer">${uiText("missing") || "Missing word"}</label><div class="quiz-input-row"><input id="quiz-answer" name="answer" autocomplete="off" autocapitalize="none" spellcheck="false" lang="${state.language}" value="${escapeHtml(selected || '')}" ${passed ? "disabled" : ""} aria-describedby="challenge-feedback" required/><button class="primary" type="submit" ${passed ? "disabled" : ""}>${uiText("check") || "Check answer"}</button></div></form>`
-    : `<div class="answer-options ${challenge.kind === 'meaning' ? 'sentence-options' : ''}">${challenge.options.map(({value, label}, n) => `<button class="answer ${selected === value ? (passed ? "correct" : "incorrect") : ""}" data-action="answer" data-value="${escapeHtml(value)}" aria-pressed="${selected === value}" aria-describedby="challenge-feedback" ${passed ? "disabled" : ""}><span class="answer-number" aria-hidden="true">${n + 1}</span><span lang="${state.language}">${escapeHtml(label)}</span>${selected === value ? icon(passed ? "check" : "reset") : ""}</button>`).join("")}</div>`;
-  return `<section class="exercise required-challenge ${passed ? "challenge-passed" : ""}" aria-labelledby="challenge-title"><div class="challenge-heading"><span class="eyebrow">${icon("spark")} ${levels[state.level].name.toUpperCase()} · ${language().name.toUpperCase()}</span><span class="challenge-status">${passed ? `${icon("check")} ${uiText("complete") || "Complete"}` : uiText("turn") || "Your turn"}</span></div><h3 id="challenge-title">${challenge.prompt}</h3><p class="quiz-hint" lang="${state.level >= 3 ? state.language : "en"}">${escapeHtml(challenge.hint)}</p>${content}<p id="challenge-feedback" class="exercise-feedback" role="status" aria-live="polite">${escapeHtml(feedback)}</p></section>`;
+  const feedback = passed ? `${uiText("correct") || "Correct!"} ${challenge.success}`
+    : state.answer === null ? (uiText("turn") || "Say your answer out loud, or answer on screen.")
+    : tries >= 3 ? `${uiText("retry") || "Not quite."} ${challenge.answer}`
+    : `${uiText("retry") || "Not quite."}${challenge.clue && tries >= 1 ? ` ${challenge.clue}` : ""}`;
+  const sentence = challenge.kind === "cloze"
+    ? `<p class="quiz-sentence" lang="${state.language}">${escapeHtml(challenge.sentence)}</p>` : "";
+  const content = challenge.options
+    ? `<div class="answer-options">${challenge.options.map(({ value, label }, n) => `<button class="answer ${selected === value ? (passed ? "correct" : "incorrect") : ""}" data-action="answer" data-value="${escapeHtml(value)}" aria-pressed="${selected === value}" aria-describedby="challenge-feedback" ${passed ? "disabled" : ""}><span class="answer-number" aria-hidden="true">${n + 1}</span><span lang="${state.language}">${escapeHtml(label)}</span>${selected === value ? icon(passed ? "check" : "reset") : ""}</button>`).join("")}</div>`
+    : `<form id="quiz-form"><label for="quiz-answer">${uiText("missing") || (challenge.gaps > 1 ? "Missing words" : "Missing word")}</label><div class="quiz-input-row"><input id="quiz-answer" name="answer" autocomplete="off" autocapitalize="none" spellcheck="false" lang="${state.language}" value="${escapeHtml(passed ? challenge.answer : "")}" ${passed ? "disabled" : ""} aria-describedby="challenge-feedback" required/><button class="primary" type="submit" ${passed ? "disabled" : ""}>${uiText("check") || "Check answer"}</button></div></form>`;
+  const heard = state.heard && !passed ? `<p class="quiz-heard">Heard: “${escapeHtml(state.heard)}”</p>` : "";
+  return `<section class="exercise required-challenge ${passed ? "challenge-passed" : ""}" aria-labelledby="challenge-title"><div class="challenge-heading"><span class="eyebrow">${icon("spark")} ${levels[state.level].name.toUpperCase()} · ${language().name.toUpperCase()}</span><span class="challenge-status">${passed ? `${icon("check")} ${uiText("complete") || "Complete"}` : uiText("turn") || "Say it out loud"}</span></div><h3 id="challenge-title" lang="${state.level >= 3 ? state.language : "en"}">${escapeHtml(challenge.prompt)}</h3>${sentence}${challenge.hint ? `<p class="quiz-hint" lang="en">${escapeHtml(challenge.hint)}</p>` : ""}${content}${heard}<p id="challenge-feedback" class="exercise-feedback" role="status" aria-live="polite">${escapeHtml(feedback)}</p></section>`;
 }
-function answerQuiz(value) {
+function answerQuiz(value, spoken = false) {
   if (state.journey.phase !== "quiz" || stepPassed(state.journey, state.step)) return;
+  const challenge = challengeFor(state.recipe, state.step, state.level);
   state.answer = value;
+  state.heard = spoken ? value : null;
   const correct = submitAnswer(state.journey, state.recipe, state.step, value, state.level);
+  state.quizTries = correct ? 0 : state.quizTries + 1;
   saveProgress();
   app.querySelector(".required-challenge").outerHTML = exercise(state.recipe, state.step);
   const next = app.querySelector('[data-action="next"]');
   next.disabled = !correct;
-  if (correct) { next.removeAttribute("aria-describedby"); next.focus({ preventScroll: true }); }
-  else { (app.querySelector('#quiz-answer') || [...app.querySelectorAll('[data-action="answer"]')].find(el => el.dataset.value === value))?.focus({ preventScroll: true }); }
+  if (correct) {
+    next.removeAttribute("aria-describedby");
+    if (agent.isConnected()) agent.prompt("The learner answered correctly. Praise them in no more than four words, then stop.");
+    // Getting it right is the answer: the lesson moves on by itself.
+    const at = state.step;
+    setTimeout(() => { if (state.screen === 2 && state.step === at && state.journey.phase === "quiz") goNext(); }, 1800);
+    return;
+  }
+  // Two gentle retries, then the agent says the answer so nobody is stuck on one word.
+  if (agent.isConnected()) agent.prompt(state.quizTries >= 3
+    ? `They have missed this a few times. Tell them the answer is "${challenge.answer}" and ask them to say it back.`
+    : state.quizTries >= 2 && challenge.clue
+      ? `That was not right. Give them this clue and ask them to try again: ${challenge.clue}`
+      : `That was not right. Warmly ask them to try once more. Do not say the answer.`);
+  (app.querySelector("#quiz-answer") || [...app.querySelectorAll('[data-action="answer"]')].find((el) => el.dataset.value === value))?.focus({ preventScroll: true });
 }
-
+/** Leaving a step: forward to the next one, or finish the lesson. */
+function goNext() {
+  if (state.journey.phase !== "quiz" || !stepPassed(state.journey, state.step)) return;
+  if (state.step === state.recipe.steps.length - 1) {
+    state.completed = true;
+    state.journey.completed = true;
+    state.finishBeat = 0;
+  } else state.step += 1;
+  state.journey.phase = "guide";
+  state.answer = null;
+  state.heard = null;
+  state.quizTries = 0;
+  stopTimer();
+  render(true);
+}
 function lesson() {
   const r = state.recipe;
   if (state.completed) return completion(r);
@@ -371,6 +416,7 @@ function render(focus = false) {
     h.focus({ preventScroll: true });
   }
   maybeAutoSpeakStep();
+  maybeAskQuiz();
 }
 
 function timerText() {
@@ -399,7 +445,18 @@ function toast(message) {
 // instructions in scripts/openai-realtime-proxy.js. No browser speech-synthesis fallback — if
 // it can't connect, the step just stays silent and, for a manual tap, says so.
 let agentState = { status: "idle", speaking: false, error: null };
-const agent = createAgent({ onState: (st) => { agentState = st; paintAgent(); } });
+const agent = createAgent({
+  onState: (st) => { agentState = st; paintAgent(); },
+  // A spoken quiz answer is graded here, exactly like a tapped one. Anything else the learner
+  // says is a question for the agent, which does not reply on its own (create_response: false).
+  onUserTranscript: (text) => {
+    if (state.screen === 2 && state.journey.phase === "quiz" && !stepPassed(state.journey, state.step)) answerQuiz(text, true);
+    else agent.prompt(`The learner said: "${text}". Reply briefly, following your language rules.`);
+  },
+});
+/** The lesson's four levels, as the agent's three (see src/agent-instructions.js). */
+const agentLevel = () => (state.level >= 3 ? 2 : state.level >= 2 ? 1 : 0);
+const agentOptions = () => ({ context: "lesson", language: state.language, level: agentLevel() });
 const langName = (id) => languages.find((l) => l.id === id)?.name || id;
 
 function paintAgent() {
@@ -425,12 +482,12 @@ function mountAgentWidget() {
   document.body.append(...wrap.children);
   document.getElementById("agentOrb").onclick = () => {
     if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect();
-    else agent.connect({ context: "lesson" });
+    else agent.connect(agentOptions());
   };
 }
 
 async function speak(text, lang, notify = true) {
-  const ok = await agent.connect({ context: "lesson" });
+  const ok = await agent.connect(agentOptions());
   if (!ok) { if (notify) toast("Couldn't reach the voice agent."); return; }
   agent.prompt(`Say exactly, in ${langName(lang)}: "${text}"`);
 }
@@ -442,6 +499,17 @@ function maybeAutoSpeakStep() {
   const i = Math.min(state.step, state.recipe.steps.length - 1);
   const culture = state.level >= 3 ? ` ${cultureFact(state.recipe, i).text}` : "";
   speak(`${translatedStep(state.recipe, i).instruction}${culture}`, state.language, false);
+}
+/** The agent asks this step's question once, when the check appears. */
+async function maybeAskQuiz() {
+  if (state.screen !== 2 || !state.recipe || state.completed) return;
+  if (state.journey.phase !== "quiz" || stepPassed(state.journey, state.step)) return;
+  const key = `${state.recipe.id}:${state.step}:${state.level}`;
+  if (state.lastQuizAskedKey === key) return;
+  state.lastQuizAskedKey = key;
+  const ok = await agent.connect(agentOptions());
+  if (!ok) return; // the question is on screen either way
+  agent.prompt(challengeFor(state.recipe, state.step, state.level).ask);
 }
 const speakButton = (text, lang) => `<button class="speak-btn" data-action="speak" data-value="${escapeHtml(text)}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
 function highlightAlign(word, on) {
@@ -599,22 +667,13 @@ app.addEventListener("click", (event) => {
     case "start-quiz":
       state.journey.phase = "quiz";
       state.answer = null;
+      state.heard = null;
+      state.quizTries = 0;
       focus = true;
       break;
     case "next":
-      if (state.journey.phase !== "quiz") return;
-      if (!stepPassed(state.journey, state.step)) return;
-      if (state.step === state.recipe.steps.length - 1) {
-        state.completed = true;
-        state.journey.completed = true;
-        state.finishBeat = 0;
-      }
-      else state.step++;
-      state.journey.phase = "guide";
-      state.answer = null;
-      stopTimer();
-      focus = true;
-      break;
+      goNext();
+      return;
     case "previous":
       if (state.journey.phase === "quiz") state.journey.phase = "guide";
       else { state.step = Math.max(0, state.step - 1); state.journey.phase = "quiz"; }

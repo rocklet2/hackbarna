@@ -1,0 +1,45 @@
+// Forgiving matching for spoken answers. Speech-to-text rarely spells a Catalan word
+// exactly ("ametllas" for "ametlles"), so each word may be a letter or two off.
+// This compares words, not sounds: it is not pronunciation scoring (see CLAUDE.md).
+
+export const flatten = (s) =>
+  String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/['’‘`´]/g, "").replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+
+export const tokens = (s) => flatten(s).split(" ").filter(Boolean);
+
+function distance(a, b) {
+  const row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i += 1) {
+    let prev = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const next = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = next;
+    }
+  }
+  return row[b.length];
+}
+
+/** Short words must be exact; longer words may be one letter off, long ones two. */
+export function sameWord(heard, wanted) {
+  if (heard === wanted) return true;
+  const allowed = wanted.length <= 3 ? 0 : wanted.length <= 7 ? 1 : 2;
+  return Math.abs(heard.length - wanted.length) <= allowed && distance(heard, wanted) <= allowed;
+}
+
+/** True when every word of `wanted` was heard somewhere in `said`. */
+export function saysAll(said, wanted) {
+  const heard = tokens(said);
+  const want = tokens(wanted);
+  return want.length > 0 && want.every((w) => heard.some((h) => sameWord(h, w)));
+}
+
+/** Share of `wanted`'s words that were heard, 0 to 1. */
+export function overlap(said, wanted) {
+  const heard = tokens(said);
+  const want = tokens(wanted);
+  if (!want.length) return 0;
+  return want.filter((w) => heard.some((h) => sameWord(h, w))).length / want.length;
+}

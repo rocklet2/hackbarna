@@ -12,7 +12,13 @@ export function createAgent({ onState, onUserTranscript } = {}) {
   let pc = null;
   let dc = null;
   let micStream = null;
-  let pendingPrompt = null; // sent once the data channel opens, if prompt() was called too early
+  // Prompts wait their turn: asking for a new response while one is still being generated is
+  // rejected by the API, which used to drop lines when two prompts landed close together
+  // (e.g. "you chose Catalan" straight into the level question).
+  let queue = [];
+  let responding = false;
+  let stuckTimer = null;
+  let pendingSession = null; // a session.update asked for before the channel opened
   const state = { status: "idle", speaking: false, error: null }; // idle | connecting | connected | error
   const emit = () => onState?.({ ...state });
 
@@ -24,7 +30,9 @@ export function createAgent({ onState, onUserTranscript } = {}) {
     pc = null;
     dc = null;
     micStream = null;
-    pendingPrompt = null;
+    queue = [];
+    responding = false;
+    pendingSession = null;
   }
 
   function sendPrompt(text) {
@@ -35,6 +43,15 @@ export function createAgent({ onState, onUserTranscript } = {}) {
       item: { type: "message", role: "system", content: [{ type: "input_text", text }] },
     }));
     dc.send(JSON.stringify({ type: "response.create" }));
+    responding = true;
+    // Safety net: never let a lost response.done silence the agent for the rest of the session.
+    clearTimeout(stuckTimer);
+    stuckTimer = setTimeout(() => { responding = false; flush(); }, 20000);
+  }
+
+  function flush() {
+    if (responding || dc?.readyState !== "open" || !queue.length) return;
+    sendPrompt(queue.shift());
   }
 
   function handleServerEvent(raw) {
@@ -42,6 +59,10 @@ export function createAgent({ onState, onUserTranscript } = {}) {
     try { event = JSON.parse(raw); } catch { return; }
     if (event.type === "conversation.item.input_audio_transcription.completed" && event.transcript?.trim()) {
       onUserTranscript?.(event.transcript.trim());
+    } else if (event.type === "response.done") {
+      clearTimeout(stuckTimer);
+      responding = false;
+      flush();
     } else if (event.type === "output_audio_buffer.started") {
       state.speaking = true;
       emit();
@@ -49,6 +70,8 @@ export function createAgent({ onState, onUserTranscript } = {}) {
       state.speaking = false;
       emit();
     } else if (event.type === "error") {
+      // A rejected response.create leaves nothing in flight; carry on with the queue.
+      if (event.error?.code === "conversation_already_has_active_response") return;
       state.error = event.error?.message || "The voice agent reported an error.";
       emit();
     }
@@ -59,11 +82,13 @@ export function createAgent({ onState, onUserTranscript } = {}) {
    * @param {boolean} [opts.listen=true] Publish the mic and transcribe the learner's speech.
    *   Pass false for playback-only uses (e.g. reading a recipe step aloud) so the browser never
    *   has to ask for microphone permission just to hear something spoken.
-   * @param {string} [opts.context] Which system prompt scripts/openai-realtime-proxy.js should
-   *   use — see its CONTEXTS map. Defaults to the onboarding guide there.
+   * @param {string} [opts.context] "onboarding" (default) or "lesson"; see src/agent-instructions.js.
+   * @param {string} [opts.language] Language id when already known (the lesson page). Locks the
+   *   session to it from the start and tells transcription what to expect.
+   * @param {number} [opts.level] Onboarding-scale level (0 beginner, 1 intermediate, 2 advanced).
    */
   async function connect(opts = {}) {
-    const { listen = true, context } = opts;
+    const { listen = true, context, language, level } = opts;
     if (pc || state.status === "connecting") return state.status === "connected";
     state.status = "connecting";
     state.error = null;
@@ -86,7 +111,8 @@ export function createAgent({ onState, onUserTranscript } = {}) {
       const channel = conn.createDataChannel("oai-events");
       channel.addEventListener("message", (e) => handleServerEvent(e.data));
       channel.addEventListener("open", () => {
-        if (pendingPrompt) { sendPrompt(pendingPrompt); pendingPrompt = null; }
+        if (pendingSession) { channel.send(JSON.stringify(pendingSession)); pendingSession = null; }
+        flush();
       });
 
       conn.onconnectionstatechange = () => {
@@ -96,7 +122,11 @@ export function createAgent({ onState, onUserTranscript } = {}) {
       const offer = await conn.createOffer();
       await conn.setLocalDescription(offer);
 
-      const url = context ? `/api/realtime-session?context=${encodeURIComponent(context)}` : "/api/realtime-session";
+      const params = new URLSearchParams();
+      if (context) params.set("context", context);
+      if (language) params.set("language", language);
+      if (Number.isInteger(level)) params.set("level", String(level));
+      const url = `/api/realtime-session${params.size ? `?${params}` : ""}`;
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/sdp" },
@@ -130,9 +160,33 @@ export function createAgent({ onState, onUserTranscript } = {}) {
 
   /** Tell the agent what's happening and let it speak — see sendPrompt()'s note on the role used. */
   function prompt(text) {
-    if (dc?.readyState === "open") sendPrompt(text);
-    else pendingPrompt = text; // flushed on the data channel's "open" event
+    queue.push(text);
+    flush(); // otherwise sent on the data channel's "open" event, or when the current reply ends
   }
 
-  return { connect, disconnect, prompt };
+  /** Drop lines that have not been spoken yet, e.g. when the screen they belonged to has gone. */
+  function clearQueue() { queue = []; }
+
+  /**
+   * Tighten the live session, e.g. the language lock once the learner has chosen.
+   * `transcriptionLanguage` is an ISO code ("ca") so short spoken answers transcribe well.
+   */
+  function updateSession({ instructions, transcriptionLanguage } = {}) {
+    const session = { type: "realtime" };
+    if (instructions) session.instructions = instructions;
+    // null means "detect it again" (the learner started over and may answer in English).
+    if (transcriptionLanguage !== undefined) {
+      const transcription = { model: "gpt-4o-mini-transcribe" };
+      if (transcriptionLanguage) transcription.language = transcriptionLanguage;
+      session.audio = { input: { transcription } };
+    }
+    const event = { type: "session.update", session };
+    if (dc?.readyState === "open") dc.send(JSON.stringify(event));
+    else pendingSession = event; // sent first thing once the channel opens
+
+  }
+
+  const isConnected = () => state.status === "connected";
+
+  return { connect, disconnect, prompt, clearQueue, updateSession, isConnected };
 }

@@ -61,7 +61,9 @@ export function matchLevel(transcript) {
   const words = said.split(" ");
   let best = null;
   for (const level of LEVELS) {
-    for (const alias of level.aliases) {
+    // The level is asked in English and the target language, so either answer counts.
+    const labels = Object.values(LEVEL_LABEL).map((names) => names[level.id]);
+    for (const alias of [...level.aliases, ...labels]) {
       const a = flatten(alias);
       const hit = a.includes(" ") ? said.includes(a) : words.includes(a);
       if (!hit) continue;

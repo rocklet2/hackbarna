@@ -8,44 +8,35 @@
 // SDP offer here as plain text; this endpoint forwards it to OpenAI's /v1/realtime/calls (signed
 // with the real API key, plus the session config — model, voice, instructions, transcription) and
 // relays back the raw SDP answer. No ephemeral key ever has to reach the browser with this flow.
+import { instructionsFor, languageName } from "../src/agent-instructions.js";
+
 const REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
 
-const ONBOARDING_INSTRUCTIONS = `You are the voice guide for Taula, a language-learning cooking app. Speak in short, warm sentences — one or two at most per turn, like a friendly cooking companion, not a chatbot. The learner is choosing a language, a starting level, a place, and a dish to cook while picking up the language; they can also see cards on screen and tap instead of speaking, so don't over-explain or list every option robotically.
-
-Language you speak in: use English for everything until the learner has told you which language they want to cook in. The moment they choose one, a message will tell you explicitly which language that is — from then on, speak your own guidance and conversation in that language (simple, encouraging, beginner-level phrasing), not English, until told otherwise. Regardless of what language you're currently speaking, whenever a message asks you to say an exact phrase in quotes, say precisely that phrase and nothing else, in whichever language that message specifies — it's reviewed target-language content and must not be paraphrased or translated.
-
-If at any point the learner says or asks — in any language — that they don't understand, are confused, or want English, drop into English for one short clarifying sentence, then go straight back to speaking the chosen language for everything after. Never leave them stuck without understanding what you said.
-
-Once they've also told you their level: at Beginner, add a quick English gloss right after anything you say in the target language, so the words have something to latch onto. At Intermediate or Advanced, stay fully in the target language unless they ask for help.
-
-Personality once a language is chosen: lean into a warm, affectionate flavor of that culture's hospitality — never a mocking impression or exaggerated accent, just genuine character:
-- Catalan: steady, proud, and community-minded, like a market vendor in Barcelona who knows every stall and takes food seriously without ever rushing you.
-- Italian: expressive and warm, generous with enthusiasm about good ingredients ("che bello!"), a little theatrical, but still brief per turn.
-- Portuguese: hospitable and easygoing, quietly warm, makes the learner feel like a welcomed guest at the table.
-
-Be encouraging and supportive — never scold a wrong or unclear answer, just gently ask again. Never claim to certify a language level (no CEFR labels), never invent facts about a dish or its culture, and never comment on food safety from what you hear.`;
-
-const LESSON_INSTRUCTIONS = `You are Taula's cooking companion, helping the learner follow a recipe step by step while they practice a language they're learning. Most of what you say is instructed directly — when a message asks you to say an exact phrase in quotes, say precisely that phrase and nothing else, in whichever language it specifies; it's reviewed recipe and target-language content that must never be paraphrased, translated, or embellished.
-
-You can also hear the learner directly. If they ask you something or seem confused about a word or a step, answer briefly and warmly — in English, unless they're clearly comfortable continuing in the target language. Keep your own remarks short, one or two sentences, like someone helping out in the kitchen, not a chatbot.
-
-Never claim to certify a language level (no CEFR labels), never invent facts about the dish or its culture, and never judge whether food is safe to eat or fully cooked from what you hear — if asked, say to check with a thermometer or a trusted source instead of guessing.`;
-
-const CONTEXTS = {
-  onboarding: ONBOARDING_INSTRUCTIONS,
-  lesson: LESSON_INSTRUCTIONS,
-};
-
-function sessionConfig(context) {
+// The instructions (including the language lock) live in src/agent-instructions.js, shared with
+// the browser so it can tighten them with a session.update once a language and level are chosen.
+// The lesson page knows both up front and passes them here as ?language=ca&level=0.
+//
+// create_response: false means the agent never answers the learner on its own. The app hears
+// the transcript, decides what the answer means (moving screens, grading a quiz) and then tells
+// the agent what to say. This stops the agent talking over screen changes, or judging a quiz
+// answer differently from the app.
+function sessionConfig(params) {
+  const context = params.get("context") === "lesson" ? "lesson" : "onboarding";
+  const language = languageName(params.get("language")) ? params.get("language") : null;
+  const rawLevel = Number(params.get("level"));
+  const level = language && [0, 1, 2].includes(rawLevel) && params.has("level") ? rawLevel : null;
+  const transcription = { model: "gpt-4o-mini-transcribe" };
+  // Knowing the language makes single spoken words (quiz answers) transcribe far better.
+  if (language && level !== null) transcription.language = language;
   return {
     type: "realtime",
     model: "gpt-realtime",
-    instructions: CONTEXTS[context] || ONBOARDING_INSTRUCTIONS,
+    instructions: instructionsFor(context, { language, level }),
     output_modalities: ["audio"],
     audio: {
       input: {
-        transcription: { model: "gpt-4o-mini-transcribe" },
-        turn_detection: { type: "server_vad" },
+        transcription,
+        turn_detection: { type: "server_vad", create_response: false },
       },
       output: { voice: "marin" },
     },
@@ -78,7 +69,7 @@ export function openaiRealtimeProxyPlugin() {
 
       const form = new FormData();
       form.set("sdp", offerSdp);
-      form.set("session", JSON.stringify(sessionConfig(url.searchParams.get("context"))));
+      form.set("session", JSON.stringify(sessionConfig(url.searchParams)));
 
       const upstream = await fetch(REALTIME_CALLS_URL, {
         method: "POST",

@@ -179,3 +179,13 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
   background: rgba(18, 17, 23, .82); padding: 6px 10px; border-radius: 10px;
 }
 .agent-status:empty { display: none; }
+
+/* Advanced learners get no English once their level is set (the agent follows the same rule,
+   see src/agent-instructions.js). Beginners and intermediates keep the English lines. */
+.app[data-level="2"] .ask .en,
+.app[data-level="2"] .bubble .en,
+.app[data-level="2"] .bubble .why,
+.app[data-level="2"] .bubble.ack,
+.app[data-level="2"] .hint,
+.app[data-level="2"] .card .detail,
+.app[data-level="2"] .cta-en { display: none; }

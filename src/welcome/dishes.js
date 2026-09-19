@@ -10,6 +10,7 @@
 // docs/ONBOARDING_JOURNEY.md about the two ranking functions.
 
 import { recipes } from "../data.js";
+import { tokens, overlap } from "../spoken-match.js";
 
 /**
  * How demanding a dish is, as an open-ended score rather than a 0 to 3 band.
@@ -72,4 +73,21 @@ export function dishesFor({ language, cities = [], level = 0, all = recipes }) {
 export function pickForPlan(dishes, plan) {
   const wanted = plan?.dishes || 1;
   return dishes.slice(0, Math.min(wanted, dishes.length));
+}
+
+// Words that do not tell dishes apart ("a la catalana", "amb", "de").
+const FILLER = new Set(["a", "la", "el", "de", "amb", "i", "al", "catalana", "alla", "con", "e", "com", "y", "con"]);
+
+/**
+ * Which of the dishes on screen did the learner just say? Only those dishes can
+ * match, and an answer that fits two of them equally ("catalana") matches none.
+ */
+export function matchDish(transcript, dishes) {
+  const scored = dishes.map((d) => {
+    const key = tokens(d.name).filter((w) => !FILLER.has(w)).join(" ") || d.name;
+    return { d, score: overlap(transcript, key) };
+  }).sort((a, b) => b.score - a.score);
+  if (!scored.length || scored[0].score < 0.5) return null;
+  if (scored[1] && scored[1].score === scored[0].score) return null;
+  return scored[0].d;
 }
