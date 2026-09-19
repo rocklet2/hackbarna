@@ -2,6 +2,12 @@ import "./style.css";
 import { languages, levels, recommend, recipes } from "./data.js";
 import { STORAGE_KEY, freshJourney, readJourneys, restoreJourney, phrases, isWaitStep, waitMomentFor } from "./journey.js";
 
+import { welcomeLessonLevel } from "./learner-profile.js";
+import { challengeFor, stepPassed, submitAnswer } from "./lesson-challenge.js";
+import { translatedStep } from "./lesson-translations.js";
+import { stepDirections } from "./lesson-copy.js";
+import { videoMarkup, requestStepVideo } from "./step-video.js";
+
 const app = document.querySelector("#app");
 const state = {
   journey: freshJourney(),
@@ -43,7 +49,8 @@ function saveProgress() {
 }
 function openRecipe(r) {
   state.recipe = r;
-  state.lessonKey = `${r.id}:${state.level}`;
+  state.level = welcomeLessonLevel(localStorage, r.language, state.level);
+  state.lessonKey = `${r.id}:${state.level}:two-part-v1`;
   state.journey = restoreJourney(lessonStore[state.lessonKey], r);
   state.step = state.journey.step;
   state.checked = state.journey.checked;
@@ -171,32 +178,34 @@ function menu() {
                 .map((w) => w[0])
                 .join(
                   " · ",
-                )}</small></div>${linkButton(`${lessonStore[`${r.id}:${state.level}`]?.completed ? "Completed · revisit" : lessonStore[`${r.id}:${state.level}`] ? "Resume lesson" : "Explore this recipe"} ${icon("arrow")}`, recipePath(r), "recipe", r.id, i === 0 ? "primary" : "secondary")}</div></article>`,
+                )}</small></div>${linkButton(`${lessonStore[`${r.id}:${state.level}:two-part-v1`]?.completed ? "Completed · revisit" : lessonStore[`${r.id}:${state.level}:two-part-v1`] ? "Resume lesson" : "Explore this recipe"} ${icon("arrow")}`, recipePath(r), "recipe", r.id, i === 0 ? "primary" : "secondary")}</div></article>`,
           )
           .join("")}</section>`
       : `<section class="empty-state">${icon("bowl")}<h2>A little too specific for our small menu.</h2><p>We don’t have a sample recipe for that combination yet. Try another preference or explore a different place.</p>${button("Adjust my preferences", "home")}</section>`
   }<section class="progression"><div><span class="eyebrow">LITTLE BY LITTLE, PLATE BY PLATE</span><h2>Your appetite for language grows.</h2><p>Start small. Build confidence. Stay for the stories.</p></div><div class="progression-levels">${levels.map((l, i) => `<div class="${i === state.level ? "current" : ""}"><span class="progression-node">${i === state.level ? icon("leaf") : i + 1}</span><strong>${l.label}</strong><small>${l.minutes} min lessons</small>${i === state.level ? "<em>You’re starting here</em>" : ""}</div>`).join("")}</div></section><p class="center-note">Suggested progression for this prototype. Your selected level is a starting estimate.</p></main>`;
 }
 
+const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 function exercise(r, cookIndex) {
-  const word = r.words[cookIndex % r.words.length];
-  if (state.level > 1)
-    return `<div class="exercise"><span class="eyebrow">${icon("spark")} YOUR TURN TO SAY IT</span><h3>${state.level === 3 ? "Explain the why, not just the what." : "Make the words your own."}</h3><p>${state.level === 3 ? "Describe this technique and explain why you use it. Connect it to a food memory." : `Describe what you just did in ${language().name}. Try using “${word[0]}”.`}</p><textarea aria-label="Your practice sentence" placeholder="Try a sentence here…" rows="3"></textarea>${button("Save my practice", "practice", "secondary")}<div class="exercise-feedback" role="status">${state.answer ? "Practice saved for this step. A future coach could give feedback here." : "Free practice · no automated grading in this preview"}</div></div>`;
-  const prompt =
-    state.level === 0
-      ? `Which word means “${word[1]}”?`
-      : `Complete your ingredient phrase: “${state.language === "it" ? "Aggiungi" : state.language === "pt" ? "Adiciona" : "Afegeix"} ___” (${word[1]})`;
-  return `<div class="exercise"><span class="eyebrow">${icon("spark")} A LITTLE PRACTICE</span><h3>${prompt}</h3><div class="answer-options">${[
-    ...r.words,
-  ]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(
-      ([w]) =>
-        `<button class="answer ${state.answer === w ? (w === word[0] ? "correct" : "incorrect") : ""}" data-action="answer" data-value="${w}" aria-pressed="${state.answer === w}">${w}${state.answer === w ? icon(w === word[0] ? "check" : "reset") : ""}</button>`,
-    )
-    .join(
-      "",
-    )}</div><p class="exercise-feedback" role="status">${state.answer ? (state.answer === word[0] ? `That’s it! ${word[0]} means ${word[1]}.` : "Not quite. Take a peek at your word collection and try again.") : "Take a guess. This is how the words start to stick."}</p></div>`;
+  const challenge = challengeFor(r, cookIndex, state.level);
+  const passed = stepPassed(state.journey, cookIndex);
+  const selected = passed ? challenge.answer : state.answer;
+  const feedback = passed ? `Correct! ${challenge.success}` : state.answer !== null ? "Not quite. Check the guide and try again." : challenge.kind === "write" ? "Type the missing word to continue." : "Choose an answer to continue.";
+  const content = challenge.kind === "write"
+    ? `<p class="quiz-sentence" lang="${state.language}">${escapeHtml(challenge.sentence)}</p><form id="quiz-form"><label for="quiz-answer">Missing word</label><div class="quiz-input-row"><input id="quiz-answer" name="answer" autocomplete="off" autocapitalize="none" spellcheck="false" lang="${state.language}" value="${escapeHtml(selected || '')}" ${passed ? "disabled" : ""} aria-describedby="challenge-feedback" required/><button class="primary" type="submit" ${passed ? "disabled" : ""}>Check answer</button></div></form>`
+    : `<div class="answer-options ${challenge.kind === 'meaning' ? 'sentence-options' : ''}">${challenge.options.map(({value, label}, n) => `<button class="answer ${selected === value ? (passed ? "correct" : "incorrect") : ""}" data-action="answer" data-value="${escapeHtml(value)}" aria-pressed="${selected === value}" aria-describedby="challenge-feedback" ${passed ? "disabled" : ""}><span class="answer-number" aria-hidden="true">${n + 1}</span><span lang="${state.language}">${escapeHtml(label)}</span>${selected === value ? icon(passed ? "check" : "reset") : ""}</button>`).join("")}</div>`;
+  return `<section class="exercise required-challenge ${passed ? "challenge-passed" : ""}" aria-labelledby="challenge-title"><div class="challenge-heading"><span class="eyebrow">${icon("spark")} ${levels[state.level].name.toUpperCase()} · ${language().name.toUpperCase()}</span><span class="challenge-status">${passed ? `${icon("check")} Complete` : "Your turn"}</span></div><h3 id="challenge-title">${challenge.prompt}</h3><p class="quiz-hint" lang="en">${escapeHtml(challenge.hint)}</p>${content}<p id="challenge-feedback" class="exercise-feedback" role="status" aria-live="polite">${escapeHtml(feedback)}</p></section>`;
+}
+function answerQuiz(value) {
+  if (state.journey.phase !== "quiz" || stepPassed(state.journey, state.step)) return;
+  state.answer = value;
+  const correct = submitAnswer(state.journey, state.recipe, state.step, value, state.level);
+  saveProgress();
+  app.querySelector(".required-challenge").outerHTML = exercise(state.recipe, state.step);
+  const next = app.querySelector('[data-action="next"]');
+  next.disabled = !correct;
+  if (correct) { next.removeAttribute("aria-describedby"); next.focus({ preventScroll: true }); }
+  else { (app.querySelector('#quiz-answer') || [...app.querySelectorAll('[data-action="answer"]')].find(el => el.dataset.value === value))?.focus({ preventScroll: true }); }
 }
 
 function lesson() {
@@ -208,16 +217,25 @@ function cookingLesson() {
   const r = state.recipe;
   const i = Math.min(state.step, r.steps.length - 1);
   const s = r.steps[i];
+  const translated = translatedStep(r, i);
+  const quiz = state.journey.phase === "quiz";
   const waitStepsBefore = r.steps.slice(0, i).filter((st) => isWaitStep(st[1])).length;
-  const wait = i > 0 && isWaitStep(s[1]) ? waitMomentFor(r, waitStepsBefore) : null;
-  const sidebar = r.steps.map((st, n) => `<li class="${n === i ? "current" : n < i ? "finished" : ""}"><button data-action="step" data-value="${n}" ${n > i ? "disabled" : ""}><span>${n < i ? icon("check") : String(n + 1).padStart(2, "0")}</span><div><strong>${st[0]}</strong><small>${n === i ? "You are here" : n < i ? "Done" : "Coming up"}</small></div></button></li>`).join("");
-  const timerOrWait =
-    i === 0
-      ? `<div class="gentle-note">${icon("leaf")} No rush. Read it, try it, make it yours.</div>`
-      : wait
-        ? `<div class="story-card"><div class="eyebrow">${icon("sun")} WHILE YOU WAIT</div><h3>${wait.title}</h3><p>${wait.text}</p>${wait.target ? `<p lang="${state.language}">${wait.target}</p>${speakButton(wait.target, state.language)}` : ""}<a href="${wait.source.url}" target="_blank" rel="noreferrer">${wait.source.name} ↗</a></div>`
-        : `<div class="timer-row">${icon("clock")}<span>Practice timer</span><b id="timer">${timerText()}</b>${button(state.timerRunning ? "Pause" : state.timer ? "Resume" : "Start 1 min", "timer", "text-button")}${state.timer ? button("Reset", "timer-reset", "text-button") : ""}</div>`;
-  return `<main class="page lesson-page"><div class="page-topline">${button(`${icon("back")} Back to the menu`, "menu", "text-button")}<span>${icon("pin")} ${state.region} <i>·</i> ${language().name}</span></div><div class="lesson-heading"><div><span class="eyebrow">A LITTLE LANGUAGE, MADE BY YOU</span><h1>${r.name}</h1></div><div class="lesson-heading-meta">${badge(`${icon("clock")} ${r.minutes} min`)}${badge(levels[state.level].name)}</div></div><div class="lesson-layout"><aside class="lesson-sidebar"><span class="eyebrow">YOUR STEPS</span><ol class="steps">${sidebar}</ol><div class="ingredient-box"><h3>${icon("bowl")} On your counter <span>${state.checked.length}/${r.ingredients.length}</span></h3><p>For two curious appetites</p>${r.ingredients.map((ing, k) => `<label class="ingredient ${state.checked.includes(k) ? "checked" : ""}"><input type="checkbox" data-ingredient="${k}" ${state.checked.includes(k) ? "checked" : ""}/><span>${ing}</span></label>`).join("")}</div></aside><section class="lesson-main"><div class="step-progress"><span>STEP ${String(i + 1).padStart(2, "0")} <i>OF ${String(r.steps.length).padStart(2, "0")}</i></span><span>${Math.round((i / r.steps.length) * 100)}% of your lesson</span><div><i style="width:${(i / r.steps.length) * 100}%"></i></div></div><div class="instruction-card"><div class="instruction-top">${badge(`${icon("chef")} In the kitchen`, "soft")}<button class="translation-toggle" data-action="translation" aria-pressed="${state.translation}">English help <span class="switch ${state.translation ? "on" : ""}"></span></button></div><h2>${s[0]}</h2><p class="cooking-instruction">${s[1]}</p><div class="phrase"><span class="eyebrow">A TASTE OF ${language().name.toUpperCase()}</span><div class="phrase-row"><h3 lang="${state.language}">${s[2]}</h3>${speakButton(s[2], state.language)}</div>${state.translation ? `<p>${s[3]}</p>` : button("Reveal meaning", "translation", "text-button")}</div>${timerOrWait}</div>${exercise(r, i)}<div class="step-footer">${button(`${icon("back")} Previous`, "previous", "text-button", i === 0 ? "disabled" : "")}<span>One small step. A little more confidence.</span>${button(`${i === r.steps.length - 1 ? "Finish & see what you learned" : "Next step"} ${icon("arrow")}`, "next")}</div></section></div></main>`;
+  const wait = isWaitStep(s[1]) ? waitMomentFor(r, waitStepsBefore) : null;
+  const sidebar = r.steps.map((st, n) => `<li class="${n === i ? "current" : n < i ? "finished" : ""}"><button data-action="step" data-value="${n}" ${n > i ? "disabled" : ""}><span>${n < i ? icon("check") : String(n + 1).padStart(2, "0")}</span><div><strong lang="${state.language}">${translatedStep(r, n).title}</strong><small>${n === i ? "You are here" : n < i ? "Done" : "Coming up"}</small></div></button></li>`).join("");
+  const story = wait ? `<section class="wait-discovery" aria-label="While you wait"><div class="eyebrow">${icon("sun")} WHILE YOU WAIT · ${language().name.toUpperCase()} CULTURE</div><h3>${wait.title}</h3>${wait.target ? `<p lang="${state.language}">${wait.target.split(/(?<=[.!?])\s+/)[0]}</p>` : ""}<p lang="en" class="${wait.target ? "english-translation" : ""}">${wait.text.split(/(?<=[.!?])\s+/).slice(0, wait.target ? 1 : 2).join(" ")}</p><a href="${wait.source.url}" target="_blank" rel="noreferrer">${wait.source.name} ↗</a></section>` : "";
+  return `<main class="page lesson-page">
+    <div class="page-topline">${button(`${icon("back")} Menu`, "menu", "text-button")}<span>${language().name} <i>·</i> ${levels[state.level].name} <i>·</i> ${r.minutes} min</span></div>
+    <div class="lesson-heading"><h1>${r.name}</h1>${badge(`${i + 1} / ${r.steps.length} steps`)}</div>
+    <div class="lesson-layout">
+      <section class="lesson-main" aria-label="Current recipe step">
+        ${!quiz ? videoMarkup(r, i, stepDirections(r, i)) : ""}
+        <div class="step-progress"><span>STEP ${String(i + 1).padStart(2, "0")} <i>OF ${String(r.steps.length).padStart(2, "0")}</i></span><div><i style="width:${((i + 1) / r.steps.length) * 100}%"></i></div></div>
+        <div class="lesson-phases" aria-label="Lesson stage"><span class="${!quiz ? 'active' : 'done'}">1 · Cook</span><span aria-hidden="true">→</span><span class="${quiz ? 'active' : ''}">2 · Practice</span></div>
+        ${quiz ? exercise(r, i) : `<div class="instruction-card"><div class="phrase-row"><h2 lang="${state.language}">${translated.title}</h2>${speakButton(translated.instruction, state.language)}</div><p class="target-instruction" lang="${state.language}">${translated.instruction}</p><p class="english-translation" lang="en">${stepDirections(r, i).join(" ")}</p></div>${story}`}
+        <div class="step-footer">${button(`${icon("back")} ${quiz ? "Review guide" : "Back"}`, "previous", "text-button", i === 0 && !quiz ? "disabled" : "")}${quiz ? button(`${i === r.steps.length - 1 ? "Finish recipe" : "Next cooking step"} ${icon("arrow")}`, "next", "primary", stepPassed(state.journey, i) ? "" : 'disabled aria-describedby="challenge-feedback"') : button(`Ready to practice ${icon("arrow")}`, "start-quiz")}</div>
+      </section>
+      <aside class="lesson-sidebar"><span class="eyebrow">THE RECIPE</span><ol class="steps">${sidebar}</ol></aside>
+    </div></main>`;
 }
 
 function completion(r) {
@@ -289,6 +307,9 @@ app.addEventListener("click", (event) => {
     value = target.dataset.value;
   let focus = false;
   switch (action) {
+    case "generate-video":
+      requestStepVideo(state.recipe, state.step, stepDirections(state.recipe, state.step));
+      return;
     case "home":
       state.screen = 0;
       resetOnboarding();
@@ -368,47 +389,45 @@ app.addEventListener("click", (event) => {
       break;
     }
     case "restart-lesson":
-      state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};focus=true;break;
+      state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};state.answer=null;focus=true;break;
+    case "start-quiz":
+      state.journey.phase = "quiz";
+      state.answer = null;
+      focus = true;
+      break;
     case "next":
+      if (state.journey.phase !== "quiz") return;
+      if (!stepPassed(state.journey, state.step)) return;
       if (state.step === state.recipe.steps.length - 1) {
         state.completed = true;
         state.journey.completed = true;
       }
       else state.step++;
+      state.journey.phase = "guide";
       state.answer = null;
       stopTimer();
       focus = true;
       break;
     case "previous":
-      state.step = Math.max(0, state.step - 1);
+      if (state.journey.phase === "quiz") state.journey.phase = "guide";
+      else { state.step = Math.max(0, state.step - 1); state.journey.phase = "quiz"; }
       state.answer = null;
       stopTimer();
       focus = true;
       break;
     case "step":
+      if (!Number.isInteger(Number(value)) || Number(value) < 0 || Number(value) > state.step) return;
       state.step = Number(value);
+      state.journey.phase = "guide";
       state.answer = null;
       stopTimer();
       break;
     case "translation":
       state.translation = !state.translation;
       break;
-    case "answer": {
-      state.answer = value;
-      const word = state.recipe.words[state.step % state.recipe.words.length];
-      if (value === word[0]) state.collected.add(state.step);
-      break;
-    }
-    case "practice": {
-      const text = app.querySelector("textarea").value.trim();
-      if (!text) {
-        toast("Try writing a sentence first.");
-        return;
-      }
-      state.answer = text;
-      state.collected.add(state.step);
-      break;
-    }
+    case "answer":
+      answerQuiz(value);
+      return;
     case "timer":
       if (state.timerRunning) state.timerRunning = false;
       else {
@@ -435,6 +454,12 @@ app.addEventListener("click", (event) => {
     );
     same?.focus({ preventScroll: true });
   }
+});
+app.addEventListener("submit", (event) => {
+  if (event.target.id !== "quiz-form") return;
+  event.preventDefault();
+  const answer = new FormData(event.target).get("answer").trim();
+  if (answer) answerQuiz(answer);
 });
 app.addEventListener("input", (event) => {
   if (event.target.matches("textarea"))

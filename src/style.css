@@ -2185,3 +2185,105 @@ h1 em {
 
 .recipe-grid{row-gap:28px}.recipe-card:last-child:nth-child(odd){grid-column:auto}
 @media(max-width:700px){.recipe-card:last-child:nth-child(odd){display:flex}.recipe-card:last-child:nth-child(odd) .recipe-photo{height:200px;min-height:0}}
+
+/* A visual, one-step-at-a-time cooking lesson. */
+.lesson-page { max-width: 1120px; }
+.lesson-page .lesson-heading { margin-bottom: 24px; }
+.lesson-page .lesson-heading h1 { margin: 0; }
+.lesson-page .lesson-layout { grid-template-columns: minmax(0, 1fr) 240px; gap: 36px; }
+.lesson-page .lesson-main { min-width: 0; }
+.step-video { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 20px; background: #1b3022; color: white; }
+.step-video video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.video-shade { position: absolute; inset: 0; background: linear-gradient(0deg, #102619c9, #10261928); }
+.video-invite { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; gap: 16px; }
+.video-kicker { font-size: 10px; font-weight: 700; letter-spacing: 2px; }
+.video-generate { display: flex; align-items: center; gap: 14px; background: var(--paper); border: 0; border-radius: 50px; padding: 12px 23px 12px 12px; font-weight: 600; font-size: 15px; }
+.video-generate > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--lime); color: var(--green); }
+.video-generate:disabled { opacity: 1; }
+.video-invite p { font-size: 12px; margin: 0; max-width: 300px; }
+.video-caption { position: absolute; bottom: 14px; right: 16px; font-size: 10px; color: #fff; pointer-events: none; }
+.step-video:has(video[src]) .video-caption { display: none; }
+.lesson-page .step-progress { margin: 22px 0 18px; }
+.lesson-page .instruction-card { background: transparent; padding: 0; border: 0; box-shadow: none; }
+.lesson-page .instruction-card h2 { margin: 0 0 12px; font-size: 27px; }
+.cooking-directions { padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.65; }
+.cooking-directions li + li { margin-top: 4px; }
+.lesson-page .phrase { margin-top: 22px; padding: 18px 20px; border: 0; border-radius: 14px; background: #edf0e3; }
+.lesson-page .phrase h3 { font-size: 21px; margin: 0; }
+.lesson-page .phrase p { margin: 6px 0 0; font-size: 13px; }
+.lesson-page .step-footer { margin: 22px 0; justify-content: space-between; }
+.lesson-extra { border-top: 1px solid var(--line); }
+.lesson-extra summary, .ingredients-disclosure summary { display: flex; gap: 10px; align-items: center; padding: 18px 0; cursor: pointer; font-size: 13px; font-weight: 600; }
+.lesson-extra summary::after, .ingredients-disclosure summary::after { content: '+'; margin-left: auto; }
+.lesson-extra[open] summary::after, .ingredients-disclosure[open] summary::after { content: '−'; }
+.lesson-extra summary small, .ingredients-disclosure summary span { color: var(--muted); font-size: 11px; font-weight: 400; }
+.lesson-extra .exercise { margin-top: 0; }
+.lesson-extra .story-card { padding: 0 0 20px; line-height: 1.7; }
+.lesson-page .ingredients-disclosure { border-bottom: 1px solid var(--line); margin-bottom: 26px; }
+.lesson-page .ingredient-box { display: block; border: 0; padding: 0 0 20px; }
+.lesson-page .lesson-sidebar > .eyebrow { display: block; }
+.lesson-page .steps { display: block; }
+summary:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .lesson-page .lesson-layout { grid-template-columns: 1fr; gap: 18px; }
+  .lesson-page .lesson-heading { flex-direction: row; align-items: center; gap: 12px; }
+  .lesson-page .lesson-heading h1 { font-size: 28px; }
+  .lesson-page .lesson-heading .badge { white-space: nowrap; font-size: 10px; }
+  .lesson-page .lesson-sidebar { display: block; }
+  .lesson-page .lesson-sidebar > .eyebrow, .lesson-page .steps { display: none; }
+  .step-video { border-radius: 14px; }
+  .video-invite { gap: 10px; padding: 15px; }
+  .video-generate { font-size: 13px; padding: 8px 17px 8px 8px; }
+  .video-generate > span { width: 32px; height: 32px; }
+  .video-caption { font-size: 8px; bottom: 8px; }
+  .video-invite p { font-size: 10px; }
+  .lesson-page .instruction-card h2 { font-size: 24px; }
+  .lesson-page .phrase h3 { font-size: 19px; }
+}
+.video-generate { color: var(--green); }
+
+.lesson-page .target-instruction { font-size: 21px; line-height: 1.6; margin: 12px 0; }
+.lesson-page .english-translation { font-size: 13px; line-height: 1.65; color: #686e61; margin: 8px 0 0; }
+.lesson-page .instruction-card .phrase-row { align-items: flex-start; }
+.lesson-page .instruction-card .phrase-row h2 { margin: 0; }
+.wait-discovery { margin: 24px 0 0; padding: 22px 24px; border-radius: 16px; background: #edf0e3; border-left: 3px solid #a3b879; }
+.wait-discovery .eyebrow { display: flex; align-items: center; gap: 8px; font-size: 10px; }
+.wait-discovery h3 { margin: 12px 0 8px; font-size: 20px; }
+.wait-discovery p { margin: 8px 0; font-size: 15px; line-height: 1.65; }
+.wait-discovery a { display: inline-block; margin-top: 8px; font-size: 11px; color: #59694b; }
+@media (max-width: 760px) {
+  .lesson-page .target-instruction { font-size: 19px; }
+  .lesson-page .lesson-sidebar { display: none; }
+  .wait-discovery { padding: 18px; }
+}
+
+/* Each cooking step ends with a required, self-paced word challenge. */
+.lesson-page .required-challenge { margin: 24px 0 0; padding: 24px; background: var(--paper); border: 2px solid var(--line); border-radius: 18px; }
+.challenge-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.challenge-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.required-challenge .answer-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.required-challenge .answer { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 12px 16px; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 12px; background: white; text-align: left; }
+.required-challenge .answer:hover:not(:disabled) { background: #f2f5e9; border-color: #a3b879; }
+.required-challenge .answer > .icon { margin-left: auto; flex-shrink: 0; }
+.answer-number { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; border: 1px solid currentColor; border-radius: 6px; font-size: 11px; opacity: .55; }
+.required-challenge .answer.correct { background: #e4efcc; border-color: #8eac61; color: #315320; opacity: 1; }
+.required-challenge .answer.incorrect { background: #fff0e7; border-color: #db956b; color: #864d2b; }
+.lesson-page .challenge-passed { border-color: #a3b879; }
+.challenge-passed .exercise-feedback, .challenge-passed .challenge-status { color: #315320; }
+.required-challenge .exercise-feedback { margin-bottom: 0; min-height: 22px; }
+@media (max-width: 480px) {
+  .lesson-page .required-challenge { padding: 18px 16px; }
+  .required-challenge .answer-options { grid-template-columns: 1fr; }
+  .challenge-heading .eyebrow { font-size: 9px; letter-spacing: 1px; }
+}
+
+.lesson-phases { display: flex; align-items: center; gap: 14px; margin: 22px 0; color: var(--muted); font-size: 13px; }
+.lesson-phases .active { color: var(--green); background: var(--lime); padding: 8px 14px; border-radius: 30px; font-weight: 700; }
+.lesson-phases .done { color: var(--green); }
+.required-challenge .sentence-options { grid-template-columns: 1fr; }
+.quiz-hint { font-size: 14px; line-height: 1.6; color: #686e61; margin-bottom: 20px; }
+.required-challenge .quiz-sentence { font-size: 22px; line-height: 1.6; color: var(--green); }
+#quiz-form label { display: block; font-size: 13px; margin-bottom: 8px; }
+.quiz-input-row { display: flex; gap: 12px; }
+#quiz-answer { min-width: 0; width: 100%; border: 2px solid var(--line); border-radius: 10px; padding: 12px; background: white; }
+@media(max-width: 480px) { .quiz-input-row { flex-direction: column; } }

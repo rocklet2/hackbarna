@@ -39,3 +39,9 @@ Photo checks, voice coaching, AI feedback, real learner progress and tutor integ
 Mood photography from Unsplash, stored locally: photo-1482049016688-2d3e1b311543 (toast), photo-1512621776951-a57141f2eefd (vegetables), photo-1509440159596-0249088772ff (bakery), photo-1539037116277-4db20889f2d4 (Barcelona).
 
 DM Sans and Manrope are distributed under the SIL Open Font License; license files are in `public/fonts/`.
+
+## Visual cooking lesson
+
+Recipe pages show a poster and an on-demand animated step video, followed by short cooking directions in the learning language and smaller English translations. Cultural facts appear directly during waiting steps; each step includes a required word-selection challenge. A correct answer unlocks Next step (or Finish recipe), and passed challenges persist on this device. Incorrect answers allow unlimited retries. Ingredients are covered before the recipe and are omitted from the lesson. `src/lesson-copy.js` removes optional prose from the cooking view while preserving the shared recipe content. `src/lesson-translations.js` provides draft Catalan, Italian, and Portuguese instructions and titles for all 107 steps; native-speaker review is pending.
+
+`src/step-video.js` creates silent, captioned clips locally with Canvas and MediaRecorder. These are animated image-and-text guides, not AI-generated cooking demonstrations. Clips are cached per step for the current page session. Posters use the existing inspiration photography. An AI video provider and exact dish photography are not connected.

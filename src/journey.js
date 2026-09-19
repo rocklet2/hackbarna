@@ -1,6 +1,6 @@
 export const STORAGE_KEY = 'taula-journeys-v4';
 export function freshJourney() {
-  return { step: 0, checked: [], drafts: {}, completed: false };
+  return { step: 0, checked: [], drafts: {}, completed: false, passedSteps: [], phase: "guide" };
 }
 export function readJourneys(storage) {
   try {
@@ -12,6 +12,8 @@ export function restoreJourney(value, recipe) {
   const j = freshJourney();
   if (!value || typeof value !== 'object') return j;
   j.completed = value.completed === true;
+  j.phase = value.phase === "quiz" ? "quiz" : "guide";
+  j.passedSteps = Array.isArray(value.passedSteps) ? [...new Set(value.passedSteps.filter(n => Number.isInteger(n) && n >= 0 && n < recipe.steps.length))] : [];
   j.step = Number.isInteger(value.step) ? Math.max(0,Math.min(recipe.steps.length-1,value.step)) : 0;
   j.checked = Array.isArray(value.checked) ? [...new Set(value.checked.filter(n=>Number.isInteger(n)&&n>=0&&n<recipe.ingredients.length))] : [];
   if(value.drafts && typeof value.drafts==='object') for(const [key,text] of Object.entries(value.drafts)) if(/^\d+$/.test(key)&&typeof text==='string') j.drafts[key]=text.slice(0,5000);
@@ -57,7 +59,8 @@ export function askPhraseFor(language, ingredient, words, index = 0) {
 // A step counts as "waiting" when there's genuine idle time — the moment to
 // read something instead of standing over the pan.
 export function isWaitStep(guidance) {
-  return /\b(wait|rest|chill|cool|bake|simmer|boil|infuse|marinate|freeze|prove|rise|roast)\b/i.test(guidance);
+  const directions = guidance.replace(/do not (?:let it )?boil/gi, '');
+  return /\b(wait|rest|chill|cool|bake|simmer|boil|infuse|marinate|freeze|prove|rise|roast|soak)\b|let stand|wrap .* minutes/i.test(directions);
 }
 export function waitMomentFor(r, index) {
   const moments = [];
