@@ -91,3 +91,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .note { background: var(--lime); border-radius: 14px; padding: 12px 14px; font-size: 14px; margin-top: 14px; }
 .note b { display: block; margin-bottom: 2px; }
 .soon-msg { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; margin-top: 12px; }
+
+.card .detail { color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.35; }
+.summary-rows { margin-top: 8px; }
+.summary-rows .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.summary-rows .row span { color: var(--muted); font-size: 14px; }
+.summary-rows .row b { font-size: 16px; }

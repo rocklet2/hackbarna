@@ -8,9 +8,17 @@ import { SUPPORTED, COMING_SOON, matchLanguage, extractName, greetingFor, byId }
 import {
   turnsFor, acknowledgementsFor, gradeReply, estimateLevel, shouldStopEarly, LEVEL_NAMES,
 } from "./levelcheck.js";
+import {
+  placesFor, placeById, matchPlace, placeQuestionFor,
+  PLANS, planById, matchPlan, planQuestionFor,
+} from "./places.js";
 
 const app = document.querySelector("#app");
-const state = { step: "language", language: null, name: null, turn: 0, grades: [], thread: [] };
+const state = {
+  step: "language", language: null, name: null,
+  turn: 0, grades: [], thread: [],
+  level: null, place: null, plan: null,
+};
 
 /* ---------- remembering the learner ---------- */
 // The level check runs on the first visit only, so it has to survive a reload.
@@ -339,7 +347,8 @@ function submitReply(text, shown = text) {
 
 function finishCheck() {
   const { level, reason } = estimateLevel(state.grades);
-  state.step = "done";
+  state.level = level;
+  state.step = "result";
   saveProfile({ level });
   renderResult(level, reason);
 }
@@ -357,10 +366,179 @@ function renderResult(level, reason) {
       It sets where your first lesson starts, and it moves as you cook.
       It is not a CEFR level.
     </div>
+    <div class="mic-row">
+      <button class="mic" id="next">Continue</button>
+    </div>
+    <button class="say" id="again">Start over</button>
+  </div>`);
+  el("next").onclick = startPlace;
+  el("again").onclick = restart;
+  setTimeout(() => say(greetingFor(state.language, state.name), lang.voice), 250);
+}
+
+/* ---------- step 3: where would you like to cook ---------- */
+function startPlace() {
+  state.step = "place";
+  renderPlace();
+}
+
+function renderPlace(message = "", listening = false) {
+  const lang = byId(state.language);
+  const q = placeQuestionFor(state.language);
+  const card = (p) => `<button class="card ${p.ready ? "" : "soon"}" data-place="${p.id}"
+      aria-pressed="${state.place === p.id}">
+      <span class="mark">${p.ready ? "◆" : "◇"}</span>
+      <span class="name">${esc(p.name)}</span>
+      <span class="endonym">${esc(p.country)} · ${esc(p.endonym)}</span>
+      <span class="detail">${esc(p.detail)}</span></button>`;
+
+  app.innerHTML = chrome(`<div class="stage">
+    <h1 class="ask">
+      <span class="target">${esc(q.target)}</span>
+      <span class="en">${esc(q.en)}</span>
+    </h1>
+    <p class="hint">Say a place, or pick one. You are travelling with the language.</p>
+    <div class="mic-row">
+      <button class="mic ${listening ? "rec" : ""}" id="mic">🎙️ <span id="micLabel">${
+        listening ? "Listening… tap to stop" : "Tap and say a place"
+      }</span></button>
+      <div class="heard" id="heard"></div>
+    </div>
+    <div id="msg">${message}</div>
+    <div class="cards" style="grid-template-columns:1fr">
+      ${placesFor(state.language).map(card).join("")}
+    </div>
+  </div>`);
+
+  el("mic").onclick = () => togglePlaceMic();
+  app.querySelectorAll("[data-place]").forEach((b) => {
+    b.onclick = () => choosePlace(b.dataset.place);
+  });
+  if (!SR) el("heard").textContent = "Voice is not available here, so pick a place.";
+  setTimeout(() => say(q.target, lang.voice), 250);
+}
+
+function togglePlaceMic() {
+  if (recActive) { stopListening(); return; }
+  speechSynthesis?.cancel?.();
+  const started = listen({
+    lang: byId(state.language).speech,
+    onText: (t) => { const h = el("heard"); if (h) h.textContent = t; },
+    onDone: (text, err) => {
+      renderPlace("", false);
+      if (err === "blocked") { el("heard").textContent = "Microphone blocked. Pick a place below."; return; }
+      if (!text) { el("heard").textContent = "I did not catch that. Try again, or pick one."; return; }
+      const place = matchPlace(text, state.language);
+      if (!place) { el("heard").textContent = `I heard “${text}”, but I could not place it.`; return; }
+      choosePlace(place.id);
+    },
+  });
+  if (!started) { el("heard").textContent = "Voice did not start. Pick a place below."; return; }
+  renderPlace("", true);
+}
+
+function choosePlace(id) {
+  const place = placeById(state.language, id);
+  if (!place) return;
+  stopListening();
+  if (!place.ready) {
+    // Same rule as an unsupported language: say so rather than pretend.
+    renderPlace(`<div class="soon-msg"><b>${esc(place.name)} is not ready yet.</b>
+      Catalan is cooked there, but we have no dishes for it, and the culture notes
+      we do have are sourced from ${esc(placesFor(state.language)[0].name)}.
+      We would rather say so than serve you the wrong region's recipes.</div>`);
+    return;
+  }
+  state.place = id;
+  saveProfile({ level: state.level, place: id, cities: place.cities });
+  startPlan();
+}
+
+/* ---------- step 4: what are you planning ---------- */
+function startPlan() {
+  state.step = "plan";
+  renderPlan();
+}
+
+function renderPlan(listening = false) {
+  const lang = byId(state.language);
+  const q = planQuestionFor(state.language);
+  const card = (p) => `<button class="card" data-plan="${p.id}" aria-pressed="${state.plan === p.id}">
+      <span class="mark">${p.id === "today" ? "●" : "●●●"}</span>
+      <span class="name">${esc(p.name)}</span>
+      <span class="detail">${esc(p.detail)}</span></button>`;
+
+  app.innerHTML = chrome(`<div class="stage">
+    <h1 class="ask">
+      <span class="target">${esc(q.target)}</span>
+      <span class="en">${esc(q.en)}</span>
+    </h1>
+    <p class="hint">Tell me what you are actually trying to do.</p>
+    <div class="mic-row">
+      <button class="mic ${listening ? "rec" : ""}" id="mic">🎙️ <span id="micLabel">${
+        listening ? "Listening… tap to stop" : "Tap and answer"
+      }</span></button>
+      <div class="heard" id="heard"></div>
+    </div>
+    <div class="cards" style="grid-template-columns:1fr">${PLANS.map(card).join("")}</div>
+  </div>`);
+
+  el("mic").onclick = togglePlanMic;
+  app.querySelectorAll("[data-plan]").forEach((b) => {
+    b.onclick = () => choosePlan(b.dataset.plan);
+  });
+  if (!SR) el("heard").textContent = "Voice is not available here, so pick one.";
+  setTimeout(() => say(q.target, lang.voice), 250);
+}
+
+function togglePlanMic() {
+  if (recActive) { stopListening(); return; }
+  speechSynthesis?.cancel?.();
+  const started = listen({
+    lang: byId(state.language).speech,
+    onText: (t) => { const h = el("heard"); if (h) h.textContent = t; },
+    onDone: (text, err) => {
+      renderPlan(false);
+      if (err === "blocked") { el("heard").textContent = "Microphone blocked. Pick one below."; return; }
+      if (!text) { el("heard").textContent = "I did not catch that. Try again, or pick one."; return; }
+      const plan = matchPlan(text);
+      if (!plan) { el("heard").textContent = `I heard “${text}”. Today, or the week?`; return; }
+      choosePlan(plan.id);
+    },
+  });
+  if (!started) { el("heard").textContent = "Voice did not start. Pick one below."; return; }
+  renderPlan(true);
+}
+
+function choosePlan(id) {
+  const plan = planById(id);
+  if (!plan) return;
+  stopListening();
+  state.plan = id;
+  state.step = "done";
+  saveProfile({
+    level: state.level, place: state.place,
+    cities: placeById(state.language, state.place)?.cities || [], plan: id,
+  });
+  renderSummary();
+}
+
+function renderSummary() {
+  const lang = byId(state.language);
+  const place = placeById(state.language, state.place);
+  const plan = planById(state.plan);
+  app.innerHTML = chrome(`<div class="stage">
+    <h1 class="ask">Ready, ${esc(state.name)}.</h1>
+    <div class="summary-rows">
+      <div class="row"><span>Language</span><b>${esc(lang.name)}</b></div>
+      <div class="row"><span>Starting point</span><b>${esc(LEVEL_NAMES[state.level])}</b></div>
+      <div class="row"><span>Cooking in</span><b>${esc(place.name)}</b></div>
+      <div class="row"><span>Planning</span><b>${esc(plan.name)}</b></div>
+    </div>
     <div class="note" style="background:var(--paper);border:1px solid var(--line)">
-      <b>Next: steps 3 to 6</b>
-      Where you would like to cook, what you are planning, the dish, then shop and connect.
-      Not built yet: continue in the existing app.
+      <b>Next: steps 5 and 6</b>
+      Choosing the ${plan.dishes === 1 ? "dish" : `${plan.dishes} dishes`}, then shop and connect.
+      Not built yet: the recipe app has the dishes for ${esc(place.name)}.
     </div>
     <div class="mic-row">
       <a class="mic" href="/" style="text-decoration:none">Open the recipe app</a>
@@ -368,7 +546,6 @@ function renderResult(level, reason) {
     <button class="say" id="again">Start over</button>
   </div>`);
   el("again").onclick = restart;
-  setTimeout(() => say(greetingFor(state.language, state.name), lang.voice), 250);
 }
 
 /** The "let me just pick" escape hatch, so nobody is trapped in a conversation. */
@@ -394,7 +571,8 @@ function renderPicker() {
 
 function restart() {
   try { localStorage.removeItem(STORE); } catch {}
-  Object.assign(state, { step: "language", language: null, name: null, turn: 0, grades: [], thread: [] });
+  Object.assign(state, { step: "language", language: null, name: null, turn: 0, grades: [],
+    thread: [], level: null, place: null, plan: null });
   renderLanguage();
 }
 
@@ -405,13 +583,15 @@ function renderWelcomeBack(profile) {
     <div class="hello">${esc(greetingFor(profile.language, profile.name))}</div>
     <div class="sub">Starting point: ${esc(LEVEL_NAMES[profile.level])} in ${esc(lang.name)}.
       We only ask those questions once.</div>
-    <a class="next" href="/" style="text-decoration:none;display:inline-flex;align-items:center">Open the recipe app</a>
+    <button class="next" id="go">Continue</button>
     <button class="say" id="again" style="align-self:center">Start over</button>
   </div>`);
+  // Place and plan are per-session questions, so a returning learner still answers those.
+  el("go").onclick = () => { state.level = profile.level; startPlace(); };
   el("again").onclick = restart;
   setTimeout(() => say(greetingFor(profile.language, profile.name), lang.voice), 300);
 }
 
 const saved = loadProfile();
-if (saved) renderWelcomeBack(saved);
+if (saved) { state.language = saved.language; state.name = saved.name; renderWelcomeBack(saved); }
 else renderLanguage();
