@@ -84,13 +84,16 @@ function paintMicBar() {
 /* ---------- small helpers ---------- */
 const el = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const chrome = (inner) => `<div class="app"><div><div class="brand">taula<b>*</b></div>
+// Each screen is one brand colour block (see BRAND.md); the other colour is its accent.
+const TONES = { start: "pink", language: "mint", level: "pink", place: "mint", dishes: "pink", shop: "mint", done: "pink" };
+const chrome = (inner, tone = TONES[state.step] || "pink") => `<div class="app" data-tone="${tone}"><div><div class="brand">taula<b>*</b></div>
   </div>${inner}</div>`;
 
 /* ---------- step 1: which language ---------- */
 const QUESTION = "Which language would you like to cook in?";
 
 function renderLanguage(message = "") {
+  state.step = "language";
   const card = (l, soon) => `<button class="card ${soon ? "soon" : ""}" data-lang="${l.id}"
       aria-pressed="${state.language === l.id}">
       <span class="mark">${l.mark}</span><span class="name">${esc(l.name)}</span>
@@ -520,6 +523,7 @@ function restart() {
 
 /** A returning learner is not asked again: the check is a first-visit thing. */
 function renderWelcomeBack(profile) {
+  state.step = "start";
   const lang = byId(profile.language);
   mic.listenFor(null);
   app.innerHTML = chrome(`<div class="greet">
@@ -561,6 +565,7 @@ function startHellos() {
 }
 
 function renderStart() {
+  state.step = "start";
   const saved = loadProfile();
   app.innerHTML = chrome(`<div class="greet">
     <div class="hello-cycle" id="hellocycle" aria-hidden="true"><span class="still">Hello</span></div>
