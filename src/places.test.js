@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { recipes } from "./data.js";
 import {
   placesFor, matchPlace, matchPlan, PLANS, placeById, planById,
-  placeQuestionFor,
+  placeQuestionFor, tonightFor,
 } from "./welcome/places.js";
 
 test("a place is only offered as ready when recipes exist for its cities", () => {
@@ -21,30 +21,33 @@ test("a place is only offered as ready when recipes exist for its cities", () =>
   }
 });
 
-test("Pays Catalan is shown but honestly marked as not ready", () => {
-  const pays = placeById("ca", "pays-catalan");
-  assert.ok(pays, "it is still offered, because Catalan is spoken there");
-  assert.equal(pays.ready, false, "we have no dishes for it yet");
-  assert.equal(placeById("ca", "catalonia").ready, true);
+test("Catalan places are Catalan towns with their own dishes, and France is not offered", () => {
+  const ids = placesFor("ca").map((p) => p.id);
+  assert.deepEqual(ids, ["barcelona", "girona", "valls", "tarragona", "lleida"]);
+  assert.equal(placeById("ca", "pays-catalan"), null, "we have no recipes for the French side");
+  for (const p of placesFor("ca")) assert.equal(p.country, "Spain");
+});
+
+test("every Catalan town offers at least two dishes", () => {
+  for (const place of placesFor("ca")) {
+    const dishes = recipes.filter((r) => r.language === "ca" &&
+      (!r.regions?.length || r.regions.some((c) => place.cities.includes(c))));
+    assert.ok(dishes.length >= 2, `${place.name} has ${dishes.length} dishes`);
+  }
 });
 
 test("matchPlace hears a place in a spoken answer", () => {
-  assert.equal(matchPlace("Catalonia", "ca").id, "catalonia");
-  assert.equal(matchPlace("I'd like to cook in Barcelona", "ca").id, "catalonia");
-  assert.equal(matchPlace("Catalunya", "ca").id, "catalonia");
+  assert.equal(matchPlace("Girona", "ca").id, "girona");
+  assert.equal(matchPlace("I'd like to cook in Barcelona", "ca").id, "barcelona");
+  assert.equal(matchPlace("calcots", "ca").id, "valls");
   assert.equal(matchPlace("bologna", "it").id, "emilia-romagna");
   assert.equal(matchPlace("brazil", "pt").id, "brazil");
 });
 
-test("matchPlace returns a place we cannot teach, so we can say so", () => {
-  // Silently ignoring it would look broken; we need to answer honestly instead.
-  const p = matchPlace("the french side", "ca") || matchPlace("perpignan", "ca");
-  assert.equal(p.id, "pays-catalan");
-  assert.equal(p.ready, false);
-});
-
-test("a longer place name beats a shorter one inside it", () => {
-  assert.equal(matchPlace("northern catalonia", "ca").id, "pays-catalan");
+test("the dish screen heading is in the language being learned", () => {
+  assert.equal(tonightFor("ca", placeById("ca", "girona")).target, "Aquesta nit, a Girona");
+  assert.equal(tonightFor("ca", placeById("ca", "girona")).en, "Tonight, in Girona");
+  assert.match(tonightFor("it", placeById("it", "lazio")).target, /^Stasera/);
 });
 
 test("matchPlace returns null when no place was named", () => {

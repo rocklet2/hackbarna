@@ -15,19 +15,45 @@ export const PLACE_QUESTION = {
   pt: { target: "Onde gostarias de cozinhar hoje?", en: "Where would you like to cook today?" },
 };
 
+/** The dish screen heading, in the language being learned. */
+const TONIGHT = {
+  ca: (place) => ({ target: `Aquesta nit, a ${place.endonym}`, en: `Tonight, in ${place.name}` }),
+  it: (place) => ({ target: `Stasera, in ${place.endonym}`, en: `Tonight, in ${place.name}` }),
+  pt: (place) => ({ target: `Esta noite · ${place.endonym}`, en: `Tonight, in ${place.name}` }),
+};
+export const tonightFor = (languageId, place) => (TONIGHT[languageId] || TONIGHT.ca)(place);
+
 const PLACES = {
   ca: [
     {
-      id: "catalonia", name: "Catalonia", country: "Spain", endonym: "Catalunya",
-      detail: "Barcelona, Girona and Tarragona. Market vegetables, bread and tomato, autumn sweets.",
-      cities: ["Barcelona, ES", "Girona, ES", "Tarragona, ES"], ready: true,
-      aliases: ["catalonia", "catalunya", "cataluna", "spain", "barcelona", "girona", "tarragona"],
+      id: "barcelona", name: "Barcelona", country: "Spain", endonym: "Barcelona",
+      detail: "Market stalls and a sweet tooth. Tomato bread, spinach with raisins, crema catalana.",
+      cities: ["Barcelona, ES"], ready: true,
+      aliases: ["barcelona", "bcn", "catalonia", "catalunya", "cataluna", "spain"],
     },
     {
-      id: "pays-catalan", name: "Pays Catalan", country: "France", endonym: "Catalunya Nord",
-      detail: "Perpignan and the Roussillon, where Catalan is cooked on the French side of the border.",
-      cities: [], ready: false,
-      aliases: ["pays catalan", "france", "french", "perpignan", "roussillon", "northern catalonia", "catalunya nord"],
+      id: "girona", name: "Girona", country: "Spain", endonym: "Girona",
+      detail: "Old-town Girona and the north. Tomato bread, beans and slow vegetable stews.",
+      cities: ["Girona, ES"], ready: true,
+      aliases: ["girona", "gerona", "empordà", "emporda"],
+    },
+    {
+      id: "valls", name: "Valls", country: "Spain", endonym: "Valls",
+      detail: "The home of the calçot: sweet onions charred on the fire and dipped in romesco.",
+      cities: ["Valls, ES"], ready: true,
+      aliases: ["valls", "alt camp", "calcots", "calcot"],
+    },
+    {
+      id: "tarragona", name: "Tarragona", country: "Spain", endonym: "Tarragona",
+      detail: "The Roman coast and romesco country. Roasted vegetables, nuts and autumn sweets.",
+      cities: ["Tarragona, ES"], ready: true,
+      aliases: ["tarragona", "tarraco", "romesco"],
+    },
+    {
+      id: "lleida", name: "Lleida", country: "Spain", endonym: "Lleida",
+      detail: "Orchard country inland. Vegetable coca baked flat and shared.",
+      cities: ["Lleida, ES"], ready: true,
+      aliases: ["lleida", "lerida", "ponent"],
     },
   ],
   it: [

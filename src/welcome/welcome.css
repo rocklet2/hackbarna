@@ -122,3 +122,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .micbar.gone { display: none; }
 .bubble.hello { background: var(--lime); border-color: var(--lime); }
 .bubble.hello .target { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+
+/* First screen: greetings that fade through languages, one at a time. */
+.hello-cycle { height: 64px; display: flex; align-items: center; justify-content: center; color: var(--green); font-size: 48px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+.hello-cycle span { animation: hellofade 2s ease-in-out both; }
+.hello-cycle span.still { animation: none; }
+@keyframes hellofade { 0% { opacity: 0; transform: translateY(8px); } 18%, 78% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-8px); } }

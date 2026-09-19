@@ -11,7 +11,7 @@ import "./welcome.css";
 import { SUPPORTED, COMING_SOON, matchLanguage, greetingFor, byId } from "./catalogue.js";
 import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor } from "./levelcheck.js";
 import {
-  placesFor, placeById, matchPlace, placeQuestionFor,
+  placesFor, placeById, matchPlace, placeQuestionFor, tonightFor,
   PLANS, planById, matchPlan,
 } from "./places.js";
 import { dishesFor, pickForPlan, complexityLabel, nextOptions } from "./dishes.js";
@@ -147,31 +147,21 @@ function chooseLanguage(id) {
   startCheck();
 }
 
-/* ---------- step 2a and 2b: greeting, then pick a starting point ---------- */
-/**
- * The greeting opens the conversation and the level question sits right under
- * it, on one screen. The spoken assessment that used to live here was cut as
- * too complicated for the demo; see levelcheck.js.
- */
+/* ---------- step 2: pick a starting point ---------- */
+/** The greeting now lives on the first screen. The spoken assessment was cut; see levelcheck.js. */
 function startCheck() {
   state.step = "level";
   const lang = byId(state.language);
   renderLevel();
-  const hello = greetingFor(state.language);
   const q = levelQuestionFor(state.language);
-  say(hello, lang.voice, () => setTimeout(() => say(q.target, lang.voice), 450));
+  setTimeout(() => say(q.target, lang.voice), 250);
 }
 
 function renderLevel() {
   const lang = byId(state.language);
   const q = levelQuestionFor(state.language);
-  const hello = greetingFor(state.language);
 
   app.innerHTML = chrome(`<div class="stage">
-    <div class="bubble coach hello" style="align-self:flex-start;margin-bottom:18px">
-      <div class="target">${esc(hello)}</div>
-      <div class="en">Hello, in ${esc(lang.name)}.</div>
-    </div>
     <h1 class="ask">
       <span class="target">${esc(q.target)}</span>
       <span class="en">${esc(q.en)}</span>
@@ -286,30 +276,36 @@ function renderDishes(ranked) {
   }
 
   const many = chosen.length > 1;
-  const card = (r) => `<div class="card" style="cursor:default">
+  const tonight = tonightFor(state.language, place);
+  const card = (r) => `<button class="card" data-dish="${esc(r.id)}" aria-pressed="${chosen.includes(r)}">
       <span class="name">${esc(r.name)}</span>
       <span class="endonym">${esc(complexityLabel(r))}</span>
       <span class="detail">${esc(r.description)}</span>
       <span class="words">${r.words.slice(0, 4).map((w) => esc(w[0])).join(" · ")}</span>
-    </div>`;
-  // Offer one alternative, but only for a single dish: "instead" is ambiguous
-  // when three are listed, and swapping should not silently collapse a week.
-  const spare = many ? null : ranked.find((r) => !chosen.includes(r));
+    </button>`;
+  // One day means one dish: show a short menu and let the learner pick.
+  const menu = many ? chosen : ranked.slice(0, 4);
 
   app.innerHTML = chrome(`<div class="stage">
-    <h1 class="ask">${many ? `Your week in ${esc(place.name)}` : `Tonight, in ${esc(place.name)}`}</h1>
+    <h1 class="ask">${many ? `Your week in ${esc(place.name)}` : `
+      <span class="target">${esc(tonight.target)}</span>
+      <span class="en">${esc(tonight.en)}</span>`}</h1>
     <p class="hint">${many
       ? `${chosen.length} dishes, one shopping trip, chosen for ${esc(LEVEL_NAMES[state.level])}.`
-      : `Chosen for ${esc(LEVEL_NAMES[state.level])}: ${esc(complexityLabel(chosen[0]))}.`}</p>
-    <div class="cards" style="grid-template-columns:1fr">${chosen.map(card).join("")}</div>
-    ${spare ? `<button class="say" id="swap">Rather cook ${esc(spare.name)} instead</button>` : ""}
+      : `Pick one. The first is our suggestion for ${esc(LEVEL_NAMES[state.level])}.`}</p>
+    <div class="cards" style="grid-template-columns:1fr">${menu.map(card).join("")}</div>
     <div class="mic-row" style="gap:10px">
       ${nextOptions(chosen.length).map((o) => `<button class="mic ${o.id === "shop" ? "" : "alt"}"
         data-next="${o.id}">${esc(o.name)}</button>`).join("")}
     </div>
   </div>`);
 
-  if (spare) el("swap").onclick = () => { state.dishes = [spare]; renderDishes(ranked); };
+  app.querySelectorAll("[data-dish]").forEach((b) => {
+    b.onclick = () => {
+      state.dishes = [ranked.find((r) => r.id === b.dataset.dish)];
+      renderDishes(ranked);
+    };
+  });
   app.querySelectorAll("[data-next]").forEach((b) => {
     b.onclick = () => (b.dataset.next === "shop" ? startShop() : renderHandoff("cook"));
   });
@@ -452,9 +448,30 @@ function renderWelcomeBack(profile) {
  * It is also the natural "begin" moment, so it costs the learner nothing that
  * a tap-to-talk button on every screen would not have cost them anyway.
  */
+const HELLOS = ["Hello", "Hola", "Ciao", "Olá", "Bonjour", "Hallo", "Γεια σου", "Merhaba", "こんにちは", "مرحبا"];
+let helloTimer = null;
+function stopHellos() { clearInterval(helloTimer); helloTimer = null; }
+
+/** Apple-style: one greeting at a time, fading through languages. Static if motion is reduced. */
+function startHellos() {
+  const box = el("hellocycle");
+  if (!box || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+  let i = 0;
+  const show = () => {
+    const span = document.createElement("span");
+    span.textContent = HELLOS[i % HELLOS.length];
+    box.replaceChildren(span);
+    i += 1;
+  };
+  show();
+  stopHellos();
+  helloTimer = setInterval(show, 2000);
+}
+
 function renderStart() {
   const saved = loadProfile();
   app.innerHTML = chrome(`<div class="greet">
+    <div class="hello-cycle" id="hellocycle" aria-hidden="true"><span class="still">Hello</span></div>
     <div class="hello">Cook. Talk. Learn.</div>
     <div class="sub">Pick a place, cook its food, and pick up the language while you do.</div>
     <button class="next" id="begin">${saved ? "Welcome back" : "Begin"}</button>
@@ -463,7 +480,9 @@ function renderStart() {
       : "This browser has no speech recognition, so you will tap and type. Everything still works."}</div>
   </div>`);
   paintMicBar();
+  startHellos();
   el("begin").onclick = () => {
+    stopHellos();
     mic.start();                    // must happen inside the gesture
     if (saved) { state.language = saved.language; renderWelcomeBack(saved); }
     else renderLanguage();

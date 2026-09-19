@@ -1,5 +1,4 @@
 // Internal prototype recipes: cooking and language content awaiting editorial review.
-const ca = ['Barcelona, ES', 'Girona, ES', 'Tarragona, ES'];
 const it = ['Milan, IT', 'Roma, IT', 'Bologna, IT'];
 const pt = ['Porto, PT', 'Lisbon, PT'];
 function dish(id, language, name, minLevel, minutes, regions, ingredients, words, directions, tags = ['vegetarian'], image = 'vegetables') {
@@ -10,18 +9,30 @@ function dish(id, language, name, minLevel, minutes, regions, ingredients, words
   };
 }
 export const moreRecipes = [
-  dish('coca', 'ca', 'Coca de verdures', 1, 45, ca,
+  dish('coca', 'ca', 'Coca de verdures', 1, 45, ['Lleida, ES', 'Barcelona, ES'],
     ['250 g ready-made bread dough', '1 red pepper', '1 onion', '1 courgette', '2 tbsp olive oil', 'Salt'],
     [['massa','dough'],['pebrot','pepper'],['ceba','onion'],['carbassó','courgette']],
     [['Prepare the vegetables','Thinly slice the pepper, onion and courgette. Heat the oven to 220°C.'],['Stretch the dough','Stretch the dough onto an oiled baking tray. Leave a small edge.'],['Arrange the colors','Top with the vegetables, drizzle with oil and sprinkle with salt.'],['Bake and share','Bake for 20–25 minutes until the base is cooked and the vegetables are tender. Cut into portions.']], ['vegan'], 'bakery'),
-  dish('mongetes', 'ca', 'Mongetes amb all', 0, 15, ca,
+  dish('mongetes', 'ca', 'Mongetes amb all', 0, 15, ['Girona, ES', 'Barcelona, ES'],
     ['400 g cooked white beans, drained', '2 garlic cloves', '1 tbsp olive oil', 'Parsley', 'Salt'],
     [['mongetes','beans'],['all','garlic'],['julivert','parsley'],['oli','oil']],
     [['Gather your ingredients','Drain and rinse the cooked beans. Finely chop the garlic and parsley.'],['Warm the garlic','Gently warm garlic in olive oil for a minute without browning it.'],['Add the beans','Stir in the beans and warm through for 5 minutes. Add a splash of water if needed.'],['Finish with parsley','Season and sprinkle with parsley. Describe the ingredients on your plate.']], ['vegan','gluten-free']),
-  dish('crema', 'ca', 'Crema catalana', 2, 55, ca,
+  dish('crema', 'ca', 'Crema catalana', 2, 55, ['Barcelona, ES', 'Girona, ES', 'Lleida, ES'],
     ['500 ml milk', '4 egg yolks', '80 g sugar, plus topping', '20 g cornflour', 'Lemon peel', '1 cinnamon stick'],
     [['llet','milk'],['sucre','sugar'],['llimona','lemon'],['canyella','cinnamon']],
     [['Infuse the milk','Warm the milk with lemon peel and cinnamon. Remove from heat and infuse for 10 minutes.'],['Mix the base','Whisk egg yolks, sugar and cornflour. Slowly whisk in the strained warm milk.'],['Thicken gently','Return to low heat and stir continuously until thickened. Do not let it boil.'],['Chill the custard','Pour into heatproof ramekins and refrigerate until cold, at least 2 hours. This is extra chilling time beyond the active lesson.'],['Make a crisp top','Sprinkle a thin layer of sugar on each chilled custard. Caramelize carefully with a kitchen torch following its instructions.']], ['vegetarian','gluten-free'], 'bakery'),
+  dish('espinacs', 'ca', 'Espinacs a la catalana', 0, 20, ['Barcelona, ES'],
+    ['400 g fresh spinach', '30 g raisins', '30 g pine nuts', '2 garlic cloves', '2 tbsp olive oil', 'Salt'],
+    [['espinacs','spinach'],['panses','raisins'],['pinyons','pine nuts'],['all','garlic']],
+    [['Prepare everything','Wash the spinach. Soak the raisins in warm water for 10 minutes and slice the garlic.'],['Toast the pine nuts','Toast the pine nuts in a dry pan for a minute until golden, then set them aside.'],['Wilt the spinach','Warm the oil with the garlic, add the spinach and cook until it has wilted.'],['Add the raisins and serve','Stir in the drained raisins and pine nuts, season with salt and serve warm.']], ['vegan','gluten-free']),
+  dish('calcots', 'ca', 'Calçots amb romesco', 1, 45, ['Valls, ES', 'Tarragona, ES'],
+    ['12 calçots or thick spring onions', '2 ripe tomatoes', '30 g almonds', '30 g hazelnuts', '1 slice of bread', '1 garlic clove', '4 tbsp olive oil', '1 tbsp vinegar', 'Salt'],
+    [['calçots','spring onions'],['salsa','sauce'],['ametlles','almonds'],['oli','oil']],
+    [['Roast and toast','Heat the oven to 220°C. Roast the tomatoes and garlic for 20 minutes. Toast the almonds, hazelnuts and bread in a dry pan.'],['Blend the romesco','Blend the roasted tomatoes and garlic with the nuts, bread, oil, vinegar and salt until thick. Taste and adjust.'],['Char the calçots','Roast the calçots on a hot tray for 15 to 20 minutes, turning them, until the outsides are black and the insides soft.'],['Wrap, peel and dip','Wrap the hot calçots in paper for 10 minutes. Carefully peel off the black outer layer and dip in the romesco.']], ['vegan']),
+  dish('samfaina', 'ca', 'Samfaina', 1, 40, ['Girona, ES', 'Tarragona, ES', 'Valls, ES'],
+    ['1 aubergine', '1 courgette', '1 red pepper', '1 onion', '2 ripe tomatoes', '3 tbsp olive oil', 'Salt'],
+    [['albergínia','aubergine'],['carbassó','courgette'],['pebrot','pepper'],['tomàquet','tomato']],
+    [['Chop the vegetables','Cut the aubergine, courgette, pepper and onion into even, bite-sized pieces.'],['Start with the onion','Soften the onion and pepper in olive oil over a medium heat for about 10 minutes.'],['Add the rest','Add the aubergine and courgette and cook for 10 minutes, stirring now and then.'],['Simmer with tomato','Grate in the tomatoes, add salt and simmer gently for 15 minutes until thick and glossy.']], ['vegan','gluten-free']),
   dish('caprese', 'it', 'Insalata caprese', 0, 10, it,
     ['2 ripe tomatoes', '125 g vegetarian mozzarella', 'Basil', 'Olive oil', 'Salt'],
     [['pomodoro','tomato'],['mozzarella','mozzarella'],['basilico','basil'],['olio','oil']],
