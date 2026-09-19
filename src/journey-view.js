@@ -1,5 +1,6 @@
 import { dayNames, nextDate, dayOneReady, discoverStages, askPhraseFor, quizFor, quizScore } from './journey.js';
 const btn=(label,action,attrs='',kind='primary')=>`<button class="${kind}" data-action="${action}" ${attrs}>${label}</button>`;
+const speakBtn=(text,lang)=>`<button class="speak-btn" data-action="speak" data-value="${text}" data-lang="${lang}" aria-label="Hear this phrase"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 4-6 5H2v6h3l6 5V4Zm4 4c3 2 3 6 0 8m3-11c5 4 5 10 0 14"/></svg></button>`;
 export function dayBar(j) {
   return `<nav class="day-bar" aria-label="Three-day lesson">${dayNames.map((name,i)=>`<button data-action="day" data-value="${i}" ${i>j.unlocked?'disabled':''} class="${j.day===i?'active':''}"><span>${i<j.unlocked?'✓':`0${i+1}`}</span><div><small>DAY ${i+1}</small><strong>${name}</strong></div>${i>j.unlocked?'<i>Later</i>':''}</button>`).join('')}</nav>`;
 }
@@ -27,7 +28,7 @@ function discoverFlow({r,j,language,videoUrl,culture}){
     title='Your shopping list.';
     body=`<p>Check what you already have. For the rest, here’s how to ask for it in ${language==='it'?'Italian':language==='pt'?'Portuguese':'Catalan'}.</p>${!j.shoppingReady?btn('Create my shopping list','make-list'):`<div class="shopping-checks">${r.ingredients.map((v,k)=>{
       const ask=askPhraseFor(language,v,r.words);
-      return `<div class="shopping-item"><label><input type="checkbox" data-shopping="${k}" ${j.checked.includes(k)?'checked':''}/><span>${v}</span><small>${j.checked.includes(k)?'Got it':'To buy'}</small></label>${ask?`<p class="ask-phrase"><span>How do I ask for this?</span><strong lang="${language}">${ask[0]}</strong><small>${ask[1]}</small></p>`:''}</div>`;
+      return `<div class="shopping-item"><label><input type="checkbox" data-shopping="${k}" ${j.checked.includes(k)?'checked':''}/><span>${v}</span><small>${j.checked.includes(k)?'Got it':'To buy'}</small></label>${ask?`<p class="ask-phrase"><span>How do I ask for this?</span><span class="phrase-row"><strong lang="${language}">${ask[0]}</strong>${speakBtn(ask[0],language)}</span><small>${ask[1]}</small></p>`:''}</div>`;
     }).join('')}</div>`}`;
   }
   const dayEnd = stage==='list' ? `<div class="day-end"><div><strong>${dayOneReady(j)?'A good place to pause.':'One more step'}</strong><small>${j.shoppingReady?'Shopping list ready':'Create your shopping list to continue'}</small></div>${btn(j.unlocked>0?'Return to day 2 →':'Save day 1 & pause','finish-discovery',dayOneReady(j)?'':'disabled')}</div>` : '';

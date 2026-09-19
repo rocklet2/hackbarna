@@ -111,6 +111,22 @@
           "url": "https://bid.barcelonaturisme.com/wv3/en/enjoy/101/bread-a-staple-food-to-tempt-your-palate-.html"
         }
       },
+      "nameStory": {
+        "en": "The name is refreshingly literal: pa amb tomàquet just means \"bread with tomato.\" The tomato's own name traveled much further to get here — tomàquet reached Catalan through Spanish, which borrowed it from Classical Nahuatl, the language of the Aztecs, a reminder that tomatoes only reached Europe after the voyages to the Americas.",
+        "target": "El nom és ben literal: pa amb tomàquet vol dir això mateix. Però la paraula tomàquet ha viatjat molt més per arribar aquí — passa pel castellà, que la va prendre del nàhuatl clàssic, la llengua dels asteques, un record que el tomàquet només va arribar a Europa després dels viatges a Amèrica.",
+        "source": {
+          "name": "Wikipedia · Pa amb tomàquet",
+          "url": "https://en.wikipedia.org/wiki/Pa_amb_tom%C3%A0quet"
+        }
+      },
+      "regionalNote": {
+        "title": "Rubbed here, grated everywhere else.",
+        "text": "In Catalonia — Barcelona and Girona alike — the tomato is cut in half and rubbed straight onto the bread, leaving the skin behind like a natural filter. Travel south to Madrid or Andalusia and cooks grate the tomato instead, often mixed with garlic. Girona even holds its own pa amb tomàquet fair each year, in Santa Coloma de Farners, running since 2001.",
+        "source": {
+          "name": "Wikipedia · Pa amb tomàquet",
+          "url": "https://en.wikipedia.org/wiki/Pa_amb_tom%C3%A0quet"
+        }
+      },
       "review": "unreviewed"
     },
     {
@@ -182,6 +198,22 @@
         "source": {
           "name": "Barcelona City Council · Catalan cuisine",
           "url": "https://www.meet.barcelona/es/visitala-y-amala/gastronomia/la-cocina-catalana"
+        }
+      },
+      "nameStory": {
+        "en": "Escalivada comes from escalivar, Catalan for \"to cook in embers\" — a direct memory of when these vegetables were roasted straight in the ashes of a wood fire, not in an oven.",
+        "target": "Escalivada ve d'escalivar, que en català vol dir \"coure a les brases\" — un record directe de quan aquestes verdures es rostien directament a les cendres del foc de llenya, no al forn.",
+        "source": {
+          "name": "Wiktionary · escalivada",
+          "url": "https://en.wiktionary.org/wiki/escalivada"
+        }
+      },
+      "regionalNote": {
+        "title": "One dish, many regional cousins.",
+        "text": "Escalivada belongs to a whole family of roasted-vegetable dishes across the old Crown of Aragón. Cross into Aragón and the same idea becomes firigolla, with roasted tomato added; head further south and it turns into ensalada asada, with tomato and garlic too. Catalonia keeps its version simple: peppers, aubergine and onion, letting the smoke do the talking.",
+        "source": {
+          "name": "The Mediterranean Dish · Escalivada",
+          "url": "https://www.themediterraneandish.com/escalivada-recipe/"
         }
       },
       "review": "unreviewed"
@@ -271,6 +303,22 @@
         "source": {
           "name": "Barcelona Tourism · Bread & traditions",
           "url": "https://bid.barcelonaturisme.com/wv3/en/enjoy/101/bread-a-staple-food-to-tempt-your-palate-.html"
+        }
+      },
+      "nameStory": {
+        "en": "Panellets simply means \"little breads\" in Catalan — a modest name for a sweet with deep roots. The ground-almond base shows the influence of Arabic pastry-making, and by the 18th century panellets were already being used as blessed food in religious celebrations.",
+        "target": "Panellets vol dir senzillament \"panets petits\" en català — un nom modest per a un dolç amb arrels profundes. La base d'ametlla mòlta mostra la influència de la pastisseria àrab, i ja al segle XVIII els panellets es feien servir com a aliment beneït en celebracions religioses.",
+        "source": {
+          "name": "Catalan News · The odyssey of panellets",
+          "url": "https://www.catalannews.com/life-style/item/catalan-panellets-the-odyssey-of-a-culinary-tradition-born-in-constantinople"
+        }
+      },
+      "regionalNote": {
+        "title": "Why pine nuts, here.",
+        "text": "Panellets come in many shapes — pyramidal coconut ones, cylindrical almond ones — but around Barcelona, pine nut panellets are the clear local favourite, accounting for roughly half of what's eaten each autumn. That's the version this lesson teaches.",
+        "source": {
+          "name": "Catalan News · The odyssey of panellets",
+          "url": "https://www.catalannews.com/life-style/item/catalan-panellets-the-odyssey-of-a-culinary-tradition-born-in-constantinople"
         }
       },
       "review": "unreviewed",

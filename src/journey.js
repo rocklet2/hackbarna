@@ -4,6 +4,14 @@ export function freshJourney() {
   return { day: 0, unlocked: 0, discoverStage: 0, shoppingReady: false, checked: [], step: 0, drafts: {}, day1Date: null, day2Date: null, quizAnswers: {}, quizSubmitted: false, completed: false };
 }
 export const discoverStages = ['about', 'culture', 'list'];
+export function lessonSteps(r) {
+  const steps = [];
+  if (r.nameStory) steps.push({ kind: 'name' });
+  steps.push({ kind: 'culture' });
+  if (r.regionalNote) steps.push({ kind: 'regional' });
+  r.steps.forEach((_, index) => steps.push({ kind: 'cook', index }));
+  return steps;
+}
 export function readJourneys(storage) {
   try {
     const raw = JSON.parse(storage.getItem(STORAGE_KEY) || '{}');
@@ -17,7 +25,7 @@ export function restoreJourney(value, recipe) {
   j.unlocked = Number.isInteger(value.unlocked) ? Math.max(0,Math.min(2,value.unlocked)) : 0;
   j.day = Number.isInteger(value.day) ? Math.max(0,Math.min(j.unlocked,value.day)) : 0;
   j.discoverStage = Number.isInteger(value.discoverStage) ? Math.max(0,Math.min(discoverStages.length-1,value.discoverStage)) : 0;
-  j.step = Number.isInteger(value.step) ? Math.max(0,Math.min(recipe.steps.length-1,value.step)) : 0;
+  j.step = Number.isInteger(value.step) ? Math.max(0,Math.min(lessonSteps(recipe).length-1,value.step)) : 0;
   j.checked = Array.isArray(value.checked) ? [...new Set(value.checked.filter(n=>Number.isInteger(n)&&n>=0&&n<recipe.ingredients.length))] : [];
   for (const key of ['day1Date','day2Date']) if(typeof value[key]==='string' && !Number.isNaN(Date.parse(value[key]))) j[key]=value[key];
   if(value.drafts && typeof value.drafts==='object') for(const [key,text] of Object.entries(value.drafts)) if(/^\d+$/.test(key)&&typeof text==='string') j.drafts[key]=text.slice(0,5000);

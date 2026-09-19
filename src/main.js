@@ -1,6 +1,6 @@
 import "./style.css";
 import { languages, levels, recommend, recipes } from "./data.js";
-import { STORAGE_KEY, freshJourney, readJourneys, restoreJourney, dayOneReady, canStartDay, discoverStages, quizFor, quizScore, phrases } from "./journey.js";
+import { STORAGE_KEY, freshJourney, readJourneys, restoreJourney, dayOneReady, canStartDay, discoverStages, lessonSteps, quizFor, quizScore, phrases } from "./journey.js";
 import { dayBar, videoPlayer, journeyPage, pausePage } from "./journey-view.js";
 
 const app = document.querySelector("#app");
@@ -174,8 +174,13 @@ function culture(r) {
     : `<div class="story-card"><div class="eyebrow">${icon("sun")} A MOMENT AT THE TABLE</div><h3>Every kitchen has a story.</h3><p>Think of a dish someone makes for you at home. Who makes it? When do you eat it? ${state.level > 1 ? `Try telling that story in ${language().name}.` : "Keep that memory with you as you cook."}</p><small>Reflection prompt · local recipe history is being curated.</small></div>`;
 }
 
-function exercise(r) {
-  const word = r.words[state.step % r.words.length];
+function cookStepIndex() {
+  const steps = lessonSteps(state.recipe);
+  const current = steps[Math.min(state.step, steps.length - 1)];
+  return current && current.kind === "cook" ? current.index : 0;
+}
+function exercise(r, cookIndex) {
+  const word = r.words[cookIndex % r.words.length];
   if (state.level > 1)
     return `<div class="exercise"><span class="eyebrow">${icon("spark")} YOUR TURN TO SAY IT</span><h3>${state.level === 3 ? "Explain the why, not just the what." : "Make the words your own."}</h3><p>${state.level === 3 ? "Describe this technique and explain why you use it. Connect it to a food memory." : `Describe what you just did in ${language().name}. Try using “${word[0]}”.`}</p><textarea aria-label="Your practice sentence" placeholder="Try a sentence here…" rows="3"></textarea>${button("Save my practice", "practice", "secondary")}<div class="exercise-feedback" role="status">${state.answer ? "Practice saved for this step. A future coach could give feedback here." : "Free practice · no automated grading in this preview"}</div></div>`;
   const prompt =
@@ -205,8 +210,27 @@ function lesson() {
 function cookingLesson() {
   const r = state.recipe;
   if (state.completed) return completion(r);
-  const s = r.steps[state.step];
-  return `<main class="page lesson-page"><div class="page-topline">${button(`${icon("back")} Back to the menu`, "menu", "text-button")}<span>${icon("pin")} ${state.region} <i>·</i> ${language().name}</span></div><div class="lesson-heading"><div><span class="eyebrow">A LITTLE LANGUAGE, MADE BY YOU</span><h1>${r.name}</h1></div><div class="lesson-heading-meta">${badge(`${icon("clock")} ${r.minutes} min`)}${badge(levels[state.level].name)}</div></div>${dayBar(state.journey)}<div class="cooking-day-intro"><span>DAY 2 · INGREDIENTS READY? LET’S MAKE SOMETHING.</span>${button("Save & come back later", "menu", "text-button")}</div><div class="lesson-layout"><aside class="lesson-sidebar"><span class="eyebrow">TODAY’S LITTLE JOURNEY</span><ol class="steps">${r.steps.map((s, i) => `<li class="${i === state.step ? "current" : i < state.step ? "finished" : ""}"><button data-action="step" data-value="${i}" ${i > state.step ? "disabled" : ""}><span>${i < state.step ? icon("check") : String(i + 1).padStart(2, "0")}</span><div><strong>${s[0]}</strong><small>${i === state.step ? "You are here" : i < state.step ? "Done" : "Coming up"}</small></div></button></li>`).join("")}</ol><div class="ingredient-box"><h3>${icon("bowl")} On your counter <span>${state.checked.length}/${r.ingredients.length}</span></h3><p>For two curious appetites</p>${r.ingredients.map((ing, i) => `<label class="ingredient ${state.checked.includes(i) ? "checked" : ""}"><input type="checkbox" data-ingredient="${i}" ${state.checked.includes(i) ? "checked" : ""}/><span>${ing}</span></label>`).join("")}</div></aside><section class="lesson-main"><div class="step-progress"><span>STEP ${String(state.step + 1).padStart(2, "0")} <i>OF ${String(r.steps.length).padStart(2, "0")}</i></span><span>${Math.round((state.step / r.steps.length) * 100)}% of your lesson</span><div><i style="width:${(state.step / r.steps.length) * 100}%"></i></div></div><div class="instruction-card"><div class="instruction-top">${badge(`${icon("chef")} In the kitchen`, "soft")}<button class="translation-toggle" data-action="translation" aria-pressed="${state.translation}">English help <span class="switch ${state.translation ? "on" : ""}"></span></button></div><h2>${s[0]}</h2><p class="cooking-instruction">${s[1]}</p><div class="phrase"><span class="eyebrow">A TASTE OF ${language().name.toUpperCase()}</span><h3 lang="${state.language}">${s[2]}</h3>${state.translation ? `<p>${s[3]}</p>` : button("Reveal meaning", "translation", "text-button")}</div>${state.step > 0 ? `<div class="timer-row">${icon("clock")}<span>Practice timer</span><b id="timer">${timerText()}</b>${button(state.timerRunning ? "Pause" : state.timer ? "Resume" : "Start 1 min", "timer", "text-button")}${state.timer ? button("Reset", "timer-reset", "text-button") : ""}</div>` : `<div class="gentle-note">${icon("leaf")} No rush. Read it, try it, make it yours.</div>`}</div>${exercise(r)}<div class="step-footer">${button(`${icon("back")} Previous`, "previous", "text-button", state.step === 0 ? "disabled" : "")}<span>One small step. A little more confidence.</span>${button(`${state.step === r.steps.length - 1 ? "Finish cooking & pause" : "Next step"} ${icon("arrow")}`, "next")}</div></section><aside class="lesson-right">${videoPlayer(r, videoUrls[r.id])}${culture(r)}<div class="word-collection"><div class="word-heading"><h3>${icon("book")} Your word collection</h3><span>${r.words.length}</span></div><p>Little souvenirs from this lesson.</p>${r.words.map(([w, en]) => `<div><strong lang="${state.language}">${w}</strong><span>${en}</span></div>`).join("")}<span class="review-note">Language copy awaiting native-speaker review.</span></div><div class="slow-note">✳<p>You’re not just making a dish.<br>You’re getting to know a place.</p></div></aside></div></main>`;
+  const steps = lessonSteps(r);
+  const i = Math.min(state.step, steps.length - 1);
+  const current = steps[i];
+  const stepTitle = (st) =>
+    st.kind === "name" ? `Why “${r.name}”?`
+    : st.kind === "culture" ? (r.story ? r.story.title : "Every kitchen has a story.")
+    : st.kind === "regional" ? r.regionalNote.title
+    : r.steps[st.index][0];
+  const sidebar = steps.map((st, n) => `<li class="${n === i ? "current" : n < i ? "finished" : ""}"><button data-action="step" data-value="${n}" ${n > i ? "disabled" : ""}><span>${n < i ? icon("check") : String(n + 1).padStart(2, "0")}</span><div><strong>${stepTitle(st)}</strong><small>${n === i ? "You are here" : n < i ? "Done" : "Coming up"}</small></div></button></li>`).join("");
+  let mainContent;
+  if (current.kind === "name") {
+    mainContent = `<div class="story-card name-story"><div class="eyebrow">${icon("sun")} WHY THIS NAME</div><h3>Why “${r.name}”?</h3><div class="story-hero"><img src="/images/${r.image}.jpg" alt="${r.name} mood image"/><span class="image-disclaimer">Mood image</span></div><div class="bilingual-story"><div><span class="eyebrow">IN ENGLISH</span><p>${r.nameStory.en}</p></div><div><span class="eyebrow">${language().name.toUpperCase()}</span><p lang="${state.language}">${r.nameStory.target}</p>${speakButton(r.nameStory.target, state.language)}</div></div><a href="${r.nameStory.source.url}" target="_blank" rel="noreferrer">${r.nameStory.source.name} ↗</a></div>`;
+  } else if (current.kind === "culture") {
+    mainContent = culture(r);
+  } else if (current.kind === "regional") {
+    mainContent = `<div class="story-card"><div class="eyebrow">${icon("pin")} A LOCAL DIFFERENCE</div><h3>${r.regionalNote.title}</h3><p>${r.regionalNote.text}</p><a href="${r.regionalNote.source.url}" target="_blank" rel="noreferrer">${r.regionalNote.source.name} ↗</a></div>`;
+  } else {
+    const s = r.steps[current.index];
+    mainContent = `<div class="instruction-card"><div class="instruction-top">${badge(`${icon("chef")} In the kitchen`, "soft")}<button class="translation-toggle" data-action="translation" aria-pressed="${state.translation}">English help <span class="switch ${state.translation ? "on" : ""}"></span></button></div><h2>${s[0]}</h2><p class="cooking-instruction">${s[1]}</p><div class="phrase"><span class="eyebrow">A TASTE OF ${language().name.toUpperCase()}</span><div class="phrase-row"><h3 lang="${state.language}">${s[2]}</h3>${speakButton(s[2], state.language)}</div>${state.translation ? `<p>${s[3]}</p>` : button("Reveal meaning", "translation", "text-button")}</div>${current.index > 0 ? `<div class="timer-row">${icon("clock")}<span>Practice timer</span><b id="timer">${timerText()}</b>${button(state.timerRunning ? "Pause" : state.timer ? "Resume" : "Start 1 min", "timer", "text-button")}${state.timer ? button("Reset", "timer-reset", "text-button") : ""}</div>` : `<div class="gentle-note">${icon("leaf")} No rush. Read it, try it, make it yours.</div>`}</div>${exercise(r, current.index)}</div>`;
+  }
+  return `<main class="page lesson-page"><div class="page-topline">${button(`${icon("back")} Back to the menu`, "menu", "text-button")}<span>${icon("pin")} ${state.region} <i>·</i> ${language().name}</span></div><div class="lesson-heading"><div><span class="eyebrow">A LITTLE LANGUAGE, MADE BY YOU</span><h1>${r.name}</h1></div><div class="lesson-heading-meta">${badge(`${icon("clock")} ${r.minutes} min`)}${badge(levels[state.level].name)}</div></div>${dayBar(state.journey)}<div class="cooking-day-intro"><span>DAY 2 · ${steps.length} LITTLE MOMENTS, START TO FINISH.</span>${button("Save & come back later", "menu", "text-button")}</div><div class="lesson-layout"><aside class="lesson-sidebar"><span class="eyebrow">TODAY’S LITTLE JOURNEY</span><ol class="steps">${sidebar}</ol><div class="ingredient-box"><h3>${icon("bowl")} On your counter <span>${state.checked.length}/${r.ingredients.length}</span></h3><p>For two curious appetites</p>${r.ingredients.map((ing, k) => `<label class="ingredient ${state.checked.includes(k) ? "checked" : ""}"><input type="checkbox" data-ingredient="${k}" ${state.checked.includes(k) ? "checked" : ""}/><span>${ing}</span></label>`).join("")}</div></aside><section class="lesson-main"><div class="step-progress"><span>STEP ${String(i + 1).padStart(2, "0")} <i>OF ${String(steps.length).padStart(2, "0")}</i></span><span>${Math.round((i / steps.length) * 100)}% of your lesson</span><div><i style="width:${(i / steps.length) * 100}%"></i></div></div>${mainContent}<div class="step-footer">${button(`${icon("back")} Previous`, "previous", "text-button", i === 0 ? "disabled" : "")}<span>One small step. A little more confidence.</span>${button(`${i === steps.length - 1 ? "Finish cooking & pause" : "Next step"} ${icon("arrow")}`, "next")}</div></section><aside class="lesson-right">${videoPlayer(r, videoUrls[r.id])}<div class="word-collection"><div class="word-heading"><h3>${icon("book")} Your word collection</h3><span>${r.words.length}</span></div><p>Little souvenirs from this lesson.</p>${r.words.map(([w, en]) => `<div><strong lang="${state.language}">${w}</strong><span>${en}</span></div>`).join("")}<span class="review-note">Language copy awaiting native-speaker review.</span></div><div class="slow-note">✳<p>You’re not just making a dish.<br>You’re getting to know a place.</p></div></aside></div></main>`;
 }
 
 function completion(r) {
@@ -246,6 +270,17 @@ function toast(message) {
   el.classList.add("visible");
   setTimeout(() => el.classList.remove("visible"), 4000);
 }
+const speechLocales = { ca: "ca-ES", it: "it-IT", pt: "pt-PT" };
+function speak(text, lang) {
+  if (!("speechSynthesis" in window)) { toast("Audio isn't supported in this browser."); return; }
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = speechLocales[lang] || lang;
+    window.speechSynthesis.speak(utterance);
+  } catch { toast("Couldn't play audio just now."); }
+}
+const speakButton = (text, lang) => `<button class="speak-btn" data-action="speak" data-value="${text}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
 setInterval(() => {
   if (!state.timerRunning) return;
   state.timer = Math.max(0, state.timer - 1);
@@ -368,7 +403,7 @@ app.addEventListener("click", (event) => {
       focus=true;break;
     }
     case "next":
-      if (state.step === state.recipe.steps.length - 1) {
+      if (state.step === lessonSteps(state.recipe).length - 1) {
         state.journey.unlocked=2;
         state.journey.day2Date ||= new Date().toISOString();
         state.paused=true;
@@ -392,13 +427,12 @@ app.addEventListener("click", (event) => {
     case "translation":
       state.translation = !state.translation;
       break;
-    case "answer":
+    case "answer": {
       state.answer = value;
-      if (
-        value === state.recipe.words[state.step % state.recipe.words.length][0]
-      )
-        state.collected.add(state.step);
+      const word = state.recipe.words[cookStepIndex() % state.recipe.words.length];
+      if (value === word[0]) state.collected.add(state.step);
       break;
+    }
     case "practice": {
       const text = app.querySelector("textarea").value.trim();
       if (!text) {
@@ -419,6 +453,9 @@ app.addEventListener("click", (event) => {
     case "timer-reset":
       stopTimer();
       break;
+    case "speak":
+      speak(value, target.dataset.lang || state.language);
+      return;
     default:
       return;
   }

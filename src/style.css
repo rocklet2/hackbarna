@@ -1481,6 +1481,71 @@ h1 em {
   margin-top: 15px;
   line-height: 1.6;
 }
+.story-hero {
+  border-radius: 9px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 4px;
+}
+.story-hero img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+.story-hero .image-disclaimer {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: #00000080;
+  color: #fff;
+  font-size: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.bilingual-story {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+.bilingual-story > div {
+  background: #fffdf6;
+  border: 1px solid #e6ddc8;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.bilingual-story .eyebrow {
+  margin-bottom: 8px;
+}
+.bilingual-story .speak-btn {
+  margin-top: 10px;
+}
+.speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--green);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.speak-btn:hover {
+  background: #eaf0de;
+}
+.speak-btn .icon {
+  width: 14px;
+  height: 14px;
+}
+.phrase-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .word-collection {
   margin-top: 23px;
   border: 1px solid var(--line);
@@ -1909,6 +1974,9 @@ h1 em {
   }
   .lesson-heading h1 {
     font-size: 33px;
+  }
+  .bilingual-story {
+    grid-template-columns: 1fr;
   }
   .lesson-heading {
     gap: 15px;
