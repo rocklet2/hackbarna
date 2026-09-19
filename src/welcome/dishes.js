@@ -82,7 +82,7 @@ export function nextOptions(selectedCount) {
   }
   options.push({
     id: "shop",
-    name: selectedCount === 1 ? "Learn to ask for the ingredients" : "Learn to ask for the week's ingredients",
+    name: selectedCount === 1 ? "Learn what to say at the market" : "Learn what to say at the market",
     detail: "Learn how to ask for what you need, then go and get it.",
   });
   return options;
