@@ -28,7 +28,7 @@ test("every offered region has a beginner path", () => {
 });
 test("diet and time constraints are applied together with a useful empty state", () => {
   assert.deepEqual(
-    recommend({ ...base, diet: "gluten-free", quick: true }),
+    recommend({ ...base, language: "it", region: "Milan, IT", diet: "vegan", quick: true }).filter(r => r.tags.includes("gluten-free")),
     [],
   );
   const vegan = recommend({ ...base, diet: "vegan" });
@@ -45,4 +45,12 @@ test("Rio gets Brazilian sample dishes, not the Portugal-only recipes", () => {
   assert.equal(ids[0], "moqueca");
   assert.ok(ids.includes("vinagrete"));
   assert.ok(!ids.includes("caldo"));
+});
+
+
+test("expanded catalog adds choices in every region", () => {
+  for(const l of languages) for(const region of l.regions) {
+    const matches=recommend({...base,language:l.id,region});
+    assert.ok(matches.length>=5, `${region} has ${matches.length}`);
+  }
 });

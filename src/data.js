@@ -1,3 +1,4 @@
+import { moreRecipes } from "./more-recipes.js";
 // Design-preview content, independent from Romi's production Catalonia config.
 // Target-language copy and cooking instructions require human review before public demo.
 export const languages = [
@@ -726,6 +727,8 @@ export const recipes = [
   ),
 ];
 
+recipes.push(...moreRecipes);
+
 const italianTable = {
   title: "A small beginning to the meal.",
   text: "Bruschetta is served as an antipasto: an appetizer that opens the meal. Bread at the beginning of a meal gives us a small, approachable place to start learning, too.",
@@ -743,6 +746,7 @@ const portugueseTable = {
   },
 };
 for (const r of recipes) {
+  if (r.language === "ca" && !r.story) r.story = { title: "A table full of Catalan traditions.", text: "Barcelona’s traditional cooking includes roasted vegetables, bean salads and sweet dishes such as crema catalana and panellets. Use this recipe as a starting point to explore that wider food culture.", source: vegetablesSource };
   if (r.id === "risotto")
     r.story = {
       title: "Rice has a home in the north.",
@@ -753,7 +757,7 @@ for (const r of recipes) {
       },
     };
   else if (r.language === "it") r.story = italianTable;
-  else if (r.id === "moqueca" || r.id === "vinagrete")
+  else if (r.regions.includes("Rio, BR") && r.id !== "salada")
     r.story = {
       title: "A country with many tables.",
       text: "Brazil’s culinary landscape stretches from moqueca and acarajé in the northeast to barbecue traditions in the south. This is a journey through Brazilian flavors from your Rio starting point, rather than a claim that every dish originated in Rio.",
@@ -764,6 +768,13 @@ for (const r of recipes) {
     };
   else if (r.language === "pt" && !r.story) r.story = portugueseTable;
 }
+
+const culturalOverrides = {
+  caprese: { title: "A little taste of Capri.", text: "Caprese salad appears among Capri’s characteristic dishes: fresh tomatoes and mozzarella with basil and olive oil. Notice how a short ingredient list can tell you about a place. This is an Italian discovery from your selected city, rather than a Milanese recipe.", source: { name: "Capri.com · Typical dishes", url: "https://www.capri.com/en/e/restaurants-capri" } },
+  'cacio-pepe': { title: "A Roman lesson in simplicity.", text: "Cacio e pepe combines pasta, Pecorino Romano and pepper. Italy’s tourism board features the dish in its collection of recipes from Lazio. A short ingredient list leaves room to focus on technique.", source: { name: "Italia.it · Tonnarelli cacio e pepe", url: "https://www.italia.it/it/lazio/cosa-fare/videoricetta-viaggio-italiano-lazio" } },
+  polenta: { title: "The north, one spoonful at a time.", text: "Maize flour, used for polenta, is one of the ingredients that characterizes Lombardy’s cuisine. Alongside rice and cheeses, it helps tell the story of a northern Italian table.", source: { name: "Italia.it · Lombardy’s cuisine", url: "https://www.italia.it/en/lombardy/things-to-do/typical-food-and-dishes-in-lombardy-italy" } },
+};
+for(const r of recipes) if(culturalOverrides[r.id]) r.story=culturalOverrides[r.id];
 
 export function recommend({ language, region, level, diet, quick }) {
   return recipes
