@@ -234,3 +234,12 @@ const COOK_CTA = {
   es: "¡A cocinar!",
 };
 export const cookCtaFor = (language) => ({ target: COOK_CTA[language] || COOK_CTA.ca, en: "Let's start cooking!" });
+
+/** Heading of the market lesson, so the step before it does not have to explain it. UNREVIEWED. */
+const MARKET_HEADING = {
+  ca: "Al mercat",
+  it: "Al mercato",
+  pt: "No mercado",
+  es: "En el mercado",
+};
+export const marketHeadingFor = (language) => ({ target: MARKET_HEADING[language] || MARKET_HEADING.ca, en: "At the market" });

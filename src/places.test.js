@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { recipes } from "./data.js";
 import {
   placesFor, matchPlace, matchPlan, PLANS, placeById, planById,
-  placeQuestionFor, tonightFor,
+  placeQuestionFor, tonightFor, dishQuestionFor,
 } from "./welcome/places.js";
 
 test("a place is only offered as ready when recipes exist for its cities", () => {
@@ -75,5 +75,13 @@ test("place questions are asked in both languages", () => {
   for (const id of ["ca", "it", "pt", "es"]) {
     const q = placeQuestionFor(id);
     assert.ok(q.target && q.en, `${id} question has both languages`);
+  }
+});
+
+test("the dish screen opens with a leading question in every language", () => {
+  for (const id of ["ca", "it", "pt", "es"]) {
+    const q = dishQuestionFor(id);
+    assert.ok(q.target && q.en, `${id} asks in both languages`);
+    assert.equal(q.en, "What would you like to cook today?");
   }
 });

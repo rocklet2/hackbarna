@@ -16,6 +16,15 @@ export const PLACE_QUESTION = {
   es: { target: "¿Dónde te gustaría cocinar hoy?", en: "Where would you like to cook today?" },
 };
 
+/** The dish screen's leading question, asked in the language being learned. UNREVIEWED. */
+const DISH_QUESTION = {
+  ca: { target: "Què t'agradaria cuinar avui?", en: "What would you like to cook today?" },
+  it: { target: "Cosa ti piacerebbe cucinare oggi?", en: "What would you like to cook today?" },
+  pt: { target: "O que gostarias de cozinhar hoje?", en: "What would you like to cook today?" },
+  es: { target: "¿Qué te gustaría cocinar hoy?", en: "What would you like to cook today?" },
+};
+export const dishQuestionFor = (languageId) => DISH_QUESTION[languageId] || DISH_QUESTION.ca;
+
 /** The dish screen heading, in the language being learned. */
 const TONIGHT = {
   ca: (place) => ({ target: `Aquesta nit, a ${place.endonym}`, en: `Tonight, in ${place.name}` }),

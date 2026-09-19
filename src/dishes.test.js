@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { recipes } from "./data.js";
 import { complexityOf, complexityLabel, dishesFor, pickForPlan } from "./welcome/dishes.js";
 import { phrases } from "./journey.js";
-import { shopScript, ingredientWords, wordFeedback, gradeRepetition, feedbackFor } from "./welcome/shop.js";
+import { shopScript, marketHeadingFor, ingredientWords, wordFeedback, gradeRepetition, feedbackFor } from "./welcome/shop.js";
 import { planById, placesFor } from "./welcome/places.js";
 import { translatedStep } from "./lesson-translations.js";
 
@@ -201,5 +201,12 @@ test("Spanish ingredient words are taught from the curated lists", () => {
   for (const r of recipes.filter((x) => x.language === "es")) {
     const { taught } = ingredientWords("es", r);
     assert.ok(taught.length >= 3, `${r.name} teaches ${taught.length} words`);
+  }
+});
+
+test("the market lesson has its own heading in every language, so no button has to introduce it", () => {
+  for (const id of ["ca", "it", "pt", "es"]) {
+    const h = marketHeadingFor(id);
+    assert.ok(h.target && h.en === "At the market", id);
   }
 });

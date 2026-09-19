@@ -11,9 +11,9 @@ import { recipeUrl } from "../learner-profile.js";
 import "./welcome.css";
 import { SUPPORTED, COMING_SOON, matchLanguage, greetingFor, byId } from "./catalogue.js";
 import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor, levelLabelFor } from "./levelcheck.js";
-import { placesFor, placeById, matchPlace, placeQuestionFor, tonightFor } from "./places.js";
+import { placesFor, placeById, matchPlace, placeQuestionFor, tonightFor, dishQuestionFor } from "./places.js";
 import { dishesFor, complexityLabel } from "./dishes.js";
-import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, gradeRepetition, feedbackFor } from "./shop.js";
+import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, marketHeadingFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
 import { createAgent } from "../agent.js";
 
@@ -318,7 +318,8 @@ function renderDishes(ranked) {
   }
 
   const tonight = tonightFor(state.language, place);
-  const card = (r) => `<button class="card" data-dish="${esc(r.id)}" aria-pressed="${chosen.includes(r)}">
+  const question = dishQuestionFor(state.language);
+  const card = (r) => `<button class="card" data-dish="${esc(r.id)}">
       <span class="name">${esc(r.name)}</span>
       <span class="endonym">${esc(complexityLabel(r))}</span>
       <span class="detail">${esc(r.description)}</span>
@@ -327,37 +328,31 @@ function renderDishes(ranked) {
 
   app.innerHTML = chrome(`<div class="stage">
     <h1 class="ask">
-      <span class="target">${esc(tonight.target)}</span>
-      <span class="en">${esc(tonight.en)}</span>
+      <span class="target">${esc(question.target)}</span>
+      <span class="en">${esc(question.en)}</span>
     </h1>
+    <p class="hint">${esc(tonight.target)} · ${esc(tonight.en)}</p>
     <div class="cards" style="grid-template-columns:1fr;margin-top:14px">${ranked.slice(0, 4).map(card).join("")}</div>
-    <div class="mic-row sticky">
-      <button class="mic" id="next" ${chosen.length ? "" : "disabled"}>Learn what to say at the market</button>
-    </div>
   </div>`);
 
+  // Tapping a dish is the answer, like every other question: it moves on.
   app.querySelectorAll("[data-dish]").forEach((b) => {
     b.onclick = () => {
       state.dishes = [ranked.find((r) => r.id === b.dataset.dish)];
-      renderDishes(ranked);
+      startShop();
     };
   });
-  el("next").onclick = startShop;
 }
 
 /* ---------- step 6: the stall conversation ---------- */
 
 function lessonFor() {
-  return { script: shopScript(state.language, state.level, state.dishes[0]), label: "Shop & connect" };
+  return { script: shopScript(state.language, state.level, state.dishes[0]) };
 }
 
 function startShop() {
   state.step = "shop";
   state.line = 0; state.thread = []; state.tries = 0;
-  const count = lessonFor().script.length;
-  state.thread.push({ who: "sys", text: state.level >= 1
-    ? "A real exchange at the stall. The seller speaks first and you reply. Say each reply back to me."
-    : `${count} things to say at the stall. Say each one back to me.` });
   renderLesson();
   setTimeout(() => sayLessonLine(), 400);
 }
@@ -376,7 +371,7 @@ function sayLessonLine() {
 
 function renderLesson() {
   const lang = byId(state.language);
-  const { script, label } = lessonFor();
+  const { script } = lessonFor();
   const bubbles = state.thread.map((m) => {
     if (m.who === "me") return `<div class="bubble me">${esc(m.text)}</div>`;
     if (m.who === "sys") return `<div class="bubble sys">${esc(m.text)}</div>`;
@@ -388,10 +383,19 @@ function renderLesson() {
       ${m.why ? `<div class="why">${esc(m.why)}</div>` : ""}</div>`;
   }).join("");
 
+  const heading = marketHeadingFor(state.language);
+  const dish = state.dishes[0]?.name || "";
+  const intro = state.level >= 1
+    ? `You are buying the ingredients for ${dish}. The seller speaks first and you reply. Say each reply back to me.`
+    : `You are buying the ingredients for ${dish}. Say each phrase back to me.`;
   app.innerHTML = chrome(`<div class="stage">
+    <h1 class="ask">
+      <span class="target">${esc(heading.target)}</span>
+      <span class="en">${esc(heading.en)}</span>
+    </h1>
+    <p class="hint">${esc(intro)}</p>
     <div class="turnbar">
       ${script.map((_, i) => `<i class="${i < state.line ? "done" : ""} ${i === state.line ? "current" : ""}"></i>`).join("")}
-      <span>${esc(label)}</span>
     </div>
     <div class="thread" id="thread">${bubbles}</div>
     <div class="sayrow"><p class="hint centred">Say it back.</p>
