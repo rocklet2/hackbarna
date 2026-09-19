@@ -8,6 +8,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body { display: flex; justify-content: center; background: #ecebe2; }
+#app { width: 100%; max-width: 480px; display: flex; }
 button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
 button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
 
@@ -135,7 +136,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .sayrow .micoff:disabled { color: var(--muted); text-decoration: none; }
 
 /* The end screen hands back the phrases, as something to shop from. */
-.recap { display: flex; flex-direction: column; gap: 8px; margin: 2px 0 6px; }
+.recap { display: flex; flex-direction: column; gap: 8px; margin: 2px 0 22px; }
 .recap .line { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
 .recap .target { font-weight: 600; }
 .recap .en { color: var(--muted); font-size: 13px; }
@@ -145,3 +146,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 
 .bubble.seller { background: #ebe6d8; border-color: #ebe6d8; align-self: flex-start; border-bottom-left-radius: 6px; }
 .bubble .who { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+
+/* The last screen's one action: big, at the bottom, in the language being learned. */
+.cta { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 18px 20px; border-radius: 28px; background: var(--green); color: #fff; text-decoration: none; }
+.cta-target { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.cta-en { font-size: 13px; opacity: .8; }
+.stage .cta + .say { align-self: center; margin-top: 10px; }

@@ -15,7 +15,7 @@ import {
   PLANS, planById, matchPlan,
 } from "./places.js";
 import { dishesFor, pickForPlan, complexityLabel, nextOptions } from "./dishes.js";
-import { shopScript, ingredientLesson, listHeadingFor, gradeRepetition, feedbackFor } from "./shop.js";
+import { shopScript, ingredientLesson, listHeadingFor, cookCtaFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
 
 const app = document.querySelector("#app");
@@ -27,7 +27,7 @@ const state = {
 
 /* ---------- remembering the learner ---------- */
 // The level check runs on the first visit only, so it has to survive a reload.
-const STORE = "taula-welcome-v1";
+const STORE = "taula-welcome-v2";
 function saveProfile(extra = {}) {
   try {
     localStorage.setItem(STORE, JSON.stringify({
@@ -309,7 +309,7 @@ function startShop() {
   state.step = "shop";
   state.line = 0; state.thread = []; state.tries = 0;
   const count = lessonFor().script.length;
-  state.thread.push({ who: "sys", text: state.level >= 2
+  state.thread.push({ who: "sys", text: state.level >= 1
     ? "A real exchange at the stall. The seller speaks first and you reply. Say each reply back to me."
     : `${count} things to say at the stall. Say each one back to me.` });
   renderLesson();
@@ -419,9 +419,10 @@ function renderHandoff(via) {
          <span class="en">${esc(listHeadingFor(state.language).en)}</span>`
       : "Let's cook."}</h1>
     ${recap}
-    <div class="mic-row">
-      <a class="mic" href="/" style="text-decoration:none">Open the recipe app</a>
-    </div>
+    <a class="cta" href="/">
+      <span class="cta-target">${esc(cookCtaFor(state.language).target)}</span>
+      <span class="cta-en">${esc(cookCtaFor(state.language).en)}</span>
+    </a>
     <button class="say" id="again">Start over</button>
   </div>`);
   el("again").onclick = restart;

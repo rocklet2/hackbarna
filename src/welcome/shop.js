@@ -77,13 +77,12 @@ const EN = {
 };
 
 /**
- * Build the market lesson for a level (0 beginner, 1 elementary, 2 intermediate,
- * 3 advanced). Andrei's `phrases()` returns five rows in a fixed order:
+ * Build the market lesson for a level (0 beginner, 1 intermediate, 2 advanced). Andrei's `phrases()` returns five rows in a fixed order:
  * 0 greeting · 1 "do you have X?" · 2 "how much?" · 3 "half a kilo please"
  * · 4 "I'm learning X, can we speak X?"
  *
- * 0 and 1 are single phrases said back one at a time, built only from those rows.
- * 2 and 3 are a back and forth with the seller, who speaks first each turn:
+ * 0 is single phrases said back one at a time, built only from those rows.
+ * 1 and 2 are a back and forth with the seller, who speaks first each turn:
  * intermediate is a short shop, advanced adds telling them you are learning and
  * asking what to buy for tonight's dish.
  */
@@ -101,14 +100,6 @@ export function shopScript(language, level, recipe) {
       line(2, "You will hear a number back. You do not have to catch it the first time."),
     ];
   }
-  if (level === 1) {
-    return [
-      line(0, "Start the way everyone there starts."),
-      line(1, `Point if you need to. Naming ${first[1] || "what you need"} is enough.`),
-      line(3, "Now the amount. This one works for anything you buy by weight."),
-    ];
-  }
-
   const x = EXCHANGE[language];
   if (!x) return [];
   const turn = (seller, target, en, why) => ({ seller: { target: seller[0], en: seller[1] }, target, en, why });
@@ -116,7 +107,7 @@ export function shopScript(language, level, recipe) {
   const total = turn(x.more, x.total, EN.total, "Say you are done, and ask what you owe, in one go.");
   const thanks = turn(x.bye, x.thanks, EN.thanks, "Leave the way you came in: warmly.");
 
-  if (level === 2) {
+  if (level === 1) {
     return [
       turn(x.open, x.askFor(first[0]), EN.askFor(first[1]), "The seller speaks first. Greet, then ask for what you came for."),
       turn(x.amount, x.half, EN.half, "Ask for the amount as a question. It sounds friendlier than a demand."),
@@ -229,3 +220,11 @@ const LIST_HEADING = {
   pt: { target: "A tua lista", en: "Your list, in Portuguese" },
 };
 export const listHeadingFor = (language) => LIST_HEADING[language] || LIST_HEADING.ca;
+
+/** The last screen's call to action, in the language being learned. Unreviewed. */
+const COOK_CTA = {
+  ca: "A cuinar!",
+  it: "A cucinare!",
+  pt: "Vamos cozinhar!",
+};
+export const cookCtaFor = (language) => ({ target: COOK_CTA[language] || COOK_CTA.ca, en: "Let's start cooking!" });

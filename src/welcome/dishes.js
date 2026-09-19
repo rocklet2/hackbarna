@@ -57,10 +57,10 @@ export function dishesFor({ language, cities = [], level = 0, all = recipes }) {
   if (pool.length < 2) return pool;
 
   // Aim at a point in this catalogue's own range: level 0 at the easiest dish,
-  // level 3 at the hardest, evenly spaced between.
+  // level 2 at the hardest, evenly spaced between.
   const scores = pool.map(complexityOf);
   const low = Math.min(...scores), high = Math.max(...scores);
-  const target = low + (Math.max(0, Math.min(3, level)) / 3) * (high - low);
+  const target = low + (Math.max(0, Math.min(2, level)) / 2) * (high - low);
 
   return pool
     .map((r) => ({ recipe: r, distance: Math.abs(complexityOf(r) - target) }))

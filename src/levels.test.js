@@ -7,16 +7,15 @@ import {
 test("matchLevel hears a level in a spoken answer", () => {
   assert.equal(matchLevel("beginner").id, 0);
   assert.equal(matchLevel("I'm a complete beginner").id, 0);
-  assert.equal(matchLevel("elementary").id, 1);
-  assert.equal(matchLevel("intermediate").id, 2);
-  assert.equal(matchLevel("advanced").id, 3);
+  assert.equal(matchLevel("intermediate").id, 1);
+  assert.equal(matchLevel("advanced").id, 2);
 });
 
 test("matchLevel understands how people actually answer", () => {
   assert.equal(matchLevel("nothing at all").id, 0);
-  assert.equal(matchLevel("just a little").id, 1, "'a little' beats the bare 'little'");
-  assert.equal(matchLevel("I'm okay").id, 2);
-  assert.equal(matchLevel("pretty fluent").id, 3);
+  assert.equal(matchLevel("just a little").id, 0, "a few words still counts as a beginner");
+  assert.equal(matchLevel("I'm okay").id, 1);
+  assert.equal(matchLevel("pretty fluent").id, 2);
 });
 
 test("matchLevel returns null when no level was said", () => {
@@ -25,7 +24,8 @@ test("matchLevel returns null when no level was said", () => {
   assert.equal(matchLevel(null), null);
 });
 
-test("the four levels line up with their names and are complete", () => {
+test("the three levels line up with their names and are complete", () => {
+  assert.equal(LEVELS.length, 3);
   assert.equal(LEVELS.length, LEVEL_NAMES.length);
   LEVELS.forEach((l, i) => {
     assert.equal(l.id, i, "id is the index, which the rest of the app relies on");
