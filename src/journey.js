@@ -1,7 +1,7 @@
 export const STORAGE_KEY = 'taula-journeys-v3';
 export const dayNames = ['Discover & shop', 'Cook & connect', 'Remember & celebrate'];
 export function freshJourney() {
-  return { day: 0, unlocked: 0, discoverStage: 0, shoppingReady: false, checked: [], step: 0, drafts: {}, day1Date: null, day2Date: null, quizAnswers: {}, quizSubmitted: false, completed: false };
+  return { day: 0, unlocked: 0, discoverStage: 0, checked: [], step: 0, drafts: {}, day1Date: null, day2Date: null, quizAnswers: {}, quizSubmitted: false, completed: false };
 }
 export const discoverStages = ['about', 'culture', 'list'];
 export function lessonSteps(r) {
@@ -21,7 +21,7 @@ export function readJourneys(storage) {
 export function restoreJourney(value, recipe) {
   const j = freshJourney();
   if (!value || typeof value !== 'object') return j;
-  for (const key of ['shoppingReady','quizSubmitted','completed']) j[key] = value[key] === true;
+  for (const key of ['quizSubmitted','completed']) j[key] = value[key] === true;
   j.unlocked = Number.isInteger(value.unlocked) ? Math.max(0,Math.min(2,value.unlocked)) : 0;
   j.day = Number.isInteger(value.day) ? Math.max(0,Math.min(j.unlocked,value.day)) : 0;
   j.discoverStage = Number.isInteger(value.discoverStage) ? Math.max(0,Math.min(discoverStages.length-1,value.discoverStage)) : 0;
@@ -44,7 +44,7 @@ export function quizFor(r) {
   ];
 }
 export function quizScore(recipe, answers) { return quizFor(recipe).reduce((score,q,i)=>score+(answers[i]===q.answer?1:0),0); }
-export function dayOneReady(j) { return j.shoppingReady === true; }
+export function dayOneReady(j) { return j.discoverStage >= discoverStages.length - 1; }
 export function canStartDay(j, day) { return Number.isInteger(day)&&day>=0&&day<=2&&day<=j.unlocked; }
 export function nextDate(iso) {
   const d=new Date(iso||Date.now());d.setDate(d.getDate()+1);
@@ -59,7 +59,29 @@ export function phrases(language, word, wordEn) {
   };
   return rows[language];
 }
-export function askPhraseFor(language, ingredient, words) {
+const askTemplates = {
+  ca: [
+    (w, en) => [`Teniu ${w}?`, `Do you have ${en}?`],
+    (w, en) => [`Voldria ${w}, si us plau.`, `I’d like ${en}, please.`],
+    (w, en) => [`Busco ${w}.`, `I’m looking for ${en}.`],
+    (w, en) => [`Encara us queda ${w}?`, `Do you still have ${en} left?`],
+  ],
+  it: [
+    (w, en) => [`Avete ${w}?`, `Do you have ${en}?`],
+    (w, en) => [`Vorrei ${w}, per favore.`, `I’d like ${en}, please.`],
+    (w, en) => [`Cerco ${w}.`, `I’m looking for ${en}.`],
+    (w, en) => [`Ne avete ancora di ${w}?`, `Do you still have some ${en}?`],
+  ],
+  pt: [
+    (w, en) => [`Tem ${w}?`, `Do you have ${en}?`],
+    (w, en) => [`Queria ${w}, por favor.`, `I’d like ${en}, please.`],
+    (w, en) => [`Estou à procura de ${w}.`, `I’m looking for ${en}.`],
+    (w, en) => [`Ainda tem ${w}?`, `Do you still have ${en}?`],
+  ],
+};
+export function askPhraseFor(language, ingredient, words, index = 0) {
   const match = words.find(([, en]) => ingredient.toLowerCase().includes(en.toLowerCase()));
-  return match ? phrases(language, match[0], match[1])[1] : null;
+  if (!match) return null;
+  const templates = askTemplates[language] || askTemplates.ca;
+  return templates[index % templates.length](match[0], match[1]);
 }

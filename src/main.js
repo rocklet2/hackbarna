@@ -382,7 +382,6 @@ app.addEventListener("click", (event) => {
       state.journey.discoverStage = Math.max(0, state.journey.discoverStage - 1);
       focus = true;
       break;
-    case "make-list": state.journey.shoppingReady = true; break;
     case "finish-discovery":
       if(!dayOneReady(state.journey)) return;
       state.journey.unlocked = Math.max(1,state.journey.unlocked);

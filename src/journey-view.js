@@ -1,4 +1,4 @@
-import { dayNames, nextDate, dayOneReady, discoverStages, askPhraseFor, quizFor, quizScore } from './journey.js';
+import { dayNames, nextDate, discoverStages, askPhraseFor, quizFor, quizScore } from './journey.js';
 const btn=(label,action,attrs='',kind='primary')=>`<button class="${kind}" data-action="${action}" ${attrs}>${label}</button>`;
 const speakBtn=(text,lang)=>`<button class="speak-btn" data-action="speak" data-value="${text}" data-lang="${lang}" aria-label="Hear this phrase"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 4-6 5H2v6h3l6 5V4Zm4 4c3 2 3 6 0 8m3-11c5 4 5 10 0 14"/></svg></button>`;
 export function dayBar(j) {
@@ -26,13 +26,13 @@ function discoverFlow({r,j,language,videoUrl,culture}){
     next='Continue →';
   } else {
     title='Your shopping list.';
-    body=`<p>Check what you already have. For the rest, here’s how to ask for it in ${language==='it'?'Italian':language==='pt'?'Portuguese':'Catalan'}.</p>${!j.shoppingReady?btn('Create my shopping list','make-list'):`<div class="shopping-checks">${r.ingredients.map((v,k)=>{
-      const ask=askPhraseFor(language,v,r.words);
+    body=`<p>Check what you already have. For the rest, here’s how to ask for it in ${language==='it'?'Italian':language==='pt'?'Portuguese':'Catalan'}.</p><div class="shopping-checks">${r.ingredients.map((v,k)=>{
+      const ask=askPhraseFor(language,v,r.words,k);
       return `<div class="shopping-item"><label><input type="checkbox" data-shopping="${k}" ${j.checked.includes(k)?'checked':''}/><span>${v}</span><small>${j.checked.includes(k)?'Got it':'To buy'}</small></label>${ask?`<p class="ask-phrase"><span>How do I ask for this?</span><span class="phrase-row"><strong lang="${language}">${ask[0]}</strong>${speakBtn(ask[0],language)}</span><small>${ask[1]}</small></p>`:''}</div>`;
-    }).join('')}</div>`}`;
+    }).join('')}</div>`;
   }
-  const dayEnd = stage==='list' ? `<div class="day-end"><div><strong>${dayOneReady(j)?'A good place to pause.':'One more step'}</strong><small>${j.shoppingReady?'Shopping list ready':'Create your shopping list to continue'}</small></div>${btn(j.unlocked>0?'Return to day 2 →':'Save day 1 & pause','finish-discovery',dayOneReady(j)?'':'disabled')}</div>` : '';
-  return `<div class="discover-flow">${i>0?btn('← Back','discover-back','','text-button'):''}${discoverProgress(stages,i)}<div class="section-kicker">DAY 1 · ${dayNames[0].toUpperCase()}</div><h2>${title}</h2>${body}${extra}${next?btn(next,'discover-next'):''}${dayEnd}</div>`;
+  const dayEnd = stage==='list' ? `<div class="day-end"><div><strong>A good place to pause.</strong><small>Shopping list ready</small></div>${btn(j.unlocked>0?'Return to day 2 →':'Save day 1 & pause','finish-discovery')}</div>` : '';
+  return `<div class="discover-flow">${i>0?btn('← Back','discover-back','','text-button'):''}${discoverProgress(stages,i)}<h2>${title}</h2>${body}${extra}${next?btn(next,'discover-next'):''}${dayEnd}</div>`;
 }
 export function journeyPage({r,j,languageName,language,videoUrl,culture}){
   const heading=`<div class="page-topline">${btn('← Back to the menu','menu','','text-button')}<span>${languageName}</span></div><div class="lesson-heading"><div><h1>${r.name}</h1></div><span class="badge">Day ${j.day+1} of 3 · saved on this device</span></div>${dayBar(j)}`;

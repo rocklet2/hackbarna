@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { recipes } from './data.js';
 import { freshJourney, restoreJourney, dayOneReady, canStartDay, discoverStages, askPhraseFor, lessonSteps, quizScore, readJourneys } from './journey.js';
 const recipe = recipes[0];
-test('day one needs a shopping list; future days stay locked',()=>{
+test('day one needs the shopping list stage reached; future days stay locked',()=>{
   const j=freshJourney();
   assert.equal(dayOneReady(j),false);
   assert.equal(canStartDay(j,1),false);
   assert.equal(canStartDay(j,2),false);
-  j.shoppingReady=true;
+  j.discoverStage=discoverStages.length-1;
   assert.equal(dayOneReady(j),true);
   j.unlocked=1;
   assert.equal(canStartDay(j,1),true);
@@ -17,11 +17,13 @@ test('day one needs a shopping list; future days stay locked',()=>{
 test('discover flow is recipe, culture, then the shopping list',()=>{
   assert.deepEqual(discoverStages,['about','culture','list']);
 });
-test('each ingredient offers a phrase for the word it contains, in the target language',()=>{
+test('each ingredient offers a phrase for the word it contains, varied by position so they are not all the same template',()=>{
   assert.deepEqual(recipe.ingredients,['2 slices of rustic bread','1 ripe tomato','1 tbsp extra-virgin olive oil','A pinch of salt']);
-  assert.deepEqual(askPhraseFor('ca','2 slices of rustic bread',recipe.words),['Teniu pa?','Do you have bread?']);
-  assert.deepEqual(askPhraseFor('ca','1 tbsp extra-virgin olive oil',recipe.words),['Teniu oli?','Do you have oil?']);
-  assert.equal(askPhraseFor('ca','A random ingredient with no match',recipe.words),null);
+  assert.deepEqual(askPhraseFor('ca','2 slices of rustic bread',recipe.words,0),['Teniu pa?','Do you have bread?']);
+  assert.deepEqual(askPhraseFor('ca','1 ripe tomato',recipe.words,1),['Voldria tomàquet, si us plau.','I’d like tomato, please.']);
+  assert.deepEqual(askPhraseFor('ca','1 tbsp extra-virgin olive oil',recipe.words,2),['Busco oli.','I’m looking for oil.']);
+  assert.deepEqual(askPhraseFor('ca','A pinch of salt',recipe.words,3),['Encara us queda sal?','Do you still have salt left?']);
+  assert.equal(askPhraseFor('ca','A random ingredient with no match',recipe.words,0),null);
 });
 test('the lesson opens with its name story, then culture, then a regional note, before cooking',()=>{
   assert.ok(recipe.nameStory && recipe.regionalNote, 'flagship recipe should carry both story fields');
@@ -36,7 +38,7 @@ test('completion requires a submitted quiz with at least three correct answers',
   assert.equal(quizScore(recipe,{0:0,1:1,2:2,3:3}),4);
 });
 test('saved progress survives serialization and malformed storage falls back safely',()=>{
-  const original={...freshJourney(),day:1,unlocked:1,shoppingReady:true,checked:[0,2],step:2,drafts:{2:'My practice'}};
+  const original={...freshJourney(),day:1,unlocked:1,discoverStage:2,checked:[0,2],step:2,drafts:{2:'My practice'}};
   const restored=restoreJourney(JSON.parse(JSON.stringify(original)),recipe);
   assert.deepEqual(restored,original);
   assert.deepEqual(readJourneys({getItem:()=>'{broken'}),{});
