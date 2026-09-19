@@ -1,6 +1,6 @@
 import "./style.css";
 import { languages, levels, recommend, recipes } from "./data.js";
-import { STORAGE_KEY, cities, freshJourney, readJourneys, restoreJourney, dayOneReady, canStartDay, quizFor, quizScore, phrases } from "./journey.js";
+import { STORAGE_KEY, cities, freshJourney, readJourneys, restoreJourney, dayOneReady, canStartDay, discoverStages, quizFor, quizScore, phrases } from "./journey.js";
 import { dayBar, videoPlayer, journeyPage, pausePage } from "./journey-view.js";
 
 const app = document.querySelector("#app");
@@ -340,16 +340,21 @@ app.addEventListener("click", (event) => {
       break;
     case "restart-lesson":
       state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};state.paused=false;focus=true;break;
-    case "study":
-      state.journey.study = Number(value);
-      break;
-    case "learn": {
-      const i = [0,1,2].find(i=>!state.journey.learned.includes(i));
-      if(i===undefined) break;
-      if(value !== state.recipe.words[i][0]) { toast("Not quite. Look at your word cards and try again."); return; }
-      state.journey.learned.push(i);
+    case "discover-next": {
+      const stages = discoverStages(state.journey);
+      state.journey.discoverStage = Math.min(state.journey.discoverStage + 1, stages.length - 1);
+      focus = true;
       break;
     }
+    case "discover-back":
+      state.journey.discoverStage = Math.max(0, state.journey.discoverStage - 1);
+      focus = true;
+      break;
+    case "discover-shop-help":
+      state.journey.wantsShopHelp = value === "yes";
+      state.journey.discoverStage += 1;
+      focus = true;
+      break;
     case "make-list": state.journey.shoppingReady = true; break;
     case "download-list": {
       const text = `${state.recipe.name} — shopping in ${state.city}\n\n`+state.recipe.ingredients.map((v,i)=>`${state.checked.includes(i)?'[x]':'[ ]'} ${v}`).join('\n');

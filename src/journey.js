@@ -1,8 +1,14 @@
-export const STORAGE_KEY = 'taula-journeys-v2';
+export const STORAGE_KEY = 'taula-journeys-v3';
 export const cities = ['Barcelona', 'Girona', 'Tarragona', 'Milan', 'Roma', 'Bologna', 'Porto', 'Lisbon', 'Rio'];
 export const dayNames = ['Discover & shop', 'Cook & connect', 'Remember & celebrate'];
 export function freshJourney() {
-  return { day: 0, unlocked: 0, study: 0, learned: [], shoppingReady: false, checked: [], step: 0, drafts: {}, day1Date: null, day2Date: null, quizAnswers: {}, quizSubmitted: false, completed: false };
+  return { day: 0, unlocked: 0, discoverStage: 0, wantsShopHelp: null, shoppingReady: false, checked: [], step: 0, drafts: {}, day1Date: null, day2Date: null, quizAnswers: {}, quizSubmitted: false, completed: false };
+}
+export function discoverStages(j) {
+  const stages = ['about', 'culture', 'ask'];
+  if (j.wantsShopHelp) stages.push('shops');
+  stages.push('list', 'phrases');
+  return stages;
 }
 export function readJourneys(storage) {
   try {
@@ -16,9 +22,9 @@ export function restoreJourney(value, recipe) {
   for (const key of ['shoppingReady','quizSubmitted','completed']) j[key] = value[key] === true;
   j.unlocked = Number.isInteger(value.unlocked) ? Math.max(0,Math.min(2,value.unlocked)) : 0;
   j.day = Number.isInteger(value.day) ? Math.max(0,Math.min(j.unlocked,value.day)) : 0;
-  j.study = Number.isInteger(value.study) ? Math.max(0,Math.min(3,value.study)) : 0;
+  j.wantsShopHelp = value.wantsShopHelp === true ? true : value.wantsShopHelp === false ? false : null;
+  j.discoverStage = Number.isInteger(value.discoverStage) ? Math.max(0,Math.min(discoverStages(j).length-1,value.discoverStage)) : 0;
   j.step = Number.isInteger(value.step) ? Math.max(0,Math.min(recipe.steps.length-1,value.step)) : 0;
-  j.learned = Array.isArray(value.learned) ? [...new Set(value.learned.filter(n=>Number.isInteger(n)&&n>=0&&n<3))] : [];
   j.checked = Array.isArray(value.checked) ? [...new Set(value.checked.filter(n=>Number.isInteger(n)&&n>=0&&n<recipe.ingredients.length))] : [];
   for (const key of ['day1Date','day2Date']) if(typeof value[key]==='string' && !Number.isNaN(Date.parse(value[key]))) j[key]=value[key];
   if(value.drafts && typeof value.drafts==='object') for(const [key,text] of Object.entries(value.drafts)) if(/^\d+$/.test(key)&&typeof text==='string') j.drafts[key]=text.slice(0,5000);
@@ -37,7 +43,7 @@ export function quizFor(r) {
   ];
 }
 export function quizScore(recipe, answers) { return quizFor(recipe).reduce((score,q,i)=>score+(answers[i]===q.answer?1:0),0); }
-export function dayOneReady(j) { return j.learned.length===3 && j.shoppingReady; }
+export function dayOneReady(j) { return j.shoppingReady === true; }
 export function canStartDay(j, day) { return Number.isInteger(day)&&day>=0&&day<=2&&day<=j.unlocked; }
 export function nextDate(iso) {
   const d=new Date(iso||Date.now());d.setDate(d.getDate()+1);

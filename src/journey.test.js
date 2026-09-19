@@ -1,18 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recipes } from './data.js';
-import { freshJourney, restoreJourney, dayOneReady, canStartDay, quizScore, readJourneys, shopsFor } from './journey.js';
+import { freshJourney, restoreJourney, dayOneReady, canStartDay, discoverStages, quizScore, readJourneys, shopsFor } from './journey.js';
 const recipe = recipes[0];
-test('day one needs word practice and a shopping list; future days stay locked',()=>{
+test('day one needs a shopping list; future days stay locked',()=>{
   const j=freshJourney();
   assert.equal(dayOneReady(j),false);
   assert.equal(canStartDay(j,1),false);
   assert.equal(canStartDay(j,2),false);
-  j.learned=[0,1,2];j.shoppingReady=true;
+  j.shoppingReady=true;
   assert.equal(dayOneReady(j),true);
   j.unlocked=1;
   assert.equal(canStartDay(j,1),true);
   assert.equal(canStartDay(j,2),false);
+});
+test('discover stages skip the shop recommendation unless requested',()=>{
+  const j=freshJourney();
+  assert.deepEqual(discoverStages(j),['about','culture','ask','list','phrases']);
+  j.wantsShopHelp=true;
+  assert.deepEqual(discoverStages(j),['about','culture','ask','shops','list','phrases']);
+  j.wantsShopHelp=false;
+  assert.deepEqual(discoverStages(j),['about','culture','ask','list','phrases']);
 });
 test('completion requires a submitted quiz with at least three correct answers',()=>{
   const j={...freshJourney(),unlocked:2,day:2,completed:true,quizSubmitted:true};
@@ -21,7 +29,7 @@ test('completion requires a submitted quiz with at least three correct answers',
   assert.equal(quizScore(recipe,{0:0,1:1,2:2,3:3}),4);
 });
 test('saved progress survives serialization and malformed storage falls back safely',()=>{
-  const original={...freshJourney(),day:1,unlocked:1,learned:[0,1,2],shoppingReady:true,checked:[0,2],step:2,drafts:{2:'My practice'}};
+  const original={...freshJourney(),day:1,unlocked:1,wantsShopHelp:true,shoppingReady:true,checked:[0,2],step:2,drafts:{2:'My practice'}};
   const restored=restoreJourney(JSON.parse(JSON.stringify(original)),recipe);
   assert.deepEqual(restored,original);
   assert.deepEqual(readJourneys({getItem:()=>'{broken'}),{});
