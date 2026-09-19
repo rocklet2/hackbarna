@@ -1,9 +1,9 @@
 # [APP NAME]: Project Brief
 
-**Event:** HackBarna / AI Summit Barcelona, 19-20 Sep 2026 (sponsor: Norsken)
+**Event:** HackBarna / AI Summit Barcelona, 19-20 Sep 2026, Norrsken House Barcelona (~150 hackers)
 **Challenge:** Preply, "Best use of AI for Learning"
 **Challenge page:** https://www.hackbarna.com/en/events/aisummit26
-**Status of this doc:** brief as written by Romi on 2026-09-19. Items in [brackets] are undecided. Items marked UNVERIFIED must be confirmed before we rely on them.
+**Status of this doc:** brief as written by Romi on 2026-09-19, updated the same day with the event page facts (section 4 and section 11). Items in [brackets] are undecided. Items marked UNVERIFIED must be confirmed before we rely on them.
 
 ## 1. The idea
 Online recipes are built for reading, not cooking: a long backstory, then steps you follow with dirty hands. One mistake and you're on your own, like paper directions after a missed turn. [APP NAME] is a cooking coach that reroutes you, and it teaches you a language while you cook.
@@ -25,14 +25,17 @@ You pick a country (say Spain or Brazil). The app takes you through its dishes s
 5. Progress screen: language production, skill scores, dish collection.
 6. Country as configuration (dishes, language, vocabulary), so a second country is data, not a rebuild.
 
-## 4. Sponsor tech (UNVERIFIED: confirm the list with organizers)
-Sponsor lists differ between pages. The descriptions below are from general knowledge and may be out of date.
-- **SLNG (Unmute):** voice layer. Open-source tool that compiles a YAML/Markdown agent spec into a voice agent, plus one API for speech-to-text and text-to-speech with swappable models. Templates include step-by-step and multi-agent handoff agents. Caveat: examples seen were English models; verify Spanish/Portuguese coverage.
-- **Fal.ai:** claims 5-second videos in about 3 seconds. Generated video often gets cooking motion wrong and we cannot teach a wrong technique. Use only for steps where the output passes a test (see section 7), with pre-verified clips as fallback, and never for doneness.
+## 4. Sponsor tech
+Sponsor list checked against the event page on 2026-09-19 (read via a fetch summary; re-check the page before relying on exact wording). Tool descriptions below are still from general knowledge and UNVERIFIED until we test them.
+
+- **SLNG (Unmute):** voice layer. Open-source tool that compiles a YAML/Markdown agent spec into a voice agent, plus one API for speech-to-text and text-to-speech with swappable models. Templates include step-by-step and multi-agent handoff agents. Caveat: examples seen were English models; verify Spanish/Portuguese coverage. **Has its own challenge (section 11).**
+- **Galtea:** AI testing and evaluation. We use it to measure photo-check consistency and language accuracy, which backs the effectiveness story. **Has its own challenge (section 11).**
 - **Mastra:** agent and workflow orchestration for stage logic and memory.
-- **Galtea:** AI testing and evaluation. We use it to measure photo-check consistency and language accuracy, which backs the effectiveness story.
-- **Optional:** Vonage (live tutor video call), Nebius (hosted models, only if they beat alternatives on our photo rubric).
-- **Skip:** Cognition (dev tool that could speed up building), QualityClouds, Make, unless a prize requires them.
+- **Fal.ai:** claims 5-second videos in about 3 seconds. Generated video often gets cooking motion wrong and we cannot teach a wrong technique. Use only for steps where the output passes a test (see section 7), with pre-verified clips as fallback, and never for doneness.
+- **Vonage (Gold sponsor):** Video API. Optional live tutor video call. Has its own challenge.
+- **Nebius:** hosted models (Token Factory). Only if they beat alternatives on our photo rubric.
+- **QualityClouds Norma:** code scan and fix tool. Cheap extra entry: one scan, one fix, one rescan near the end (section 11). Moved out of "skip" on 2026-09-19.
+- **Skip:** Cognition (Devin; dev tool that could speed up building), Make, Titan OS, unless a prize requires them.
 
 ## 5. Known risks and our answers
 | Risk | Answer |
@@ -66,6 +69,39 @@ Pick the country, start the dish in the target language, show the level toggle, 
 [Frontend/PWA] · [AI: vision, prompts, evals] · [Voice: SLNG integration] · [Backend/data, country config] · [Design/demo/pitch]. Romi takes [role].
 
 ## 10. Open questions
-- Are there sponsor-specific prizes, and what does SLNG's challenge judge?
 - Which demo country and dish? Pick a dish under 45 minutes with short visual checkpoints.
-- Team size and hours available.
+- Team size and hours available. The event page does not state a team size limit; overall prizes mention 3 tickets, which suggests teams of up to 3 (inference, confirm with organizers).
+- What is Preply's prize? The page says "To be announced".
+- What exactly does Fal's "H3 Max Director Livestream" challenge require? Unclear from the page.
+
+## 11. Event facts (from the event page, 2026-09-19)
+**Venue:** Norrsken House Barcelona. **Co-organizer:** AI Summit Barcelona 2026.
+
+### Schedule
+- **Sat 19 Sep:** 9:00 registration, 10:00 keynote, 11:30 team formation, 13:00 lunch, 14:00 workshops, 18:00 dinner, 20:00 hacking onwards, venue closes 23:00.
+- **Sun 20 Sep:** 9:00 breakfast, **11:00 CODE SUBMISSION DEADLINE**, 13:00 lunch, 14:00 demos, 16:00 judging, 17:30 awards, 18:00 close.
+- Build window is roughly tonight plus early Sunday morning. Build order in section 6 is the priority order.
+
+### Sponsors
+- **Gold:** Vonage.
+- **Silver:** Preply, Mastra, Nebius, Cognition, Fal.ai, QualityClouds, Galtea, Make, SLNG, Titan OS.
+- **Community:** Le Wagon Barcelona, FemCoders Club.
+
+### Challenges we can enter
+| Challenge | Prize | Judging | Our fit |
+|---|---|---|---|
+| **Preply: Best Use of AI for Learning** (main target) | To be announced | Effectiveness of progress signals, engagement and return likelihood, UX polish, creative non-chat-wrapper AI | Core. Matches section 2. |
+| **SLNG Platform** | LEGO set per team member | Voice AI integration using SLNG STT/TTS APIs; bonus points for using the unmute framework | Strong: the voice coach is built on it. |
+| **Galtea: Find & Fix AI Flaws** | 3 LEGO sets, 3 t-shirts, 3-month Galtea Pro | Impact on real users, discovery quality, successful fixes with documented proof | Strong: photo-check and language-accuracy evals. Document the flaw, the fix and the before/after. |
+| **Vonage Video API** | Corsair Void v2 headsets (max 3 winners), t-shirts for all participants using the API | Video API usage | Optional: live tutor video call. |
+| **QualityClouds Norma: Production-Ready AI Code** | Keychron V6 keyboard per member + 12 months Norma Pro | One scan, at least one fix, one rescan; defend the code in 2 minutes | Cheap extra entry. Do it near the end. |
+| **Nebius Token Factory** | $1,000 / $500 / $100 | Not detailed | Only if hosted models win on our photo rubric. |
+| **Mastra: Agent on Messaging Platform** | EUR 250 | Works from a stranger's phone (30), exceeds wrapper (30), retention (20), code craft (20) | Weak unless we ship on a messaging platform. |
+| **Fal.ai: H3 Max Director Livestream** | $1,000 in fal credits | Unclear | Unclear, video-focused. Ask organizers. |
+
+Not relevant: Titan OS (content recommendation), Cognition (Devin for X), Norrsken House wildfire detection.
+
+### Overall prizes
+- **1st:** trophy, 3 gold summit tickets (EUR 655 each), AI Summit startup pitch opportunity, MacBook + AirPods, Bynd.vc mentorship, $1,000 Nebius credits, 6-month Devin Max, token/credit packages.
+- **2nd:** trophy, 3 silver tickets (EUR 355 each), 4-month Devin Max, tokens/credits.
+- **3rd:** trophy, 3 silver tickets (EUR 355 each), 2-month Devin Max, tokens/credits.
