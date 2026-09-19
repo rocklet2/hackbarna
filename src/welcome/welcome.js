@@ -46,7 +46,7 @@ const SR = speechSupported;
 let micState = { on: false, hearing: false, text: "", error: null };
 const mic = createMic({ onState: (st) => { micState = st; paintMicBar(); } });
 
-/** The mic switch sits beside the typed answer on the shop screen; no transcript is shown. */
+/** The mic switch beside "Say it back" on the market screen; no transcript is shown. */
 function paintMicBar() {
   const btn = document.getElementById("micoff");
   if (!btn) return;
@@ -396,10 +396,6 @@ function renderLesson() {
     <div class="thread" id="thread">${bubbles}</div>
     <div class="sayrow"><p class="hint centred">Say it back.</p>
       ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
-    <form class="typed" id="typed">
-      <input id="shopInput" autocomplete="off" placeholder="Or type it" />
-      <button type="submit">Send</button>
-    </form>
     <div class="lesson-actions">
       <button class="say" id="hear">▸ Hear it again</button>
       <button class="say" id="skip">Skip ›</button>
@@ -409,11 +405,6 @@ function renderLesson() {
   el("thread").scrollTop = el("thread").scrollHeight;
   el("hear").onclick = () => agentSay(`Say exactly, in ${lang.name}: "${script[state.line]?.target}"`);
   el("skip").onclick = skipLesson;
-  el("typed").onsubmit = (e) => {
-    e.preventDefault();
-    const v = el("shopInput").value.trim();
-    if (v) submitLesson(v);
-  };
   const off = el("micoff");
   if (off) off.onclick = () => mic.toggle();
   paintMicBar();
