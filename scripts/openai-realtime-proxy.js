@@ -1,7 +1,8 @@
-// Dev/preview-time proxy for the onboarding's voice agent (src/welcome/agent.js), now backed
-// by OpenAI's Realtime API instead of SLNG (SLNG's agent never got a working connection tested
-// end-to-end; see git history for that attempt). Same shape as tts-proxy.js: the browser never
-// sees OPENAI_API_KEY, it only ever talks to this endpoint.
+// Dev/preview-time proxy for the voice agent shared by welcome.html's onboarding and the
+// lesson page (src/agent.js), backed by OpenAI's Realtime API instead of SLNG (SLNG's agent
+// never got a working connection tested end-to-end; see git history for that attempt). Same
+// shape as the old tts-proxy.js it replaced: the browser never sees OPENAI_API_KEY, it only
+// ever talks to this endpoint.
 //
 // This uses the WebRTC "calls" flow: the browser creates its own RTCPeerConnection and posts its
 // SDP offer here as plain text; this endpoint forwards it to OpenAI's /v1/realtime/calls (signed
@@ -9,7 +10,7 @@
 // relays back the raw SDP answer. No ephemeral key ever has to reach the browser with this flow.
 const REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
 
-const INSTRUCTIONS = `You are the voice guide for Taula, a language-learning cooking app. Speak in short, warm sentences — one or two at most per turn, like a friendly cooking companion, not a chatbot. The learner is choosing a language, a starting level, a place, and a dish to cook while picking up the language; they can also see cards on screen and tap instead of speaking, so don't over-explain or list every option robotically.
+const ONBOARDING_INSTRUCTIONS = `You are the voice guide for Taula, a language-learning cooking app. Speak in short, warm sentences — one or two at most per turn, like a friendly cooking companion, not a chatbot. The learner is choosing a language, a starting level, a place, and a dish to cook while picking up the language; they can also see cards on screen and tap instead of speaking, so don't over-explain or list every option robotically.
 
 Language you speak in: use English for everything until the learner has told you which language they want to cook in. The moment they choose one, a message will tell you explicitly which language that is — from then on, speak your own guidance and conversation in that language (simple, encouraging, beginner-level phrasing), not English, until told otherwise. Regardless of what language you're currently speaking, whenever a message asks you to say an exact phrase in quotes, say precisely that phrase and nothing else, in whichever language that message specifies — it's reviewed target-language content and must not be paraphrased or translated.
 
@@ -24,11 +25,18 @@ Personality once a language is chosen: lean into a warm, affectionate flavor of 
 
 Be encouraging and supportive — never scold a wrong or unclear answer, just gently ask again. Never claim to certify a language level (no CEFR labels), never invent facts about a dish or its culture, and never comment on food safety from what you hear.`;
 
-function sessionConfig() {
+const LESSON_INSTRUCTIONS = `You are Taula's cooking companion, reading a recipe aloud one step at a time while the learner cooks in a language they're learning. You have no microphone input to react to — every message you get is a direct instruction telling you exactly what to say next. When asked to say an exact phrase in quotes, say precisely that phrase and nothing else, in whichever language the message specifies — it's reviewed recipe and target-language content that must never be paraphrased, translated, or embellished. Never claim to certify a language level (no CEFR labels), never invent facts about the dish or its culture, and never comment on food safety.`;
+
+const CONTEXTS = {
+  onboarding: ONBOARDING_INSTRUCTIONS,
+  lesson: LESSON_INSTRUCTIONS,
+};
+
+function sessionConfig(context) {
   return {
     type: "realtime",
     model: "gpt-realtime",
-    instructions: INSTRUCTIONS,
+    instructions: CONTEXTS[context] || ONBOARDING_INSTRUCTIONS,
     output_modalities: ["audio"],
     audio: {
       input: {
@@ -51,7 +59,8 @@ function readRawBody(req) {
 
 export function openaiRealtimeProxyPlugin() {
   const handler = async (req, res, next) => {
-    if (req.url !== "/api/realtime-session") return next();
+    const url = new URL(req.url, "http://localhost");
+    if (url.pathname !== "/api/realtime-session") return next();
     if (req.method !== "POST") { res.statusCode = 405; res.end("Use POST"); return; }
     try {
       const key = process.env.OPENAI_API_KEY;
@@ -65,7 +74,7 @@ export function openaiRealtimeProxyPlugin() {
 
       const form = new FormData();
       form.set("sdp", offerSdp);
-      form.set("session", JSON.stringify(sessionConfig()));
+      form.set("session", JSON.stringify(sessionConfig(url.searchParams.get("context"))));
 
       const upstream = await fetch(REALTIME_CALLS_URL, {
         method: "POST",

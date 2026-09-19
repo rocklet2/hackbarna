@@ -8,6 +8,7 @@ import { translatedStep } from "./lesson-translations.js";
 import { stepDirections } from "./lesson-copy.js";
 import { videoMarkup, requestStepVideo } from "./step-video.js";
 import { alignedInstruction } from "./word-align.js";
+import { createAgent } from "./agent.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -313,27 +314,47 @@ function toast(message) {
   el.classList.add("visible");
   setTimeout(() => el.classList.remove("visible"), 4000);
 }
-// The recipe step is spoken through /api/tts (OpenAI — see scripts/tts-proxy.js), a small
-// dev/preview-server proxy that keeps the API key off the client. No browser speech-synthesis
-// fallback: if the request fails, the step just stays silent and, for a manual tap, says so.
-const ttsCache = new Map();
-const ttsPlayer = new Audio();
+/* ---------- the voice agent: a tiny character, bottom-right ---------- */
+// Same shared agent as welcome.html's onboarding (src/agent.js, OpenAI's Realtime API over
+// WebRTC), used here purely for output: it reads recipe steps and phrases aloud. No browser
+// speech-synthesis fallback — if it can't connect, the step just stays silent and, for a
+// manual tap, says so. connect({listen:false}) skips publishing a mic track entirely, so this
+// page never has to ask for microphone permission just to hear something spoken.
+let agentState = { status: "idle", speaking: false, error: null };
+const agent = createAgent({ onState: (st) => { agentState = st; paintAgent(); } });
+const langName = (id) => languages.find((l) => l.id === id)?.name || id;
+
+function paintAgent() {
+  const orb = document.getElementById("agentOrb");
+  if (!orb) return;
+  orb.dataset.status = agentState.speaking ? "speaking" : agentState.status;
+  orb.setAttribute("aria-label", agentState.status === "connected"
+    ? "Voice guide connected — tap to turn off"
+    : agentState.status === "connecting" ? "Connecting the voice guide…"
+    : agentState.status === "error" ? "Voice guide unavailable — tap to retry"
+    : "Tap to turn on the voice guide");
+  const status = document.getElementById("agentStatus");
+  if (status) status.textContent = agentState.status === "error" ? agentState.error : "";
+}
+
+/** Mounted once, outside #app, so re-rendering a screen never tears down the agent's audio. */
+function mountAgentWidget() {
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `<div id="agentStatus" class="agent-status" role="status" aria-live="polite"></div>
+    <button type="button" id="agentOrb" class="agent-orb" data-status="idle" aria-label="Tap to turn on the voice guide">
+      <span class="agent-face"><span class="agent-eye"></span><span class="agent-eye"></span><span class="agent-mouth"></span></span>
+    </button>`;
+  document.body.append(...wrap.children);
+  document.getElementById("agentOrb").onclick = () => {
+    if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect();
+    else agent.connect({ context: "lesson", listen: false });
+  };
+}
+
 async function speak(text, lang, notify = true) {
-  try {
-    const key = `${lang}:${text}`;
-    let url = ttsCache.get(key);
-    if (!url) {
-      const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, lang }) });
-      if (!res.ok) throw new Error(`TTS request failed (${res.status})`);
-      url = URL.createObjectURL(await res.blob());
-      ttsCache.set(key, url);
-    }
-    ttsPlayer.pause();
-    ttsPlayer.src = url;
-    await ttsPlayer.play();
-  } catch {
-    if (notify) toast("Couldn't play audio just now.");
-  }
+  const ok = await agent.connect({ context: "lesson", listen: false });
+  if (!ok) { if (notify) toast("Couldn't reach the voice agent."); return; }
+  agent.prompt(`Say exactly, in ${langName(lang)}: "${text}"`);
 }
 function maybeAutoSpeakStep() {
   if (state.screen !== 2 || !state.recipe || state.completed || state.journey.phase === "quiz") return;
@@ -589,4 +610,5 @@ if (routedRecipe) {
 }
 if (state.screen === 2 && state.recipe) history.replaceState(null, "", recipePath(state.recipe));
 else if (window.location.pathname !== "/") history.replaceState(null, "", "/");
+mountAgentWidget();
 render();

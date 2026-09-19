@@ -15,7 +15,7 @@ import { placesFor, placeById, matchPlace, placeQuestionFor, tonightFor } from "
 import { dishesFor, complexityLabel } from "./dishes.js";
 import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
-import { createAgent } from "./agent.js";
+import { createAgent } from "../agent.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -63,7 +63,7 @@ function paintMicBar() {
 }
 
 /* ---------- the voice agent: a tiny character, bottom-right ---------- */
-// OpenAI's Realtime API over WebRTC (see src/welcome/agent.js) — a real conversational agent,
+// OpenAI's Realtime API over WebRTC (see src/agent.js) — a real conversational agent,
 // not just TTS: welcome.js tells it what's happening via agent.prompt() and it speaks on its
 // own initiative. What it hears the learner say comes back through mic.feed(), so every
 // screen's existing mic.listenFor(matchLanguage/matchPlace/...) keeps deciding what a spoken
@@ -107,7 +107,7 @@ function mountAgentWidget() {
       <span class="agent-face"><span class="agent-eye"></span><span class="agent-eye"></span><span class="agent-mouth"></span></span>
     </button>`;
   document.body.append(...wrap.children);
-  el("agentOrb").onclick = () => { if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect(); else agent.connect(); };
+  el("agentOrb").onclick = () => { if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect(); else agent.connect({ context: "onboarding" }); };
 }
 
 /* ---------- small helpers ---------- */
@@ -625,7 +625,7 @@ function renderStart() {
   el("begin").onclick = () => {
     stopHellos();
     mic.start();                    // must happen inside the gesture
-    agent.connect();                // same gesture opens the realtime agent's mic track too
+    agent.connect({ context: "onboarding" }); // same gesture opens the realtime agent's mic track too
     if (saved) { state.language = saved.language; renderWelcomeBack(saved); }
     else renderLanguage();
   };

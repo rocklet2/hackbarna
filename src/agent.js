@@ -1,17 +1,13 @@
-// The onboarding's voice agent, over OpenAI's Realtime API (WebRTC). Runs alongside — not
-// instead of — the existing tap-to-choose cards and mic.js: whatever it hears the learner say
-// arrives here as a transcript, and welcome.js still decides what that means (matchLanguage,
-// matchPlace, ...) via mic.feed(), exactly as it already does for mic.js's own browser speech
-// recognition. The agent doesn't need to know our screens to carry the audio; see prompt()
-// below for how welcome.js tells it what to say.
+// The voice agent shared by welcome.html's onboarding and the lesson page, over OpenAI's
+// Realtime API (WebRTC). Generic on purpose — it knows nothing about either page's screens.
+// Callers tell it what to say via prompt() and, if they're listening for spoken answers, get
+// the learner's transcript back via onUserTranscript.
 //
 // Replaces an earlier SLNG/LiveKit integration that never got a working connection end to end.
 //
-// One session for the whole onboarding, started from the same "Begin" tap that opens the
-// microphone (browsers require a user gesture for getUserMedia) — see mic.js's own note on
-// this. If OPENAI_API_KEY isn't set in .env, /api/realtime-session (scripts/openai-realtime-
-// proxy.js) answers 501 and connect() reports that as its error rather than throwing, so the
-// rest of the page works without it.
+// If OPENAI_API_KEY isn't set in .env, /api/realtime-session (scripts/openai-realtime-proxy.js)
+// answers 501 and connect() reports that as its error rather than throwing, so the rest of the
+// page works without it.
 export function createAgent({ onState, onUserTranscript } = {}) {
   let pc = null;
   let dc = null;
@@ -32,8 +28,8 @@ export function createAgent({ onState, onUserTranscript } = {}) {
   }
 
   function sendPrompt(text) {
-    // A "system" item, not "user": it's stage direction ("you're now on the language screen"),
-    // not something the learner said, and it shouldn't show up in their conversation turns.
+    // A "system" item, not "user": it's stage direction ("you're now on the language screen",
+    // "say this recipe step"), not something the learner said, and shouldn't show up as their turn.
     dc.send(JSON.stringify({
       type: "conversation.item.create",
       item: { type: "message", role: "system", content: [{ type: "input_text", text }] },
@@ -58,15 +54,28 @@ export function createAgent({ onState, onUserTranscript } = {}) {
     }
   }
 
-  async function connect() {
+  /**
+   * @param {object} [opts]
+   * @param {boolean} [opts.listen=true] Publish the mic and transcribe the learner's speech.
+   *   Pass false for playback-only uses (e.g. reading a recipe step aloud) so the browser never
+   *   has to ask for microphone permission just to hear something spoken.
+   * @param {string} [opts.context] Which system prompt scripts/openai-realtime-proxy.js should
+   *   use — see its CONTEXTS map. Defaults to the onboarding guide there.
+   */
+  async function connect(opts = {}) {
+    const { listen = true, context } = opts;
     if (pc || state.status === "connecting") return state.status === "connected";
     state.status = "connecting";
     state.error = null;
     emit();
     try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const conn = new RTCPeerConnection();
-      conn.addTrack(micStream.getTracks()[0], micStream);
+      if (listen) {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        conn.addTrack(micStream.getTracks()[0], micStream);
+      } else {
+        conn.addTransceiver("audio", { direction: "recvonly" });
+      }
 
       const audioEl = document.createElement("audio");
       audioEl.autoplay = true;
@@ -87,7 +96,8 @@ export function createAgent({ onState, onUserTranscript } = {}) {
       const offer = await conn.createOffer();
       await conn.setLocalDescription(offer);
 
-      const res = await fetch("/api/realtime-session", {
+      const url = context ? `/api/realtime-session?context=${encodeURIComponent(context)}` : "/api/realtime-session";
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/sdp" },
         body: offer.sdp,

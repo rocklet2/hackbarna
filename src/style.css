@@ -2523,3 +2523,44 @@ body.lesson-brand .completion { padding: calc(env(safe-area-inset-top) + 52px) 1
   body.lesson-brand { padding: 24px 0; }
   body.lesson-brand #app { min-height: calc(100dvh - 48px); border: 2px solid var(--pb-ink); box-shadow: 0 8px 0 var(--pb-ink); }
 }
+
+/* ------------------------------------------------------------------------
+   The voice agent's tiny character (src/agent.js), shared with welcome.html
+   (src/welcome/welcome.css has its own copy of these same rules, tuned to
+   that page's pink/mint tone blocks instead of body.lesson-brand). Hidden
+   outside the lesson screen — mounted once at module init, so it exists in
+   the DOM the whole time, but only shown while body.lesson-brand is set.
+------------------------------------------------------------------------ */
+.agent-orb, .agent-status { display: none; }
+body.lesson-brand .agent-status { display: block; }
+body.lesson-brand .agent-orb {
+  display: grid;
+  position: fixed; right: 16px; bottom: 16px; z-index: 40;
+  width: 56px; height: 56px; border-radius: 50%; padding: 0;
+  border: 2px solid var(--pb-white); background: var(--pb-ink); color: var(--pb-white);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .35);
+  place-items: center;
+  transition: background .2s, color .2s;
+}
+body.lesson-brand .agent-orb:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
+body.lesson-brand .agent-orb[data-status="connecting"] { opacity: .65; }
+body.lesson-brand .agent-orb[data-status="connected"] { background: var(--pb-mint); color: var(--pb-ink); }
+body.lesson-brand .agent-orb[data-status="speaking"] { background: var(--pb-pink); color: var(--pb-ink); animation: agentPulse .6s ease-in-out infinite alternate; }
+body.lesson-brand .agent-orb[data-status="error"] { background: var(--pb-white); color: var(--pb-ink); border-color: var(--pb-pink); }
+@keyframes agentPulse { from { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 0 0 rgba(255, 122, 172, .55); } to { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 0 8px rgba(255, 122, 172, 0); } }
+
+body.lesson-brand .agent-face { position: relative; width: 26px; height: 22px; }
+body.lesson-brand .agent-eye { position: absolute; top: 2px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+body.lesson-brand .agent-eye:first-child { left: 1px; }
+body.lesson-brand .agent-eye:last-child { right: 1px; }
+body.lesson-brand .agent-mouth { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 12px; height: 3px; border-radius: 3px; background: currentColor; transition: width .12s, height .12s, border-radius .12s; }
+body.lesson-brand .agent-orb[data-status="speaking"] .agent-mouth { width: 9px; height: 9px; border-radius: 50%; }
+body.lesson-brand .agent-orb[data-status="connecting"] .agent-mouth { width: 12px; border-radius: 3px; animation: agentThinking 1s steps(3) infinite; }
+@keyframes agentThinking { to { width: 4px; } }
+
+body.lesson-brand .agent-status {
+  position: fixed; right: 16px; bottom: 78px; z-index: 40; max-width: 220px;
+  font-size: 11px; line-height: 1.4; text-align: right; color: var(--pb-white);
+  background: rgba(18, 17, 23, .82); padding: 6px 10px; border-radius: 10px;
+}
+body.lesson-brand .agent-status:empty { display: none; }
