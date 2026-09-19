@@ -130,3 +130,11 @@ export function ingredientLesson(language, level, recipe) {
 
   return { turns, items, unknown };
 }
+
+/** Heading of the end screen, in the language being learned. Unreviewed until a speaker signs off. */
+const LIST_HEADING = {
+  ca: { target: "La teva llista", en: "Your list, in Catalan" },
+  it: { target: "La tua lista", en: "Your list, in Italian" },
+  pt: { target: "A tua lista", en: "Your list, in Portuguese" },
+};
+export const listHeadingFor = (language) => LIST_HEADING[language] || LIST_HEADING.ca;

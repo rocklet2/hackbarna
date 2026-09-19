@@ -15,7 +15,7 @@ import {
   PLANS, planById, matchPlan,
 } from "./places.js";
 import { dishesFor, pickForPlan, complexityLabel, nextOptions } from "./dishes.js";
-import { shopScript, ingredientLesson, gradeRepetition, feedbackFor } from "./shop.js";
+import { shopScript, ingredientLesson, listHeadingFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
 
 const app = document.querySelector("#app");
@@ -430,9 +430,6 @@ function submitLesson(text) {
 /* ---------- the end of onboarding ---------- */
 function renderHandoff(via) {
   state.step = "done";
-  const place = placeById(state.language, state.place);
-  const lang = byId(state.language);
-  const list = state.dishes.map((d) => esc(d.name)).join(", ");
   mic.listenFor(null);
   // Hand back what they just practised, so the screen is a page to shop from.
   const items = via === "shop" ? ingredientLesson(state.language, state.level, state.dishes[0]).items : [];
@@ -441,18 +438,11 @@ function renderHandoff(via) {
       <span class="en">${esc(i.en)}</span>
       <span class="why">${esc(i.ingredient)}</span></div>`).join("")}</div>` : "";
   app.innerHTML = chrome(`<div class="stage">
-    <h1 class="ask">${via === "shop" ? `Your list, in ${esc(lang.name)}.` : "Let's cook."}</h1>
+    <h1 class="ask">${via === "shop"
+      ? `<span class="target">${esc(listHeadingFor(state.language).target)}</span>
+         <span class="en">${esc(listHeadingFor(state.language).en)}</span>`
+      : "Let's cook."}</h1>
     ${recap}
-    <div class="summary-rows">
-      <div class="row"><span>Language</span><b>${esc(lang.name)}</b></div>
-      <div class="row"><span>Starting point</span><b>${esc(LEVEL_NAMES[state.level])}</b></div>
-      <div class="row"><span>Cooking in</span><b>${esc(place.name)}</b></div>
-      <div class="row"><span>${state.dishes.length > 1 ? "Dishes" : "Dish"}</span><b>${list}</b></div>
-    </div>
-    <div class="note" style="background:var(--paper);border:1px solid var(--line)">
-      <b>Next: step 7, the recipe lesson</b>
-      That is the existing app, with the shopping list, the cooking steps and the culture notes.
-    </div>
     <div class="mic-row">
       <a class="mic" href="/" style="text-decoration:none">Open the recipe app</a>
     </div>
