@@ -9,26 +9,22 @@
 // Honesty is unchanged, and is easier to hold now: a self-chosen starting point
 // is obviously a starting point. It is never a score and never a CEFR level.
 
-export const LEVEL_NAMES = ["Beginner", "Elementary", "Intermediate", "Advanced"];
+export const LEVEL_NAMES = ["Beginner", "Intermediate", "Advanced"];
 
 export const LEVELS = [
   {
-    id: 0, name: "Beginner", detail: "New to it. We start with first words.",
+    id: 0, name: "Beginner", detail: "New to it, or a few words. We start with first words.",
     aliases: ["beginner", "beginning", "begin", "new", "nothing", "none", "zero",
-      "start", "starting", "first", "never"],
+      "start", "starting", "first", "never", "elementary", "basic", "basics", "little",
+      "a little", "some", "bit", "a bit", "few", "a few"],
   },
   {
-    id: 1, name: "Elementary", detail: "A few words. We build from those.",
-    aliases: ["elementary", "basic", "basics", "little", "a little", "some", "bit",
-      "a bit", "few", "a few"],
-  },
-  {
-    id: 2, name: "Intermediate", detail: "You can follow along. We can go faster.",
+    id: 1, name: "Intermediate", detail: "You can follow along. We can go faster.",
     aliases: ["intermediate", "middle", "medium", "ok", "okay", "decent", "alright",
       "so so", "comfortable"],
   },
   {
-    id: 3, name: "Advanced", detail: "You can hold a conversation. We can talk while we cook.",
+    id: 2, name: "Advanced", detail: "You can hold a conversation. We can talk while we cook.",
     aliases: ["advanced", "fluent", "confident", "high", "good", "very good",
       "quite good", "strong"],
   },
@@ -36,9 +32,9 @@ export const LEVELS = [
 
 /** Asked bilingually, matching the other screens. UNREVIEWED. */
 export const LEVEL_QUESTION = {
-  ca: { target: "Quant català saps?", en: "How much Catalan do you have?" },
-  it: { target: "Quanto italiano sai?", en: "How much Italian do you have?" },
-  pt: { target: "Quanto português sabes?", en: "How much Portuguese do you have?" },
+  ca: { target: "Quant català saps?", en: "How much Catalan do you know?" },
+  it: { target: "Quanto italiano sai?", en: "How much Italian do you know?" },
+  pt: { target: "Quanto português sabes?", en: "How much Portuguese do you know?" },
 };
 
 export const levelQuestionFor = (languageId) => LEVEL_QUESTION[languageId] || LEVEL_QUESTION.ca;

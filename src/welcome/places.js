@@ -38,22 +38,10 @@ const PLACES = {
       aliases: ["girona", "gerona", "empordà", "emporda"],
     },
     {
-      id: "valls", name: "Valls", country: "Spain", endonym: "Valls",
-      detail: "The home of the calçot: sweet onions charred on the fire and dipped in romesco.",
-      cities: ["Valls, ES"], ready: true,
-      aliases: ["valls", "alt camp", "calcots", "calcot"],
-    },
-    {
       id: "tarragona", name: "Tarragona", country: "Spain", endonym: "Tarragona",
-      detail: "The Roman coast and romesco country. Roasted vegetables, nuts and autumn sweets.",
+      detail: "The Roman coast and the calçot country. Roasted vegetables, romesco and autumn sweets.",
       cities: ["Tarragona, ES"], ready: true,
-      aliases: ["tarragona", "tarraco", "romesco"],
-    },
-    {
-      id: "lleida", name: "Lleida", country: "Spain", endonym: "Lleida",
-      detail: "Orchard country inland. Vegetable coca baked flat and shared.",
-      cities: ["Lleida, ES"], ready: true,
-      aliases: ["lleida", "lerida", "ponent"],
+      aliases: ["tarragona", "tarraco", "romesco", "valls", "calcots", "calcot"],
     },
   ],
   it: [

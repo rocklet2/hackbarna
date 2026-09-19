@@ -15,19 +15,19 @@ import {
   PLANS, planById, matchPlan,
 } from "./places.js";
 import { dishesFor, pickForPlan, complexityLabel, nextOptions } from "./dishes.js";
-import { shopScript, ingredientLesson, gradeRepetition, feedbackFor } from "./shop.js";
+import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
 
 const app = document.querySelector("#app");
 const state = {
   step: "language", language: null,
   level: null, place: null, plan: null,
-  dishes: [], stage: "shop", line: 0, thread: [], tries: 0,
+  dishes: [], line: 0, thread: [], tries: 0, wordLine: 0, wordAck: null,
 };
 
 /* ---------- remembering the learner ---------- */
 // The level check runs on the first visit only, so it has to survive a reload.
-const STORE = "taula-welcome-v1";
+const STORE = "taula-welcome-v2";
 function saveProfile(extra = {}) {
   try {
     localStorage.setItem(STORE, JSON.stringify({
@@ -84,7 +84,7 @@ function paintMicBar() {
 const el = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const chrome = (inner) => `<div class="app"><div><div class="brand">taula<b>*</b></div>
-  <div class="notice">Prototype · target-language text pending native review</div></div>${inner}</div>`;
+  </div>${inner}</div>`;
 
 /* ---------- step 1: which language ---------- */
 const QUESTION = "Which language would you like to cook in?";
@@ -155,7 +155,6 @@ function renderLevel() {
       <span class="target">${esc(q.target)}</span>
       <span class="en">${esc(q.en)}</span>
     </h1>
-    <p class="hint">No test. Say it or pick it, and change it whenever you like.</p>
     <div class="cards" style="grid-template-columns:1fr">
       ${LEVELS.map((l) => `<button class="card" data-level="${l.id}">
         <span class="name">${esc(l.name)}</span>
@@ -300,67 +299,45 @@ function renderDishes(ranked) {
   });
 }
 
-/* ---------- step 6: the stall, then your list ---------- */
-//
-// Two spoken lessons share this screen. The first is the stall conversation,
-// the second walks the recipe's own shopping list. They differ only in their
-// script and their label, so they run through one renderer.
+/* ---------- step 6: the stall conversation ---------- */
 
-function lessonFor(stage) {
-  const recipe = state.dishes[0];
-  if (stage === "list") {
-    return { script: ingredientLesson(state.language, state.level, recipe).turns, label: "Your list" };
-  }
-  return { script: shopScript(state.language, state.level, recipe), label: "Shop & connect" };
+function lessonFor() {
+  return { script: shopScript(state.language, state.level, state.dishes[0]), label: "Shop & connect" };
 }
 
 function startShop() {
   state.step = "shop";
-  state.stage = "shop";
   state.line = 0; state.thread = []; state.tries = 0;
-  state.thread.push({ who: "sys", text: state.level >= 2
-    ? "At the market, the useful thing is not ordering. It is getting them to speak to you."
-    : "Three things to say at the stall. Say each one back to me." });
+  const count = lessonFor().script.length;
+  state.thread.push({ who: "sys", text: state.level >= 1
+    ? "A real exchange at the stall. The seller speaks first and you reply. Say each reply back to me."
+    : `${count} things to say at the stall. Say each one back to me.` });
   renderLesson();
   setTimeout(() => sayLessonLine(), 400);
 }
 
-/** The list lesson opens by naming what it will and will not teach. */
-function startList() {
-  const { items, unknown } = ingredientLesson(state.language, state.level, state.dishes[0]);
-  if (!items.length) { renderHandoff("shop"); return; }
-
-  state.stage = "list";
-  state.line = 0; state.thread = []; state.tries = 0;
-  const lang = byId(state.language);
-  state.thread.push({ who: "sys", text: `Now the list for ${state.dishes[0].name}. `
-    + `${items.length} things to ask for, each a different way of asking. Say each one back to me.` });
-  if (unknown.length) {
-    // Same honesty rule as an unsupported language: name the gap, do not translate on the spot.
-    state.thread.push({ who: "sys", text: `We will skip ${unknown.join(", ")}. `
-      + `There is no checked ${lang.name} word for that yet, and we would rather leave it out than invent one.` });
-  }
-  renderLesson();
-  setTimeout(() => sayLessonLine(), 500);
-}
-
 function sayLessonLine() {
-  const { script } = lessonFor(state.stage);
+  const { script } = lessonFor();
   const line = script[state.line];
   if (!line) return;
-  state.thread.push({ who: "coach", target: line.target, en: line.en, why: line.why });
+  if (line.seller) state.thread.push({ who: "seller", target: line.seller.target, en: line.seller.en });
+  state.thread.push({ who: "coach", target: line.target, en: line.en, why: line.why, reply: !!line.seller });
   renderLesson();
-  say(line.target, byId(state.language).voice);
+  const voice = byId(state.language).voice;
+  if (line.seller) say(line.seller.target, voice, () => setTimeout(() => say(line.target, voice), 300));
+  else say(line.target, voice);
 }
 
 function renderLesson() {
   const lang = byId(state.language);
-  const { script, label } = lessonFor(state.stage);
+  const { script, label } = lessonFor();
   const bubbles = state.thread.map((m) => {
     if (m.who === "me") return `<div class="bubble me">${esc(m.text)}</div>`;
     if (m.who === "sys") return `<div class="bubble sys">${esc(m.text)}</div>`;
     if (m.who === "ack") return `<div class="bubble coach ack">${esc(m.text)}</div>`;
-    return `<div class="bubble coach"><div class="target">${esc(m.target)}</div>
+    if (m.who === "seller") return `<div class="bubble seller"><div class="who">Seller</div>
+      <div class="target">${esc(m.target)}</div><div class="en">${esc(m.en)}</div></div>`;
+    return `<div class="bubble coach">${m.reply ? `<div class="who">Your reply</div>` : ""}<div class="target">${esc(m.target)}</div>
       <div class="en">${esc(m.en)}</div>
       ${m.why ? `<div class="why">${esc(m.why)}</div>` : ""}</div>`;
   }).join("");
@@ -398,16 +375,15 @@ function renderLesson() {
   mic.listenFor((text) => submitLesson(text), "answer");
 }
 
-/** Skip moves on from the current lesson: the stall to the list, the list to the end. */
 function skipLesson() {
   mic.listenFor(null);
   speechSynthesis?.cancel?.();
-  if (state.stage === "shop") startList(); else renderHandoff("shop");
+  renderHandoff("shop");
 }
 
 function submitLesson(text) {
   mic.listenFor(null);
-  const { script } = lessonFor(state.stage);
+  const { script } = lessonFor();
   const line = script[state.line];
   const { verdict } = gradeRepetition(text, line.target);
   state.tries += 1;
@@ -423,50 +399,120 @@ function submitLesson(text) {
   state.line += 1; state.tries = 0;
   setTimeout(() => {
     if (state.line < script.length) { sayLessonLine(); return; }
-    if (state.stage === "shop") { startList(); return; }
     renderHandoff("shop");
   }, 1100);
 }
 
-/* ---------- the end of onboarding ---------- */
+/* ---------- the end of onboarding: your list, said aloud ---------- */
+// The last screen is the recipe's ingredient list. The coach says each word, the
+// learner says it back, and the row ticks off. The way out ("A cuinar!") is always
+// on screen, so nobody is held here.
+
+function cta() {
+  const c = cookCtaFor(state.language);
+  return `<a class="cta" href="/"><span class="cta-target">${esc(c.target)}</span>
+    <span class="cta-en">${esc(c.en)}</span></a>
+    <button class="say" id="again">Start over</button>`;
+}
+
 function renderHandoff(via) {
   state.step = "done";
-  const place = placeById(state.language, state.place);
-  const lang = byId(state.language);
-  const list = state.dishes.map((d) => esc(d.name)).join(", ");
   mic.listenFor(null);
-  // Hand back what they just practised, so the screen is a page to shop from.
-  const items = via === "shop" ? ingredientLesson(state.language, state.level, state.dishes[0]).items : [];
-  const recap = items.length ? `<div class="recap">${items.map((i) => `<div class="line">
-      <span class="target">${esc(i.target)}</span>
-      <span class="en">${esc(i.en)}</span>
-      <span class="why">${esc(i.ingredient)}</span></div>`).join("")}</div>` : "";
+  if (via !== "shop") {
+    app.innerHTML = chrome(`<div class="stage"><h1 class="ask">Let's cook.</h1>${cta()}</div>`);
+    el("again").onclick = restart;
+    return;
+  }
+  state.wordLine = 0; state.tries = 0; state.wordAck = null;
+  const { taught } = ingredientWords(state.language, state.dishes[0]);
+  if (!taught.length) { renderHandoff("cook"); return; }
+  renderWords();
+  setTimeout(() => sayWord(), 500);
+}
+
+function sayWord() {
+  const { taught } = ingredientWords(state.language, state.dishes[0]);
+  const row = taught[state.wordLine];
+  if (row) say(row.target, byId(state.language).voice);
+}
+
+function renderWords() {
+  const lang = byId(state.language);
+  const { rows, taught } = ingredientWords(state.language, state.dishes[0]);
+  const current = taught[state.wordLine] || null;
+  const done = !current;
+  const h = listHeadingFor(state.language);
+
+  const dots = `<div class="turnbar">${taught.map((_, i) =>
+    `<i class="${i < state.wordLine ? "done" : ""} ${i === state.wordLine ? "current" : ""}"></i>`).join("")}</div>`;
+  const ack = state.wordAck ? `<div class="bubble coach ack">${esc(state.wordAck)}</div>` : "";
+
+  // One ingredient at a time while learning; the whole list once it is learned.
+  const body = done
+    ? `<div class="recap">${rows.map((r) => `<div class="line ${r.target ? "done" : "muted"}">
+        <span class="target">${esc(r.target || r.ingredient)}</span>
+        ${r.target ? `<span class="en">${esc(r.en)}</span>` : ""}
+        <span class="why">${r.target ? esc(r.ingredient) : "No checked word for this yet"}</span></div>`).join("")}</div>
+      <div class="bubble coach ack">That is your list. Whenever you are ready, we cook.</div>`
+    : `${dots}${ack}
+      <div class="wordcard">
+        <div class="lead">${esc(current.lead)}</div>
+        <div class="word">${esc(current.target)}</div>
+        <div class="gloss">${esc(current.en)}</div>
+        <div class="qty">${esc(current.ingredient)}</div>
+      </div>
+      <div class="sayrow"><p class="hint centred">${state.wordLine === 0 && !state.wordAck
+        ? "I say each word. You say it back, out loud." : "Say it out loud."}</p>
+        ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
+      <div class="lesson-actions">
+        <button class="say" id="hear">▸ Hear it again</button>
+        <button class="say" id="skipword">Next ›</button>
+      </div>`;
+
   app.innerHTML = chrome(`<div class="stage">
-    <h1 class="ask">${via === "shop" ? `Your list, in ${esc(lang.name)}.` : "Let's cook."}</h1>
-    ${recap}
-    <div class="summary-rows">
-      <div class="row"><span>Language</span><b>${esc(lang.name)}</b></div>
-      <div class="row"><span>Starting point</span><b>${esc(LEVEL_NAMES[state.level])}</b></div>
-      <div class="row"><span>Cooking in</span><b>${esc(place.name)}</b></div>
-      <div class="row"><span>${state.dishes.length > 1 ? "Dishes" : "Dish"}</span><b>${list}</b></div>
-    </div>
-    <div class="note" style="background:var(--paper);border:1px solid var(--line)">
-      <b>Next: step 7, the recipe lesson</b>
-      That is the existing app, with the shopping list, the cooking steps and the culture notes.
-    </div>
-    <div class="mic-row">
-      <a class="mic" href="/" style="text-decoration:none">Open the recipe app</a>
-    </div>
-    <button class="say" id="again">Start over</button>
+    <h1 class="ask"><span class="target">${esc(h.target)}</span><span class="en">${esc(h.en)}</span></h1>
+    ${body}
+    ${cta()}
   </div>`);
+
   el("again").onclick = restart;
+  if (done) { mic.listenFor(null); return; }
+  el("hear").onclick = () => say(current.target, lang.voice);
+  el("skipword").onclick = () => {
+    mic.listenFor(null);
+    state.wordLine += 1; state.tries = 0; state.wordAck = null;
+    renderWords();
+    setTimeout(() => sayWord(), 400);
+  };
+  const off = el("micoff");
+  if (off) off.onclick = () => mic.toggle();
+  paintMicBar();
+  mic.setLang(lang.speech);
+  mic.listenFor((text) => submitWord(text), "answer");
+}
+
+function submitWord(text) {
+  mic.listenFor(null);
+  const { taught } = ingredientWords(state.language, state.dishes[0]);
+  const row = taught[state.wordLine];
+  const { verdict } = gradeRepetition(text, row.target);
+  state.tries += 1;
+  // Never let someone get stuck on one word: after two goes we move on anyway.
+  const forced = state.tries >= 2;
+  const { text: reply, advance } = wordFeedback(forced && verdict === "again" ? "moveon" : verdict, row.target, state.wordLine);
+  state.wordAck = reply;
+
+  if (!advance && !forced) { renderWords(); setTimeout(() => say(row.target, byId(state.language).voice), 500); return; }
+  state.wordLine += 1; state.tries = 0;
+  renderWords();
+  setTimeout(() => sayWord(), 700);
 }
 
 
 function restart() {
   try { localStorage.removeItem(STORE); } catch {}
   Object.assign(state, { step: "language", language: null,
-    level: null, place: null, plan: null, dishes: [], stage: "shop" });
+    level: null, place: null, plan: null, dishes: [], wordLine: 0, wordAck: null });
   renderLanguage();
 }
 

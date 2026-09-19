@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { recipes } from "./data.js";
 import { complexityOf, complexityLabel, dishesFor, pickForPlan, nextOptions } from "./welcome/dishes.js";
-import { shopScript, ingredientLesson, gradeRepetition, feedbackFor } from "./welcome/shop.js";
+import { phrases } from "./journey.js";
+import { shopScript, ingredientWords, wordFeedback, gradeRepetition, feedbackFor } from "./welcome/shop.js";
 import { planById } from "./welcome/places.js";
 
 const CA_CITIES = ["Barcelona, ES", "Girona, ES", "Tarragona, ES"];
@@ -23,7 +24,7 @@ test("a beginner is offered the simplest dish available", () => {
 });
 
 test("an advanced learner is offered the hardest dish available", () => {
-  const pool = dishesFor({ language: "ca", cities: CA_CITIES, level: 3 });
+  const pool = dishesFor({ language: "ca", cities: CA_CITIES, level: 2 });
   const hardest = Math.max(...pool.map(complexityOf));
   assert.equal(complexityOf(pool[0]), hardest, `${pool[0].name} is the most demanding there is`);
 });
@@ -31,10 +32,10 @@ test("an advanced learner is offered the hardest dish available", () => {
 test("every level gets a different first suggestion, with no gap in the middle", () => {
   // The bug this guards: fixed complexity bands left no middle band for a
   // six-dish catalogue, so intermediate learners tied and got the quickest dish.
-  const firsts = [0, 1, 2, 3].map(
+  const firsts = [0, 1, 2].map(
     (level) => dishesFor({ language: "ca", cities: CA_CITIES, level })[0].name);
-  assert.equal(new Set(firsts).size, 4, `each level got its own dish: ${firsts.join(" / ")}`);
-  const scores = [0, 1, 2, 3].map(
+  assert.equal(new Set(firsts).size, 3, `each level got its own dish: ${firsts.join(" / ")}`);
+  const scores = [0, 1, 2].map(
     (level) => complexityOf(dishesFor({ language: "ca", cities: CA_CITIES, level })[0]));
   for (let i = 1; i < scores.length; i += 1) {
     assert.ok(scores[i] > scores[i - 1], "each level up is a harder dish");
@@ -67,16 +68,31 @@ test("one dish can go straight to cooking, several cannot", () => {
   assert.equal(nextOptions(3).some((o) => o.id === "cook"), false, "you cannot cook three dishes at once");
 });
 
-test("the shop lesson is pitched at the learner's level", () => {
+test("the market lesson changes with every level", () => {
   const recipe = byName("Panellets");
-  const beginner = shopScript("ca", 0, recipe);
-  const advanced = shopScript("ca", 3, recipe);
-  assert.equal(beginner.length, 3);
-  assert.equal(advanced.length, 3);
-  // Both open with the greeting, but only the advanced one asks to be spoken to in Catalan.
-  assert.equal(beginner[0].target, advanced[0].target);
-  assert.match(advanced[1].en, /speak in Catalan/i);
-  assert.match(beginner[1].en, /do you have/i);
+  const scripts = [0, 1, 2].map((level) => shopScript("ca", level, recipe));
+  const keys = scripts.map((sc) => sc.map((l) => l.target).join("|"));
+  assert.equal(new Set(keys).size, 3, "each level gets its own lesson");
+  // Beginners say single phrases back; from intermediate up the seller speaks first.
+  assert.ok(scripts[0].every((l) => !l.seller));
+  assert.ok(scripts[1].every((l) => l.seller) && scripts[2].every((l) => l.seller));
+  assert.ok(scripts[2].length > scripts[1].length, "advanced is the longer conversation");
+  assert.equal(scripts[0][0].target, "Bon dia!", "beginners keep the basic greeting");
+});
+
+test("advanced tells the seller you are learning and what you are cooking", () => {
+  const recipe = byName("Pa amb tomàquet");
+  const advanced = shopScript("ca", 2, recipe);
+  assert.match(advanced[0].en, /learning Catalan/i);
+  assert.ok(advanced.some((l) => l.target.includes(recipe.name.toLowerCase())), "names tonight's dish");
+});
+
+test("beginner lessons only use phrases from Andrei's list", () => {
+  const recipe = byName("Panellets");
+  const allowed = phrases("ca", recipe.words[0][0], recipe.words[0][1]).map((r) => r[0]);
+  for (const level of [0]) {
+    for (const l of shopScript("ca", level, recipe)) assert.ok(allowed.includes(l.target), `${l.target} is one of his`);
+  }
 });
 
 test("the shop lesson names the dish's own ingredient", () => {
@@ -87,13 +103,14 @@ test("the shop lesson names the dish's own ingredient", () => {
 });
 
 test("the shop lesson works in every language", () => {
-  for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"]]) {
+  for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"], ["pt", "Salada de feijão-frade"]]) {
     const recipe = recipes.find((r) => r.language === lang && r.name === name) ||
       recipes.find((r) => r.language === lang);
-    for (const level of [0, 3]) {
+    for (const level of [0, 1, 2]) {
       const script = shopScript(lang, level, recipe);
-      assert.equal(script.length, 3, `${lang} level ${level}`);
+      assert.ok(script.length >= 3, `${lang} level ${level}`);
       for (const line of script) assert.ok(line.target && line.en && line.why);
+      if (level >= 1) for (const line of script) assert.ok(line.seller.target && line.seller.en);
     }
   }
 });
@@ -129,44 +146,41 @@ test("feedback never says wrong, and only blocks on a real miss", () => {
   assert.equal(feedbackFor("again", "x").advance, false);
 });
 
-test("the list lesson teaches the dish's own ingredients, in the target language", () => {
+test("the ingredient list teaches the dish's own ingredients as words", () => {
   const recipe = byName("Pa amb tomàquet");
-  const { turns, items, unknown } = ingredientLesson("ca", 0, recipe);
-  assert.equal(unknown.length, 0, "every ingredient of this one has a curated word");
-  assert.equal(items.length, 4);
-  // Each taught line names the real list entry, so the learner knows what it is for.
-  for (const item of items) {
-    assert.ok(recipe.ingredients.includes(item.ingredient), `${item.ingredient} is on the list`);
-    assert.ok(turns.some((t) => t.why.includes(item.ingredient)), "the coach says what it is for");
-  }
-  assert.ok(turns.every((t) => t.target && t.en && t.why));
+  const { rows, taught } = ingredientWords("ca", recipe);
+  assert.equal(rows.length, recipe.ingredients.length, "every ingredient is listed");
+  assert.deepEqual(taught.map((r) => r.target), ["pa", "tomàquet", "oli", "sal"]);
+  for (const r of taught) assert.ok(r.en && r.lead && recipe.ingredients.includes(r.ingredient));
 });
 
-test("the list lesson asks four different ways, not one sentence four times", () => {
-  const { items } = ingredientLesson("ca", 0, byName("Pa amb tomàquet"));
-  const openings = items.map((i) => i.target.split(" ")[0]);
-  assert.equal(new Set(openings).size, items.length, `all different: ${openings.join(" / ")}`);
+test("an ingredient with no checked word is shown, never invented", () => {
+  const { rows, untranslated, taught } = ingredientWords("ca", byName("Panellets"));
+  assert.deepEqual(untranslated.map((r) => r.ingredient), ["Lemon zest"]);
+  assert.equal(rows.find((r) => r.ingredient === "Lemon zest").target, null);
+  assert.ok(taught.every((r) => r.target), "only real words are taught");
 });
 
-test("an ingredient with no checked word is named, never invented", () => {
-  // Panellets asks for lemon zest, and no curated word list has it.
-  const { unknown, items } = ingredientLesson("ca", 0, byName("Panellets"));
-  assert.deepEqual(unknown, ["Lemon zest"]);
-  assert.ok(items.every((i) => !/lemon/i.test(i.target)), "nothing was translated on the spot");
-});
-
-test("the list lesson never re-teaches what the stall lesson just taught", () => {
-  const recipe = byName("Pa amb tomàquet");
-  for (const level of [0, 3]) {
-    const stall = shopScript("ca", level, recipe).map((l) => l.target);
-    const list = ingredientLesson("ca", level, recipe).turns.map((t) => t.target);
-    for (const line of list) assert.ok(!stall.includes(line), `level ${level} repeats "${line}"`);
+test("the ingredient lesson teaches at most four words", () => {
+  for (const name of ["Panellets", "Calçots amb romesco", "Pa amb tomàquet"]) {
+    assert.ok(ingredientWords("ca", byName(name)).taught.length <= 4, name);
   }
 });
 
-test("the list lesson is capped at four turns", () => {
-  const { turns } = ingredientLesson("ca", 0, byName("Panellets"));
-  assert.ok(turns.length <= 4);
+test("the ingredient list works in every language we teach", () => {
+  for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"], ["pt", "Salada de feijão-frade"]]) {
+    const recipe = recipes.find((r) => r.language === lang && r.name === name);
+    assert.ok(ingredientWords(lang, recipe).taught.length > 0, `${lang} teaches something`);
+  }
+});
+
+test("word feedback never says wrong, and does not repeat itself four times running", () => {
+  const replies = [0, 1, 2, 3].map((i) => wordFeedback("good", "pa", i).text);
+  assert.equal(new Set(replies).size, 4);
+  for (const v of ["good", "close", "moveon", "again"]) {
+    assert.doesNotMatch(wordFeedback(v, "pa", 0).text, /wrong|incorrect|failed|no,/i);
+  }
+  assert.equal(wordFeedback("again", "pa", 0).advance, false);
 });
 
 test("the shopping CTA no longer promises planning", () => {
@@ -176,11 +190,3 @@ test("the shopping CTA no longer promises planning", () => {
   }
 });
 
-test("the list lesson works in every language we teach", () => {
-  for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"]]) {
-    const recipe = recipes.find((r) => r.language === lang && r.name === name);
-    const { turns, items } = ingredientLesson(lang, 0, recipe);
-    assert.ok(items.length > 0, `${lang} teaches something`);
-    assert.ok(turns.length <= 4, `${lang} lesson stays short`);
-  }
-});

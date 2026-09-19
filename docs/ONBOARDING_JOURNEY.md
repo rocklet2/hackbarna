@@ -51,9 +51,10 @@ sound like it is not listening.
 
 ### Step 2b — Where you are starting (about 8s)
 On the **same screen as the greeting**. The coach asks *"Quant català saps?"* /
-"How much Catalan do you have?" and the learner says or taps one of four:
-Beginner, Elementary, Intermediate, Advanced. Each says what it means, and the
-screen says plainly: no test, change it whenever you like.
+"How much Catalan do you know?" and the learner says or taps one of three:
+Beginner, Intermediate, Advanced (cut from four on 2026-09-19: Elementary was
+merged into Beginner, so "a few words" now counts as Beginner). Each says what it
+means. It is a self-chosen starting point, never a test.
 
 **The spoken assessment was cut** (Romi, 2026-09-19). An earlier version asked
 three questions that got harder, graded each reply on whether the learner reached
@@ -87,16 +88,20 @@ Diet and time constraints move out of onboarding. Ask them only if they matter, 
 ### Step 5 — Choosing the dish (about 10s)
 Recipes are matched to level **by complexity, not just by minutes**:
 - **Beginner:** few steps, few techniques, small vocabulary. *(pa amb tomàquet: 4 steps)*
+- **Intermediate:** in between, aimed at the middle of whatever the catalogue offers.
 - **Advanced:** more steps, real technique, richer vocabulary. *(panellets: 6 steps; crema catalana: custard and caramelising)*
 
 After choosing, two ways forward:
 1. **"Take me straight to the recipe"** (when it is a single dish)
-2. **"Help me plan and shop for the ingredients"** → step 6
+2. **"Learn what to say at the market"** → step 6
 
 ### Step 6 — Shop and connect (about 15s)
 A **small spoken lesson**, matched to level:
-- **Beginner:** how to order what you need. *"Que tinc de dir?"* → the coach teaches the phrase, the learner says it back.
-- **Advanced:** how to start a conversation with the stallholder, ask what is good today, ask where it comes from.
+- **Beginner:** three single phrases, said back one at a time: the greeting, *"Teniu…?"*, *"Quant costa?"*.
+- **Intermediate:** a short back and forth where the seller speaks first and the learner replies: greet and ask, ask for half a kilo, say that is all and ask the total, say goodbye.
+- **Advanced:** the same exchange, longer. The learner says they are learning the language, says what they are cooking tonight and asks what to buy, then takes the advice.
+
+Only the beginner lines come from Andrei's `phrases()`. The intermediate and advanced lines are new and **unreviewed** (`EXCHANGE` in `src/welcome/shop.js`). The lesson can be skipped, and it leads to a final screen, "La teva llista": the recipe's ingredients taught one word at a time, by voice only with no typing box (one large word card; the coach says it, the learner says it out loud, then it moves on; Next and Hear it again are always there, and the full list appears once all four are done; four words at most, and an ingredient with no checked word is listed but not taught). The "A cuinar!" button is always on screen.
 
 **No multiple choice. No tapping an answer from four options.** The coach says a phrase, the learner says it back or adapts it, and the coach responds like a teacher would.
 
