@@ -6,6 +6,8 @@
 **Status of this doc:** brief as written by Romi on 2026-09-19, updated the same day with the event page facts (section 4 and section 11). Items in [brackets] are undecided. Items marked UNVERIFIED must be confirmed before we rely on them.
 
 ## 1. The idea
+**Update 2026-09-19:** it is a language learning app that also teaches a place and its culture through its food. Early levels teach words, numbers, actions and kitchen objects through very simple recipes; higher levels add fluid conversation, recipe history and cultural facts. The app asks questions while you cook to judge language level, and you can send photos of your progress. See [PROGRESS_DESIGN.md](PROGRESS_DESIGN.md).
+
 Online recipes are built for reading, not cooking: a long backstory, then steps you follow with dirty hands. One mistake and you're on your own, like paper directions after a missed turn. [APP NAME] is a cooking coach that reroutes you, and it teaches you a language while you cook.
 
 You pick a country (say Spain or Brazil). The app takes you through its dishes step by step, with instructions, voice guidance and feedback in that country's language. At each stage you can take a photo, and the AI checks how you're doing and helps you fix mistakes. Words stick because you learn them while doing the action.
@@ -105,3 +107,9 @@ Not relevant: Titan OS (content recommendation), Cognition (Devin for X), Norrsk
 - **1st:** trophy, 3 gold summit tickets (EUR 655 each), AI Summit startup pitch opportunity, MacBook + AirPods, Bynd.vc mentorship, $1,000 Nebius credits, 6-month Devin Max, token/credit packages.
 - **2nd:** trophy, 3 silver tickets (EUR 355 each), 4-month Devin Max, tokens/credits.
 - **3rd:** trophy, 3 silver tickets (EUR 355 each), 2-month Devin Max, tokens/credits.
+
+## 12. Demo decision (2026-09-19)
+- **Country and language:** Catalonia, Catalan.
+- **Dish:** panellets.
+- **Blocker:** Catalan is not a language Romi can verify. A Catalan speaker must review all strings and test labels before the demo. SLNG Catalan coverage is untested.
+- **Config:** [config/catalonia.yaml](../config/catalonia.yaml) is the single source for stages, vocabulary, questions, photo rubrics and culture facts. All entries start unreviewed.

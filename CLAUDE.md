@@ -9,7 +9,8 @@ Romi and Andrei both use this repo via their own Claude Code sessions. Everythin
 ## Project context
 - **Event:** HackBarna / AI Summit Barcelona, 19-20 Sep 2026, at Norrsken House Barcelona (Norrsken is the host; note the double r).
 - **Challenge:** Preply, "Best use of AI for Learning".
-- **Product:** [APP NAME], a cooking coach that teaches a language while you cook. Pick a country, get step-by-step dishes with voice, photo checks and feedback in that country's language.
+- **Product:** [APP NAME], a language learning app that also teaches a place and its culture through its food. Cook step by step with voice, photo checks and feedback in the local language; levels move from ingredient words to fluent conversation plus recipe history and cultural facts.
+- **Demo:** Catalonia, Catalan, panellets. Config in `config/catalonia.yaml`. Progress design in `docs/PROGRESS_DESIGN.md`.
 - **Full brief:** `docs/PROJECT_BRIEF.md` (idea, sponsor tech, risks, build order, demo flow, open questions). Read it before building anything.
 
 ### Non-negotiable guardrails
@@ -17,6 +18,8 @@ Romi and Andrei both use this repo via their own Claude Code sessions. Everythin
 - **No pronunciation scoring claims.** We promise correct word and phrase feedback only.
 - **Every target-language string is hand-checked** by a speaker before it goes in the demo. Demo only languages we can verify (Romi covers English, Spanish, Portuguese).
 - **Seeded progress data is labeled as seeded** in the UI and the pitch.
+- **Catalan is not verified by Romi.** Nothing in Catalan goes into the demo until a Catalan speaker reviews it. Mark strings `unreviewed` in the config until then.
+- **Culture facts are curated with a source**, never generated live. Progress is a "level estimate", never a certified CEFR level.
 - **Country is configuration**, not code: dishes, language and vocabulary live in data files.
 - **Sponsor list is confirmed** (brief, section 11), but tool capabilities are UNVERIFIED until tested. Run the first-hour tests in the brief before building around SLNG, Fal or vision.
 - **Code submission deadline: Sunday 20 Sep, 11:00 AM.** Everything must be pushed before then. Demos are at 14:00.
