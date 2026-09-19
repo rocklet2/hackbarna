@@ -280,6 +280,9 @@ h1 em {
 .flag.it {
   background: linear-gradient(90deg, #498966 33%, #fff 33% 66%, #d66754 66%);
 }
+.flag.es {
+  background: linear-gradient(0deg, #c6533e 25%, #efc552 25% 75%, #c6533e 75%);
+}
 .flag.pt {
   background: linear-gradient(90deg, #40865f 40%, #cb5a43 40%);
 }

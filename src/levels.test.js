@@ -37,7 +37,7 @@ test("the three levels line up with their names and are complete", () => {
 });
 
 test("the level question is asked in both languages", () => {
-  for (const id of ["ca", "it", "pt"]) {
+  for (const id of ["ca", "it", "pt", "es"]) {
     const q = levelQuestionFor(id);
     assert.ok(q.target && q.en, `${id} asks in both`);
   }
@@ -45,6 +45,6 @@ test("the level question is asked in both languages", () => {
 
 test("nothing claims this is a test or a CEFR level", () => {
   const copy = [...LEVELS.map((l) => `${l.name} ${l.detail}`),
-    ...["ca", "it", "pt"].map((id) => levelQuestionFor(id).en)].join(" ");
+    ...["ca", "it", "pt", "es"].map((id) => levelQuestionFor(id).en)].join(" ");
   assert.doesNotMatch(copy, /CEFR|A1|B2|score|assessed|exam/i);
 });

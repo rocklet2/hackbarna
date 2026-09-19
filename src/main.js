@@ -192,6 +192,7 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&
 const lessonUi = {
   ca: { next: "Següent", previous: "Pas anterior", step: "PAS", ingredients: "Ingredients", culture: "Una nota local", check: "Comprova", missing: "Paraula que falta", complete: "Complet", turn: "El teu torn", correct: "Correcte!", retry: "Torna a mirar la guia i prova-ho de nou.", explore: "Explora una altra recepta", restart: "Torna a començar" },
   it: { next: "Avanti", previous: "Passaggio precedente", step: "PASSAGGIO", ingredients: "Ingredienti", culture: "Una nota locale", check: "Controlla", missing: "Parola mancante", complete: "Completato", turn: "Tocca a te", correct: "Corretto!", retry: "Riguarda la guida e riprova.", explore: "Esplora un’altra ricetta", restart: "Ricomincia" },
+  es: { next: "Siguiente", previous: "Paso anterior", step: "PASO", ingredients: "Ingredientes", culture: "Una nota local", check: "Comprobar", missing: "Palabra que falta", complete: "Completo", turn: "Tu turno", correct: "¡Correcto!", retry: "Revisa la guía e inténtalo de nuevo.", explore: "Explora otra receta", restart: "Empezar de nuevo" },
   pt: { next: "Seguinte", previous: "Passo anterior", step: "PASSO", ingredients: "Ingredientes", culture: "Uma nota local", check: "Verificar", missing: "Palavra em falta", complete: "Concluído", turn: "A tua vez", correct: "Correto!", retry: "Consulta o guia e tenta novamente.", explore: "Explora outra receita", restart: "Recomeçar" },
 };
 const advancedCulture = {
@@ -205,6 +206,11 @@ const advancedCulture = {
     `Questa ricetta mostra come la cucina italiana trasformi ingredienti semplici in un piatto da condividere. Tecnica e pazienza contano quanto il prodotto.`,
     `La cultura gastronomica non è soltanto una lista di ingredienti: è anche memoria, conversazione e il modo di sedersi a tavola con gli altri.`,
   ][n % 3],
+  es: (r, place, n) => [
+    `${r.name} cuenta una cocina ligada al territorio. En ${place}, los mercados y los productos de temporada marcan el ritmo de la mesa de cada día.`,
+    `Esta receta muestra cómo la cocina española convierte ingredientes sencillos en un plato para compartir. La técnica y la paciencia cuentan tanto como el producto.`,
+    `La cultura gastronómica no es solo una lista de ingredientes: también es memoria, conversación y la manera de sentarse a la mesa con otras personas.`,
+  ][n % 3],
   pt: (r, place, n) => [
     `${r.name} faz parte de uma cozinha ligada ao território. Em ${place}, mercados e produtos da estação dão ritmo à mesa do dia a dia.`,
     `Esta receita mostra como a cozinha transforma ingredientes simples num prato para partilhar. A técnica e a paciência contam tanto como o produto.`,
@@ -213,7 +219,10 @@ const advancedCulture = {
 };
 function uiText(key) { return state.level >= 3 ? lessonUi[state.language]?.[key] || key : null; }
 function cultureFact(recipe, index) {
-  const place = state.region?.split(",")[0] || recipe.regions?.[0]?.split(",")[0] || language().regionLabel || "the region";
+  // A stale default region (Barcelona) must not leak into another language's dish.
+  const owned = recipe.regions?.length ? recipe.regions : language().regions || [];
+  const region = owned.includes(state.region) ? state.region : recipe.regions?.[0];
+  const place = region?.split(",")[0] || language().regionLabel || "the region";
   const words = recipe.words.length ? recipe.words : [[recipe.name, recipe.name]];
   const first = words[index % words.length];
   const second = words[(index + 1) % words.length];

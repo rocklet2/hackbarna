@@ -37,6 +37,21 @@ export const languages = [
     review: "unreviewed",
   },
   {
+    id: "es",
+    name: "Spanish",
+    hello: "¡Hola!",
+    flag: "▤",
+    regionLabel: "Spain",
+    regions: ["Madrid, ES", "Sevilla, ES", "Valencia, ES"],
+    words: [
+      ["pan", "bread"],
+      ["tomate", "tomato"],
+      ["aceite", "olive oil"],
+      ["sal", "salt"],
+    ],
+    review: "unreviewed",
+  },
+  {
     id: "pt",
     name: "Portuguese",
     hello: "Olá!",
@@ -562,6 +577,14 @@ const italianTable = {
     url: "https://www.ice.it/it/sites/default/files/inline-files/ITALIANA%20-%20ITA%20Amman%20Office%20Newsletter%20-%20Issue%201_May-June_2020.pdf",
   },
 };
+const spanishTable = {
+  title: "A kitchen shaped by exchange.",
+  text: "Many traditional Spanish dishes, such as the potato omelette, would not be possible without the exchange between Europe and the New World. Paella leans on rice and saffron, which were probably popularized in the Al-Andalus period. A simple plate can carry a long history.",
+  source: {
+    name: "Wikipedia · Spanish cuisine",
+    url: "https://en.wikipedia.org/wiki/Spanish_cuisine",
+  },
+};
 const portugueseTable = {
   title: "An invitation to the table.",
   text: "Portuguese hospitality is part of the country’s food culture, in traditional taverns as well as award-winning restaurants. Imagine welcoming someone to your table: what would you offer them first?",
@@ -592,6 +615,7 @@ for (const r of recipes) {
       },
     };
   else if (r.language === "pt" && !r.story) r.story = portugueseTable;
+  else if (r.language === "es" && !r.story) r.story = spanishTable;
 }
 
 const culturalOverrides = {

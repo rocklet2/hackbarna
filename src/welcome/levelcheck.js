@@ -35,6 +35,7 @@ export const LEVEL_QUESTION = {
   ca: { target: "Quant català saps?", en: "How much Catalan do you know?" },
   it: { target: "Quanto italiano sai?", en: "How much Italian do you know?" },
   pt: { target: "Quanto português sabes?", en: "How much Portuguese do you know?" },
+  es: { target: "¿Cuánto español sabes?", en: "How much Spanish do you know?" },
 };
 
 export const levelQuestionFor = (languageId) => LEVEL_QUESTION[languageId] || LEVEL_QUESTION.ca;
@@ -45,6 +46,7 @@ const LEVEL_LABEL = {
   ca: ["Principiant", "Intermedi", "Avançat"],
   it: ["Principiante", "Intermedio", "Avanzato"],
   pt: ["Iniciante", "Intermediário", "Avançado"],
+  es: ["Principiante", "Intermedio", "Avanzado"],
 };
 export const levelLabelFor = (languageId, levelId) => (LEVEL_LABEL[languageId] || LEVEL_LABEL.ca)[levelId] || "";
 

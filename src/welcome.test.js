@@ -8,6 +8,13 @@ test("matchLanguage hears a language name in a spoken answer", () => {
   assert.equal(matchLanguage("Català").id, "ca", "endonym with accents");
   assert.equal(matchLanguage("italian").id, "it");
   assert.equal(matchLanguage("portuguese").id, "pt");
+  assert.equal(matchLanguage("Spanish").id, "es");
+  assert.equal(matchLanguage("Español").id, "es", "endonym with accent");
+});
+
+test("Spanish is a taught language, not a coming-soon one", () => {
+  assert.equal(isSupported("es"), true);
+  assert.equal(COMING_SOON.some((l) => l.id === "es"), false);
 });
 
 test("matchLanguage also recognises languages we cannot teach yet", () => {
@@ -27,6 +34,7 @@ test("greetingFor greets in the chosen language without needing a name", () => {
   assert.equal(greetingFor("ca"), "Hola!");
   assert.equal(greetingFor("it"), "Ciao!");
   assert.equal(greetingFor("pt"), "Olá!");
+  assert.equal(greetingFor("es"), "¡Hola!");
 });
 
 test("every catalogue entry is complete and unambiguous", () => {

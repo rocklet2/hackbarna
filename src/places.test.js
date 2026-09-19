@@ -7,7 +7,7 @@ import {
 } from "./welcome/places.js";
 
 test("a place is only offered as ready when recipes exist for its cities", () => {
-  for (const id of ["ca", "it", "pt"]) {
+  for (const id of ["ca", "it", "pt", "es"]) {
     for (const place of placesFor(id)) {
       const count = recipes.filter(
         (r) => r.language === id && (r.regions || []).some((c) => place.cities.includes(c)),
@@ -72,7 +72,7 @@ test("today plan asks for one dish", () => {
 });
 
 test("place questions are asked in both languages", () => {
-  for (const id of ["ca", "it", "pt"]) {
+  for (const id of ["ca", "it", "pt", "es"]) {
     const q = placeQuestionFor(id);
     assert.ok(q.target && q.en, `${id} question has both languages`);
   }

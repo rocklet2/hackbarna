@@ -65,6 +65,20 @@ const EXCHANGE = {
     cooking: (dish) => `Hoje à noite vou cozinhar ${dish}. O que me aconselha?`,
     perfect: "Perfeito! Queria meio quilo, por favor.",
   },
+  es: {
+    open: ["¡Buenos días! Dígame.", "Good morning! Go ahead."],
+    more: ["¿Algo más?", "Anything else?"],
+    sure: ["¡Claro! ¿Qué necesita?", "Of course! What do you need?"],
+    best: ["Estos son los mejores de hoy.", "These are the best today."],
+    amount: ["Sí, tengo. ¿Cuánto quiere?", "Yes, I have some! How much do you want?"],
+    bye: ["Aquí tiene.", "Here you are."],
+    askFor: (word) => `¡Buenos días! ¿Tiene ${word}?`,
+    half: "¿Me pone medio kilo, por favor?",
+    total: "No, nada más, gracias. ¿Cuánto es todo?",
+    thanks: "¡Muchas gracias! ¡Que tenga un buen día!",
+    cooking: (dish) => `Esta noche cocino ${dish}. ¿Qué me recomienda?`,
+    perfect: "¡Perfecto! ¿Me pone medio kilo, por favor?",
+  },
 };
 
 const EN = {
@@ -208,6 +222,7 @@ const LIST_HEADING = {
   ca: { target: "La teva llista", en: "Your list, in Catalan" },
   it: { target: "La tua lista", en: "Your list, in Italian" },
   pt: { target: "A tua lista", en: "Your list, in Portuguese" },
+  es: { target: "Tu lista", en: "Your list, in Spanish" },
 };
 export const listHeadingFor = (language) => LIST_HEADING[language] || LIST_HEADING.ca;
 
@@ -216,5 +231,6 @@ const COOK_CTA = {
   ca: "A cuinar!",
   it: "A cucinare!",
   pt: "Vamos cozinhar!",
+  es: "¡A cocinar!",
 };
 export const cookCtaFor = (language) => ({ target: COOK_CTA[language] || COOK_CTA.ca, en: "Let's start cooking!" });

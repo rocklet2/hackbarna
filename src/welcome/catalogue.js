@@ -37,11 +37,20 @@ export const SUPPORTED = [
     voice: "pt",
     speech: "pt-PT",
   },
+  {
+    id: "es",
+    name: "Spanish",
+    endonym: "Español",
+    mark: "▤",
+    aliases: ["spanish", "espanol", "español", "castilian", "castellano", "spain"],
+    greeting: (name) => (name ? `¡Hola, ${name}!` : "¡Hola!"),
+    voice: "es",
+    speech: "es-ES",
+  },
 ];
 
 /** Shown so the catalogue reads like a real product. Not selectable: we have no content for these. */
 export const COMING_SOON = [
-  { id: "es", name: "Spanish", endonym: "Español", mark: "▤", aliases: ["spanish", "espanol", "español", "castilian", "castellano"] },
   { id: "fr", name: "French", endonym: "Français", mark: "▦", aliases: ["french", "francais", "français"] },
   { id: "el", name: "Greek", endonym: "Ελληνικά", mark: "▧", aliases: ["greek", "ellinika"] },
   { id: "ja", name: "Japanese", endonym: "日本語", mark: "▨", aliases: ["japanese", "nihongo"] },
