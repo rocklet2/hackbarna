@@ -435,6 +435,7 @@ h1 em {
   font-size: 12px;
   font-weight: 550;
   line-height: 1.5;
+  text-decoration: none;
 }
 .primary {
   background: var(--green);

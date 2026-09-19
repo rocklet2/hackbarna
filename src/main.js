@@ -87,7 +87,21 @@ const icon = (name, cls = "") =>
 const language = () => languages.find((l) => l.id === state.language);
 const button = (text, action, cls = "primary", attrs = "") =>
   `<button class="${cls}" data-action="${action}" ${attrs}>${text}</button>`;
+const linkButton = (text, href, action, value, cls = "primary") =>
+  `<a href="${href}" class="${cls}" data-action="${action}" data-value="${value}">${text}</a>`;
 const badge = (text, cls = "") => `<span class="badge ${cls}">${text}</span>`;
+const slugify = (str) =>
+  str.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const recipePath = (r) => `/recipes/${r.language}/${slugify(r.name)}`;
+const routeToRecipe = (pathname) => {
+  const match = pathname.match(/^\/recipes\/([a-z]{2})\/([a-z0-9-]+)\/?$/);
+  if (!match) return null;
+  const [, lang, slug] = match;
+  return recipes.find((r) => r.language === lang && slugify(r.name) === slug) || null;
+};
+const navigateTo = (path) => {
+  if (window.location.pathname !== path) history.pushState(null, "", path);
+};
 
 function header() {
   return `<header class="header"><button class="brand" data-action="home" aria-label="Taula home">${icon("bowl")}taula<span>✳</span></button><nav aria-label="Your cooking journey">${["Your taste", "The menu", "Your lesson"].map((s, i) => `<button class="nav-step ${state.screen === i ? "active" : ""} ${state.screen > i ? "done" : ""}" data-action="nav" data-value="${i}" ${i > state.screen ? "disabled" : ""}><span>${state.screen > i ? icon("check") : `0${i + 1}`}</span>${s}</button>`).join('<span class="nav-line"></span>')}</nav><span class="preview-label"><i></i> Concept preview</span></header>`;
@@ -161,7 +175,7 @@ function menu() {
                 .map((w) => w[0])
                 .join(
                   " · ",
-                )}</small></div>${button(`${lessonStore[`${r.id}:${state.level}`]?.completed ? "Completed · revisit" : lessonStore[`${r.id}:${state.level}`] ? "Resume lesson" : "Explore this recipe"} ${icon("arrow")}`, "recipe", i === 0 ? "primary" : "secondary", `data-value="${r.id}"`)}</div></article>`,
+                )}</small></div>${linkButton(`${lessonStore[`${r.id}:${state.level}`]?.completed ? "Completed · revisit" : lessonStore[`${r.id}:${state.level}`] ? "Resume lesson" : "Explore this recipe"} ${icon("arrow")}`, recipePath(r), "recipe", r.id, i === 0 ? "primary" : "secondary")}</div></article>`,
           )
           .join("")}</section>`
       : `<section class="empty-state">${icon("bowl")}<h2>A little too specific for our small menu.</h2><p>We don’t have a sample recipe for that combination yet. Try another preference or explore a different place.</p>${button("Adjust my preferences", "home")}</section>`
@@ -296,6 +310,8 @@ setInterval(() => {
 app.addEventListener("click", (event) => {
   const target = event.target.closest("[data-action]");
   if (!target || target.disabled) return;
+  if (target.tagName === "A" && !event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0)
+    event.preventDefault();
   const action = target.dataset.action,
     value = target.dataset.value;
   let focus = false;
@@ -303,6 +319,7 @@ app.addEventListener("click", (event) => {
     case "home":
       state.screen = 0;
       resetOnboarding();
+      navigateTo("/");
       stopTimer();
       focus = true;
       break;
@@ -310,6 +327,7 @@ app.addEventListener("click", (event) => {
       if (Number(value) > state.screen) return;
       state.screen = Number(value);
       if (state.screen === 0) resetOnboarding();
+      navigateTo(state.screen === 2 && state.recipe ? recipePath(state.recipe) : "/");
       stopTimer();
       focus = true;
       break;
@@ -364,14 +382,18 @@ app.addEventListener("click", (event) => {
       state.onboarded = true;
     case "menu":
       state.screen = 1;
+      navigateTo("/");
       stopTimer();
       focus = true;
       break;
-    case "recipe":
-      openRecipe(recommend(state).find(r => r.id === value));
+    case "recipe": {
+      const found = recommend(state).find(r => r.id === value);
+      openRecipe(found);
+      navigateTo(recipePath(found));
       stopTimer();
       focus = true;
       break;
+    }
     case "restart-lesson":
       state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};state.paused=false;focus=true;break;
     case "discover-next":
@@ -500,6 +522,18 @@ app.addEventListener("change", (event) => {
     saveProgress();
   }
 });
+window.addEventListener("popstate", () => {
+  const found = routeToRecipe(window.location.pathname);
+  if (found) {
+    if (languages.some((l) => l.id === found.language)) state.language = found.language;
+    openRecipe(found);
+  } else {
+    state.screen = state.onboarded ? 1 : 0;
+    if (state.screen === 0) resetOnboarding();
+  }
+  stopTimer();
+  render(true);
+});
 const prefs = saved.preferences;
 if(prefs && typeof prefs==='object') {
   if(languages.some(l=>l.id===prefs.language)) state.language=prefs.language;
@@ -509,7 +543,15 @@ if(prefs && typeof prefs==='object') {
   state.quick=prefs.quick===true;
   state.onboarded=prefs.onboarded===true;
 }
-const last = recipes.find(r=>r.id===saved.last&&r.language===state.language);
-if(last)openRecipe(last);
-else if(state.onboarded) state.screen=1;
+const routedRecipe = routeToRecipe(window.location.pathname);
+if (routedRecipe) {
+  if (languages.some((l) => l.id === routedRecipe.language)) state.language = routedRecipe.language;
+  openRecipe(routedRecipe);
+} else {
+  const last = recipes.find(r=>r.id===saved.last&&r.language===state.language);
+  if(last)openRecipe(last);
+  else if(state.onboarded) state.screen=1;
+}
+if (state.screen === 2 && state.recipe) history.replaceState(null, "", recipePath(state.recipe));
+else if (window.location.pathname !== "/") history.replaceState(null, "", "/");
 render();
