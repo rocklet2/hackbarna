@@ -11,6 +11,7 @@ Romi and Andrei both use this repo via their own Claude Code sessions. Everythin
 - **Challenge:** Preply, "Best use of AI for Learning".
 - **Product:** [APP NAME], a language learning app that also teaches a place and its culture through its food. Cook step by step with voice, photo checks and feedback in the local language; levels move from ingredient words to fluent conversation plus recipe history and cultural facts.
 - **Demo:** Catalonia, Catalan, panellets. All Catalan content lives in ONE file, `content/catalonia.json` (single source of truth; edit content there, never duplicate it in code). Progress design in `docs/PROGRESS_DESIGN.md`.
+- **Brand:** Preply (this is their challenge). See `BRAND.md` for values, colors, typography and tone.
 - **Full brief:** `docs/PROJECT_BRIEF.md` (idea, sponsor tech, risks, build order, demo flow, open questions). Read it before building anything.
 
 ### Non-negotiable guardrails
