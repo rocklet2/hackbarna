@@ -43,9 +43,15 @@ The notes give the four colors but not their roles. Sensible defaults, to be con
 - `#ffffff` for cards and backgrounds
 - `#ff7aac` and `#3ddabe` as the large color blocks and accents
 
-## Where our product differs today
+## How it is applied
 
-The onboarding in `src/welcome/` currently uses its own palette (deep green `#274d38`, orange `#dc6c43`, cream backgrounds) and the DM Sans font, set in `src/welcome/welcome.css`. It does not yet follow this brand. Restyling means replacing the CSS variables at the top of that file and loading Figtree; the copy and flow do not need to change.
+The onboarding (`welcome.html`, `src/welcome/welcome.css`) follows this brand as of 2026-09-19:
+- **Color-blocking:** each screen is one flat block of pink or mint, with the other as its accent. Screens alternate; the map is `TONES` in `src/welcome/welcome.js`. Text is near-black, and white is used for cards and the greeting.
+- **Layered cards:** white cards with a 2px ink edge and a hard offset shadow. The chosen card and ticked rows fill with the accent color.
+- **Typography:** Figtree throughout (weights 400 to 800, files in `public/fonts/`, open license). Headings are 800 weight with tight tracking. Platform is not used, because we have not confirmed we may use it.
+- **Buttons:** near-black with white text, and a hard white shadow on the main call to action.
+
+**Not yet branded: the recipe app** (`index.html`, `src/style.css`, Andrei's files) still uses the original green, orange and DM Sans. The "A cuinar!" button leads into it, so the switch is visible. It has many hardcoded colors, so it needs a proper pass rather than a variable swap.
 
 ## Applying the tone to our copy
 
