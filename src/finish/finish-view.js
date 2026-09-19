@@ -1,5 +1,6 @@
 import "./finish.css";
-import { CELEBRATION, SEEDED_STREAK, nudgeText } from "./finish.js";
+import { CELEBRATION, nudgeText } from "./finish.js";
+import { addCard, weekStrip, streakLine, milestoneLine } from "../collection/collection-view.js";
 import { headline } from "./photo-rubric.js";
 import catalonia from "../../content/catalonia.json";
 
@@ -59,11 +60,11 @@ export function readPhoto(file, maxSide = 720) {
 const dots = (beat) => `<div class="finish-dots" aria-label="Step ${beat + 1} of ${FINISH_BEATS}">${Array.from({ length: FINISH_BEATS }, (_, n) => `<i class="${n === beat ? "current" : n < beat ? "done" : ""}"></i>`).join("")}</div>`;
 const nav = (beat, h) => `<div class="finish-nav">${beat > 0 ? h.button(`${h.icon("back")} Back`, "finish-back", "text-button") : "<span></span>"}${beat < FINISH_BEATS - 1 ? h.button(`${beat === 0 ? "See what you learned" : "What’s next"} ${h.icon("arrow")}`, "finish-next") : ""}</div>`;
 
-function celebrate({ recipe, lang, photo, check, h }) {
+function celebrate({ recipe, lang, photo, check, collect, h }) {
   const photoBlock = photo
     ? `<figure class="finish-photo"><img src="${photo}" alt="Your finished ${h.escapeHtml(recipe.name)}"/></figure><label class="finish-photo-swap">Change photo<input type="file" accept="image/*" capture="environment" data-finish-photo hidden/></label>`
     : `<label class="finish-photo-add"><span>${h.icon("spark")}</span><strong>Show how it turned out</strong><small>Take or choose a photo of your dish</small><input type="file" accept="image/*" capture="environment" data-finish-photo hidden/></label>`;
-  return `<div class="eyebrow">YOU FINISHED</div><h1 class="finish-cheer" lang="${lang}">${CELEBRATION[lang] || "Enjoy!"}</h1><p class="finish-lead">You cooked ${h.escapeHtml(recipe.name)}, from the first word to the last step.</p>${photoBlock}${photo && check ? checkBlock(check, h) : ""}<p class="finish-note">${canCheckPhoto(recipe.id) ? "Your photo is kept on this device and sent to an AI model once, to check how it looks." : "Just for you, kept on this device. No AI checks this photo."}</p>`;
+  return `<div class="eyebrow">YOU FINISHED</div><h1 class="finish-cheer" lang="${lang}">${CELEBRATION[lang] || "Enjoy!"}</h1><p class="finish-lead">You cooked ${h.escapeHtml(recipe.name)}, from the first word to the last step.</p>${photoBlock}${photo && check ? checkBlock(check, h) : ""}${addCard(collect, h)}<p class="finish-note">${canCheckPhoto(recipe.id) ? "Your photo is kept on this device and sent to an AI model once, to check how it looks." : "Just for you, kept on this device. No AI checks this photo."}</p>`;
 }
 
 function learned({ recipe, lang, summary, culture, h }) {
@@ -76,14 +77,14 @@ function learned({ recipe, lang, summary, culture, h }) {
   return `<div class="eyebrow">WHAT YOU LEARNED</div><h1>${summary.wordsMet} words, ${summary.total} steps.</h1><section class="finish-card finish-level"><div class="finish-level-name"><span>Level estimate</span><strong>${h.escapeHtml(summary.levelName)}</strong></div><p>${nudgeText[summary.nudge](summary)}</p><p class="finish-note">Based on this lesson only. Not a certified level.</p></section>${again}${got}${fact}`;
 }
 
-function next({ recipe, lang, summary, langName, nextRecipe, tomorrow, h }) {
-  const streak = `<div class="finish-streak" aria-label="Streak preview"><div>${Array.from({ length: SEEDED_STREAK.earlier + 1 }, (_, n) => `<i class="${n === SEEDED_STREAK.earlier ? "today" : "seeded"}">${n === SEEDED_STREAK.earlier ? h.icon("check") : ""}</i>`).join("")}</div><span>Day ${SEEDED_STREAK.earlier + 1}</span><small>${SEEDED_STREAK.label}</small></div>`;
-  const review = `<section class="finish-card"><div class="finish-card-head"><h2>Tomorrow, two minutes</h2>${streak}</div><p>Come back and say these ${summary.review.length} out loud.</p><ul class="finish-list">${summary.review.map((t) => `<li><span class="finish-chip"><b lang="${lang}">${h.escapeHtml(t.target)}</b><i>${h.escapeHtml(t.en)}</i></span>${h.speakButton(t.target, lang)}</li>`).join("")}</ul></section>`;
+function next({ recipe, lang, summary, langName, nextRecipe, tomorrow, collect, h }) {
+  const review = `<section class="finish-card"><h2>Tomorrow, two minutes</h2><p>Come back and say these ${summary.review.length} out loud.</p><ul class="finish-list">${summary.review.map((t) => `<li><span class="finish-chip"><b lang="${lang}">${h.escapeHtml(t.target)}</b><i>${h.escapeHtml(t.en)}</i></span>${h.speakButton(t.target, lang)}</li>`).join("")}</ul></section>`;
+  const keep = `<section class="finish-card coll-streak"><div class="coll-streak-head"><strong>${collect.info.current}</strong><span>day streak</span></div>${weekStrip(collect.info, h)}<p>${streakLine(collect.info)} ${milestoneLine(collect.info)}</p><div class="finish-more">${h.button("Your collection", "open-collection", "secondary")}${h.button(`${h.icon("list")} Remind me`, "remind", "secondary")}</div></section>`;
   const tutor = `<section class="finish-card finish-tutor"><div class="eyebrow">FOR YOUR TUTOR · PREVIEW</div><h2>Send your tutor what to work on</h2><pre class="finish-brief">${h.escapeHtml(tomorrow.brief)}</pre>${h.button(`${h.icon("list")} Copy summary`, "copy-brief", "secondary")}<p class="finish-note">Copies text to paste. Tutor booking is not connected in this prototype.</p></section>`;
   const cook = nextRecipe
     ? `<section class="finish-card finish-cta"><h2>Next dish: ${h.escapeHtml(nextRecipe.name)}</h2><p>${h.escapeHtml(nextRecipe.detail || "A few new words, a small plate.")}</p>${h.linkButton(`Cook it ${h.icon("arrow")}`, h.recipePath(nextRecipe), "recipe", nextRecipe.id)}</section>`
     : "";
-  return `<div class="eyebrow">WHAT’S NEXT</div><h1>See you tomorrow.</h1>${review}${tutor}${cook}<div class="finish-more">${h.button("Back to the menu", "menu", "text-button")}${h.button("Cook this one again", "restart-lesson", "text-button")}</div>`;
+  return `<div class="eyebrow">WHAT’S NEXT</div><h1>See you tomorrow.</h1>${keep}${review}${tutor}${cook}<div class="finish-more">${h.button("Back to the menu", "menu", "text-button")}${h.button("Cook this one again", "restart-lesson", "text-button")}</div>`;
 }
 
 const TONES = ["pink", "mint", "ink"];

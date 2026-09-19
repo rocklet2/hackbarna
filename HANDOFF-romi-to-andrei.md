@@ -1,6 +1,9 @@
 # Handoff: 2026-09-19 (from Romi via Claude)
 
-## Photo check on the finish screen (added last)
+## Collection, streak and reasons to come back (added last)
+New module `src/collection/`. The finish screen now has an "Add to my collection" card once a photo is in, and the collection lives at `/collection` (screen 3 in `main.js`, rendered in the branded frame). **Touches in your file `src/main.js`:** `render()` treats screen 3 like the lesson (branded, no header), `popstate` and initial routing know `/collection`, `menu()` shows a small streak strip (`teaser`) under the top line, and there are four new actions (`add-to-collection`, `open-collection`, `collection-cook`, `remind`). **Watch out:** the streak is local to this browser. Photo check gates adding: a "not sure" photo is refused, a failed check is not. It can be gamed with any photo the model accepts, which is fine for a demo. For the pitch, open `/collection?seed=demo` first (labeled seeded data, no fake photos). Streak days use the device's local date, so a demo across midnight will tick over.
+
+## Photo check on the finish screen
 The dish photo is now judged against the rubric in `content/catalonia.json` (`photo_rubrics`). **I wrote the criteria, they were empty:** shape, pine nut coating, baking colour, for panellets only. **Watch out:** they are unreviewed, and I have only tried a fake image, so the real test is 10 real panellets photos (this is also the Galtea material: the first version passed a drawing of brown circles as "Good shape", fixed with the `is_real_photo_of_dish` gate). Needs `OPENAI_API_KEY`; without it the screen says it couldn't check. Endpoint is a Vite plugin (`scripts/photo-check.js`), so a static deploy of `dist/` will not have it.
 
 ## Added earlier the same day: the end-of-lesson experience

@@ -10,6 +10,8 @@ import { videoMarkup, requestStepVideo } from "./step-video.js";
 import { alignedInstruction } from "./word-align.js";
 import { createAgent } from "./agent.js";
 import { finishSummary, tutorBrief } from "./finish/finish.js";
+import { normalizeEntries as loadEntriesFrom, dayKey, addDays, addEntry, streakInfo, setProgress, seedEntries, collectGate, reminderIcs } from "./collection/collection.js";
+import { loadEntries, saveEntries, makeThumb, downloadText, collectionMarkup, teaser } from "./collection/collection-view.js";
 import { finishMarkup, FINISH_BEATS, loadPhoto, savePhoto, readPhoto, loadCheck, saveCheck, requestCheck, canCheckPhoto } from "./finish/finish-view.js";
 
 const app = document.querySelector("#app");
@@ -41,6 +43,8 @@ const state = {
   finishBeat: 0,
   finishPhoto: null,
   finishCheck: null,
+  collection: loadEntries(),
+  remindTime: "18:00",
 };
 const saved = readJourneys(localStorage);
 const lessonStore = saved.lessons && typeof saved.lessons === 'object' ? saved.lessons : {};
@@ -180,7 +184,7 @@ function setup() {
 function menu() {
   const matches = recommend(state);
   const first = matches[0];
-  return `<main class="page menu-page"><div class="page-topline">${button(`${icon("back")} Your taste`, "home", "text-button")}<span>${language().name} <i>·</i> ${state.region} <i>·</i> ${levels[state.level].name}</span></div><section class="menu-heading"><div><div class="eyebrow">YOUR NEXT LITTLE ADVENTURE</div><h1>What’s cooking <em>today?</em></h1><p class="intro">A little ${language().name}. A taste of ${state.region.split(",")[0]}. Something good you made yourself.</p></div><div class="personal-note">${icon("spark")}<div><strong>A menu that grows with you</strong><span>${levels[state.level].goal}</span></div></div></section><div class="menu-toolbar"><div>${badge(`${icon("pin")} ${state.region}`)}${badge(`${icon("leaf")} ${state.diet === "all" ? "All preferences" : state.diet === "vegan" ? "Plant-based" : state.diet}`)}${state.quick ? badge("Under 20 minutes") : ""}</div>${button("Edit preferences", "home", "text-button")}</div>${
+  return `<main class="page menu-page"><div class="page-topline">${button(`${icon("back")} Your taste`, "home", "text-button")}<span>${language().name} <i>·</i> ${state.region} <i>·</i> ${levels[state.level].name}</span></div>${teaser({ info: collectionInfo(), count: new Set(state.collection.map((e) => e.recipeId)).size }, collectHelpers())}<section class="menu-heading"><div><div class="eyebrow">YOUR NEXT LITTLE ADVENTURE</div><h1>What’s cooking <em>today?</em></h1><p class="intro">A little ${language().name}. A taste of ${state.region.split(",")[0]}. Something good you made yourself.</p></div><div class="personal-note">${icon("spark")}<div><strong>A menu that grows with you</strong><span>${levels[state.level].goal}</span></div></div></section><div class="menu-toolbar"><div>${badge(`${icon("pin")} ${state.region}`)}${badge(`${icon("leaf")} ${state.diet === "all" ? "All preferences" : state.diet === "vegan" ? "Plant-based" : state.diet}`)}${state.quick ? badge("Under 20 minutes") : ""}</div>${button("Edit preferences", "home", "text-button")}</div>${
     first
       ? `<section class="recipe-grid">${matches
           .map(
@@ -309,6 +313,34 @@ async function runPhotoCheck() {
   }
   render();
 }
+const collectHelpers = () => ({ button, linkButton, icon, escapeHtml, speakButton, recipePath });
+const todayKey = () => dayKey();
+function collectionInfo() { return streakInfo(state.collection, todayKey()); }
+function collectionScreen() {
+  const langRecipes = recipes.filter((r) => r.language === state.language);
+  const mine = state.collection.filter((e) => e.language === state.language || e.language === "");
+  return collectionMarkup({ entries: mine, info: collectionInfo(), progress: setProgress(mine, langRecipes), languageName: language().name, remindTime: state.remindTime, h: collectHelpers() });
+}
+const collectGateNow = () => collectGate({ photo: state.finishPhoto, check: state.finishCheck, checkable: canCheckPhoto(state.recipe.id), added: state.collection.some((e) => e.id === `${state.recipe.id}:${todayKey()}`) });
+async function addToCollection() {
+  const r = state.recipe;
+  if (collectGateNow() !== "ready") return;
+  let photo = null;
+  try { photo = await makeThumb(state.finishPhoto); } catch { /* the dish still counts */ }
+  const v = state.finishCheck?.result?.overall;
+  state.collection = addEntry(state.collection, { recipeId: r.id, name: r.name, language: r.language, day: todayKey(), photo, verdict: v === "good" || v === "fixable" ? v : null });
+  const saved = saveEntries(state.collection);
+  if (!saved.ok) toast("Storage is full, so this streak only lasts for this visit.");
+  else if (saved.stripped) toast("Older photos were dropped to make room. Your streak is safe.");
+  render();
+}
+function downloadReminder() {
+  const [hh, mm] = (app.querySelector("#remind-time")?.value || state.remindTime).split(":").map(Number);
+  state.remindTime = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  const [y, m, d] = addDays(todayKey(), 1).split("-").map(Number);
+  downloadText("taula-reminder.ics", reminderIcs({ start: new Date(y, m - 1, d, hh, mm), title: `Cook something in ${language().name}`, description: "A two-minute review, then a dish for your collection.", url: `${window.location.origin}/collection` }));
+  toast("Calendar file downloaded. Open it to add the daily reminder.");
+}
 function finishSummaryNow() { return finishSummary(state.recipe, state.journey, state.level); }
 function completion(r) {
   const summary = finishSummaryNow();
@@ -317,13 +349,13 @@ function completion(r) {
   const moment = waitMomentFor(r, 0);
   const culture = moment?.source?.name ? { title: moment.title, text: moment.text, source: moment.source } : null;
   const h = { button, linkButton, icon, escapeHtml, speakButton, recipePath };
-  return finishMarkup({ recipe: r, lang: state.language, langName: language().name, beat: state.finishBeat, photo: state.finishPhoto, check: state.finishCheck, summary, culture, nextRecipe, tomorrow: { brief: tutorBrief(r, language().name, summary) }, h });
+  return finishMarkup({ recipe: r, lang: state.language, langName: language().name, beat: state.finishBeat, photo: state.finishPhoto, check: state.finishCheck, collect: { gate: collectGateNow(), added: collectGateNow() === "added", info: collectionInfo(), count: new Set(state.collection.map((e) => e.recipeId)).size }, summary, culture, nextRecipe, tomorrow: { brief: tutorBrief(r, language().name, summary) }, h });
 }
 
 function render(focus = false) {
-  document.body.classList.toggle("lesson-brand", state.screen === 2);
-  const isLesson = state.screen === 2;
-  app.innerHTML = `${isLesson ? "" : header()}${isLesson ? lesson() : state.screen === 0 ? setup() : menu()}${isLesson ? "" : '<footer class="footer"><span>taula <i>·</i> A taste for language.</span><span>Made for curious people with an appetite.</span><span>Local prototype · content review pending</span></footer>'}<div id="toast" role="status"></div>`;
+  const isLesson = state.screen === 2 || state.screen === 3;
+  document.body.classList.toggle("lesson-brand", isLesson);
+  app.innerHTML = `${isLesson ? "" : header()}${state.screen === 3 ? collectionScreen() : isLesson ? lesson() : state.screen === 0 ? setup() : menu()}${isLesson ? "" : '<footer class="footer"><span>taula <i>·</i> A taste for language.</span><span>Made for curious people with an appetite.</span><span>Local prototype · content review pending</span></footer>'}<div id="toast" role="status"></div>`;
   saveProgress();
   if(storageFailed && app.querySelector(".footer")) app.querySelector(".footer").insertAdjacentHTML("beforeend", "<strong>Browser storage unavailable; progress lasts only this visit.</strong>");
   const draft = app.querySelector("textarea");
@@ -533,6 +565,27 @@ app.addEventListener("click", (event) => {
       navigator.clipboard.writeText(tutorBrief(state.recipe, language().name, finishSummaryNow()))
         .then(() => toast("Copied. Paste it to your tutor."), () => toast("Couldn't copy. Select the text and copy it."));
       return;
+    case "add-to-collection":
+      addToCollection();
+      return;
+    case "open-collection":
+      state.screen = 3;
+      navigateTo("/collection");
+      stopTimer();
+      focus = true;
+      break;
+    case "collection-cook": {
+      const found = recipes.find((r) => r.id === value);
+      if (!found) return;
+      openRecipe(found);
+      navigateTo(recipePath(found));
+      stopTimer();
+      focus = true;
+      break;
+    }
+    case "remind":
+      downloadReminder();
+      return;
     case "recheck-photo":
       runPhotoCheck();
       return;
@@ -651,6 +704,7 @@ app.addEventListener("change", async (event) => {
   }
 });
 window.addEventListener("popstate", () => {
+  if (window.location.pathname === "/collection") { state.screen = 3; stopTimer(); render(true); return; }
   const found = routeToRecipe(window.location.pathname);
   if (found) {
     if (languages.some((l) => l.id === found.language)) state.language = found.language;
@@ -671,8 +725,18 @@ if(prefs && typeof prefs==='object') {
   state.quick=prefs.quick===true;
   state.onboarded=prefs.onboarded===true;
 }
+// ?seed=demo adds three earlier days of demo history, flagged as seeded. ?seed=clear removes it.
+{
+  const seed = new URLSearchParams(window.location.search).get("seed");
+  if (seed === "demo" && !state.collection.some((e) => e.seeded)) {
+    state.collection = [...state.collection, ...seedEntries(recipes.filter((r) => r.language === state.language), todayKey())].map((e) => ({ ...e }));
+    state.collection = loadEntriesFrom(state.collection);
+    saveEntries(state.collection);
+  } else if (seed === "clear") { state.collection = state.collection.filter((e) => !e.seeded); saveEntries(state.collection); }
+}
 const routedRecipe = routeToRecipe(window.location.pathname);
-if (routedRecipe) {
+if (window.location.pathname === "/collection") state.screen = 3;
+else if (routedRecipe) {
   if (languages.some((l) => l.id === routedRecipe.language)) state.language = routedRecipe.language;
   openRecipe(routedRecipe);
 } else {
@@ -681,6 +745,6 @@ if (routedRecipe) {
   else if(state.onboarded) state.screen=1;
 }
 if (state.screen === 2 && state.recipe) history.replaceState(null, "", recipePath(state.recipe));
-else if (window.location.pathname !== "/") history.replaceState(null, "", "/");
+else if (window.location.pathname !== "/" && state.screen !== 3) history.replaceState(null, "", "/");
 mountAgentWidget();
 render();
