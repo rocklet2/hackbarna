@@ -466,7 +466,7 @@ function renderWords() {
         ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
       <div class="lesson-actions">
         <button class="say" id="hear">▸ Hear it again</button>
-        <button class="say" id="skipword">Skip ›</button>
+        <button class="say" id="skipword">Next ›</button>
       </div>`;
 
   app.innerHTML = chrome(`<div class="stage">
