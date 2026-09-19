@@ -8,5 +8,6 @@ export function welcomeLessonLevel(storage, language, fallback = 0) {
 }
 export function recipeUrl(recipe) {
   const slug = recipe.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  return `/recipes/${recipe.language}/${slug}`;
+  // ?fresh=1 makes the recipe start at step 1 instead of resuming an earlier visit (see openRecipe).
+  return `/recipes/${recipe.language}/${slug}?fresh=1`;
 }

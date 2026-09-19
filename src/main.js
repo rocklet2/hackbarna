@@ -63,7 +63,11 @@ function openRecipe(r) {
   state.recipe = r;
   state.level = welcomeLessonLevel(localStorage, r.language, state.level);
   state.lessonKey = `${r.id}:${state.level}:two-part-v1`;
-  state.journey = restoreJourney(lessonStore[state.lessonKey], r);
+  // Coming from onboarding means starting the dish, not resuming a half-finished earlier visit
+  // (which could land the learner mid-quiz). The marker is dropped so a later reload resumes normally.
+  const fresh = new URLSearchParams(window.location.search).has("fresh");
+  state.journey = restoreJourney(fresh ? null : lessonStore[state.lessonKey], r);
+  if (fresh) history.replaceState(null, "", window.location.pathname);
   state.step = state.journey.step;
   state.checked = state.journey.checked;
   state.drafts = state.journey.drafts;
