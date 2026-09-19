@@ -256,7 +256,6 @@ function renderPlace(message = "") {
       <span class="target">${esc(q.target)}</span>
       <span class="en">${esc(q.en)}</span>
     </h1>
-    <p class="hint">Say a place, or pick one. You are travelling with the language.</p>
     <div id="msg">${message}</div>
     <div class="cards" style="grid-template-columns:1fr">
       ${placesFor(state.language).map(card).join("")}
