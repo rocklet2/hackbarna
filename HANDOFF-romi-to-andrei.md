@@ -1,5 +1,12 @@
 # Handoff: 2026-09-19 (from Romi via Claude)
 
+## Added later the same day: the end-of-lesson experience
+**The plain "you finished" card in `completion()` is replaced by three screens** (`src/finish/`): celebrate plus optional dish photo, what you learned (level estimate, phrases to say again, one sourced culture fact), and tomorrow (2-minute review, seeded streak strip, copyable tutor summary, next dish).
+
+**Changes in your files, please glance at them:** `src/main.js` (`completion()` delegates to the module; new actions `finish-next`, `finish-back`, `copy-brief`; the `change` listener now also handles the photo input; `openRecipe` and `restart-lesson` reset the finish state). `src/journey.js` and `src/lesson-challenge.js`: the journey now records `missedSteps` (a step answered wrong before it was passed), which is what feeds "say it again tomorrow". Old saved journeys load fine (missing field becomes empty). The old `.completion*` CSS in `style.css` is now unused; I left it alone.
+
+**Watch out:** the streak strip is seeded demo data and says so on screen. The tutor summary is copy-to-clipboard only, nothing is sent anywhere. The photo is not analysed; hooking the photo-check rubric in there is the natural next step. The level nudge is a plain rule on first-try answers (80% or more nudges up), not a model, and is worded as an estimate. "Bon profit!", "Buon appetito!" and "Bom apetite!" are the only new target-language strings and are unreviewed. New tests are in `src/finish.test.js`.
+
 ## Finished
 **The whole onboarding journey, steps 1 to 5, built as a separate module. Demo simplified to focus on one day only.**
 Entry page `welcome.html`, code in `src/welcome/`. Your wizard at `/` still works exactly as before.
