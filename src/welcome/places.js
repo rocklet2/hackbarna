@@ -13,6 +13,7 @@ export const PLACE_QUESTION = {
   ca: { target: "On t'agradaria cuinar avui?", en: "Where would you like to cook today?" },
   it: { target: "Dove ti piacerebbe cucinare oggi?", en: "Where would you like to cook today?" },
   pt: { target: "Onde gostarias de cozinhar hoje?", en: "Where would you like to cook today?" },
+  es: { target: "¿Dónde te gustaría cocinar hoy?", en: "Where would you like to cook today?" },
 };
 
 /** The dish screen heading, in the language being learned. */
@@ -20,6 +21,7 @@ const TONIGHT = {
   ca: (place) => ({ target: `Aquesta nit, a ${place.endonym}`, en: `Tonight, in ${place.name}` }),
   it: (place) => ({ target: `Stasera, in ${place.endonym}`, en: `Tonight, in ${place.name}` }),
   pt: (place) => ({ target: `Esta noite · ${place.endonym}`, en: `Tonight, in ${place.name}` }),
+  es: (place) => ({ target: `Esta noche, en ${place.endonym}`, en: `Tonight, in ${place.name}` }),
 };
 export const tonightFor = (languageId, place) => (TONIGHT[languageId] || TONIGHT.ca)(place);
 
@@ -76,6 +78,26 @@ const PLACES = {
       detail: "Rio and the coast. Beans, rice and cooking that feeds a crowd.",
       cities: ["Rio, BR"], ready: true,
       aliases: ["brazil", "brasil", "rio", "rio de janeiro"],
+    },
+  ],
+  es: [
+    {
+      id: "madrid", name: "Madrid", country: "Spain", endonym: "Madrid",
+      detail: "Tapas bars and home cooking. Potato omelette, patatas bravas and Russian salad.",
+      cities: ["Madrid, ES"], ready: true,
+      aliases: ["madrid", "spain", "espana", "españa"],
+    },
+    {
+      id: "andalucia", name: "Andalusia", country: "Spain", endonym: "Andalucía",
+      detail: "Hot summers and cold soups. Gazpacho, salmorejo and spinach with chickpeas.",
+      cities: ["Sevilla, ES"], ready: true,
+      aliases: ["andalusia", "andalucia", "sevilla", "seville", "cordoba", "south"],
+    },
+    {
+      id: "valencia", name: "Valencia", country: "Spain", endonym: "Valencia",
+      detail: "Rice country by the orchards and the sea. Paella made with vegetables.",
+      cities: ["Valencia, ES"], ready: true,
+      aliases: ["valencia", "paella", "east"],
     },
   ],
 };

@@ -9,6 +9,8 @@ import { stepDirections } from "./lesson-copy.js";
 import { videoMarkup, requestStepVideo } from "./step-video.js";
 import { alignedInstruction } from "./word-align.js";
 import { createAgent } from "./agent.js";
+import { finishSummary, tutorBrief } from "./finish/finish.js";
+import { finishMarkup, FINISH_BEATS, loadPhoto, savePhoto, readPhoto } from "./finish/finish-view.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -36,6 +38,8 @@ const state = {
   drafts: {},
   collected: new Set(),
   lastAutoSpokenKey: null,
+  finishBeat: 0,
+  finishPhoto: null,
 };
 const saved = readJourneys(localStorage);
 const lessonStore = saved.lessons && typeof saved.lessons === 'object' ? saved.lessons : {};
@@ -59,6 +63,8 @@ function openRecipe(r) {
   state.checked = state.journey.checked;
   state.drafts = state.journey.drafts;
   state.completed = state.journey.completed;
+  state.finishBeat = 0;
+  state.finishPhoto = loadPhoto(state.lessonKey);
   state.screen = 2;
   state.answer = null;
   state.collected = new Set();
@@ -192,6 +198,7 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&
 const lessonUi = {
   ca: { next: "Següent", previous: "Pas anterior", step: "PAS", ingredients: "Ingredients", culture: "Una nota local", check: "Comprova", missing: "Paraula que falta", complete: "Complet", turn: "El teu torn", correct: "Correcte!", retry: "Torna a mirar la guia i prova-ho de nou.", explore: "Explora una altra recepta", restart: "Torna a començar" },
   it: { next: "Avanti", previous: "Passaggio precedente", step: "PASSAGGIO", ingredients: "Ingredienti", culture: "Una nota locale", check: "Controlla", missing: "Parola mancante", complete: "Completato", turn: "Tocca a te", correct: "Corretto!", retry: "Riguarda la guida e riprova.", explore: "Esplora un’altra ricetta", restart: "Ricomincia" },
+  es: { next: "Siguiente", previous: "Paso anterior", step: "PASO", ingredients: "Ingredientes", culture: "Una nota local", check: "Comprobar", missing: "Palabra que falta", complete: "Completo", turn: "Tu turno", correct: "¡Correcto!", retry: "Revisa la guía e inténtalo de nuevo.", explore: "Explora otra receta", restart: "Empezar de nuevo" },
   pt: { next: "Seguinte", previous: "Passo anterior", step: "PASSO", ingredients: "Ingredientes", culture: "Uma nota local", check: "Verificar", missing: "Palavra em falta", complete: "Concluído", turn: "A tua vez", correct: "Correto!", retry: "Consulta o guia e tenta novamente.", explore: "Explora outra receita", restart: "Recomeçar" },
 };
 const advancedCulture = {
@@ -205,6 +212,11 @@ const advancedCulture = {
     `Questa ricetta mostra come la cucina italiana trasformi ingredienti semplici in un piatto da condividere. Tecnica e pazienza contano quanto il prodotto.`,
     `La cultura gastronomica non è soltanto una lista di ingredienti: è anche memoria, conversazione e il modo di sedersi a tavola con gli altri.`,
   ][n % 3],
+  es: (r, place, n) => [
+    `${r.name} cuenta una cocina ligada al territorio. En ${place}, los mercados y los productos de temporada marcan el ritmo de la mesa de cada día.`,
+    `Esta receta muestra cómo la cocina española convierte ingredientes sencillos en un plato para compartir. La técnica y la paciencia cuentan tanto como el producto.`,
+    `La cultura gastronómica no es solo una lista de ingredientes: también es memoria, conversación y la manera de sentarse a la mesa con otras personas.`,
+  ][n % 3],
   pt: (r, place, n) => [
     `${r.name} faz parte de uma cozinha ligada ao território. Em ${place}, mercados e produtos da estação dão ritmo à mesa do dia a dia.`,
     `Esta receita mostra como a cozinha transforma ingredientes simples num prato para partilhar. A técnica e a paciência contam tanto como o produto.`,
@@ -213,7 +225,10 @@ const advancedCulture = {
 };
 function uiText(key) { return state.level >= 3 ? lessonUi[state.language]?.[key] || key : null; }
 function cultureFact(recipe, index) {
-  const place = state.region?.split(",")[0] || recipe.regions?.[0]?.split(",")[0] || language().regionLabel || "the region";
+  // A stale default region (Barcelona) must not leak into another language's dish.
+  const owned = recipe.regions?.length ? recipe.regions : language().regions || [];
+  const region = owned.includes(state.region) ? state.region : recipe.regions?.[0];
+  const place = region?.split(",")[0] || language().regionLabel || "the region";
   const words = recipe.words.length ? recipe.words : [[recipe.name, recipe.name]];
   const first = words[index % words.length];
   const second = words[(index + 1) % words.length];
@@ -274,8 +289,15 @@ function cookingLesson() {
     </div></main>`;
 }
 
+function finishSummaryNow() { return finishSummary(state.recipe, state.journey, state.level); }
 function completion(r) {
-  return `<main class="page completion"><div class="completion-symbol">${icon("bowl")}<span>✳</span></div><div class="eyebrow">A LITTLE PROUD? YOU SHOULD BE.</div><h1>You brought something<br>new to the <em>table.</em></h1><p class="intro">${r.name}, a few words in ${language().name},<br>and one delicious little adventure.</p><div class="completion-stats"><div><strong>${r.steps.length}</strong><span>steps cooked</span></div><div><strong>${r.words.length}</strong><span>words introduced</span></div></div><p class="completion-note">Lesson complete · saved on this device · no certified level assessment.</p><div class="completion-actions">${button(`${uiText("explore") || "Explore another recipe"} ${icon("arrow")}`, "menu")}${button(uiText("restart") || "Restart this lesson", "restart-lesson", "secondary")}</div><div class="completion-words">${r.words.map(([w, en]) => badge(`${w} <span>· ${en}</span>`)).join("")}</div></main>`;
+  const summary = finishSummaryNow();
+  const done = (x) => lessonStore[`${x.id}:${state.level}:two-part-v1`]?.completed;
+  const nextRecipe = recommend(state).find((x) => x.id !== r.id && !done(x)) || null;
+  const moment = waitMomentFor(r, 0);
+  const culture = moment?.source?.name ? { title: moment.title, text: moment.text, source: moment.source } : null;
+  const h = { button, linkButton, icon, escapeHtml, speakButton, recipePath };
+  return finishMarkup({ recipe: r, lang: state.language, langName: language().name, beat: state.finishBeat, photo: state.finishPhoto, summary, culture, nextRecipe, tomorrow: { brief: tutorBrief(r, language().name, summary) }, h });
 }
 
 function render(focus = false) {
@@ -479,7 +501,20 @@ app.addEventListener("click", (event) => {
       focus = true;
       break;
     }
+    case "finish-next":
+      state.finishBeat = Math.min(FINISH_BEATS - 1, state.finishBeat + 1);
+      focus = true;
+      break;
+    case "finish-back":
+      state.finishBeat = Math.max(0, state.finishBeat - 1);
+      focus = true;
+      break;
+    case "copy-brief":
+      navigator.clipboard.writeText(tutorBrief(state.recipe, language().name, finishSummaryNow()))
+        .then(() => toast("Copied. Paste it to your tutor."), () => toast("Couldn't copy. Select the text and copy it."));
+      return;
     case "restart-lesson":
+      state.finishBeat=0;state.finishPhoto=null;
       state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};state.answer=null;focus=true;break;
     case "start-quiz":
       state.journey.phase = "quiz";
@@ -492,6 +527,7 @@ app.addEventListener("click", (event) => {
       if (state.step === state.recipe.steps.length - 1) {
         state.completed = true;
         state.journey.completed = true;
+        state.finishBeat = 0;
       }
       else state.step++;
       state.journey.phase = "guide";
@@ -564,7 +600,17 @@ app.addEventListener("input", (event) => {
   if (event.target.matches("textarea"))
     { state.drafts[state.step] = event.target.value; saveProgress(); }
 });
-app.addEventListener("change", (event) => {
+app.addEventListener("change", async (event) => {
+  if (event.target.matches("[data-finish-photo]")) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      state.finishPhoto = await readPhoto(file);
+      savePhoto(state.lessonKey, state.finishPhoto);
+      render();
+    } catch { toast("That file isn't a photo we can read."); }
+    return;
+  }
   if (event.target.matches("[data-ingredient]")) {
     const i = Number(event.target.dataset.ingredient);
     state.checked = event.target.checked

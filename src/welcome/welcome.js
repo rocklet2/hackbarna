@@ -149,7 +149,7 @@ function renderLanguage(message = "") {
     const lang = matchLanguage(text);
     if (lang) chooseLanguage(lang.id);
   });
-  agent.prompt("The learner just reached the language screen and hasn't chosen a language yet, so speak in English. In one short, warm sentence, ask which language they'd like to cook in — Catalan, Italian, or Portuguese.");
+  agent.prompt("The learner just reached the language screen and hasn't chosen a language yet, so speak in English. In one short, warm sentence, ask which language they'd like to cook in — Catalan, Italian, Portuguese, or Spanish.");
 }
 
 function chooseLanguage(id) {

@@ -160,6 +160,59 @@ const copy = {
     'Deixe esfriar|Transfira para um prato untado com manteiga. Deixe esfriar completamente antes de tocar; esse tempo se soma ao da aula.',
     'Enrole e finalize|Com as mãos untadas com manteiga, faça bolinhas e passe no granulado.',
   ],
+  'ensalada-tomate': [
+    'Prepara las verduras|Corta los tomates en rodajas y la cebolla en aros finos.',
+    'Aliña la ensalada|Colócalo en un plato, añade un chorro de aceite de oliva y vinagre y una pizca de sal.',
+    'Déjala reposar|Déjala reposar 5 minutos para que se mezclen los sabores y sírvela.',
+  ],
+  pisto: [
+    'Corta las verduras|Corta el calabacín, el pimiento y la cebolla en trozos pequeños y regulares.',
+    'Empieza con la cebolla|Sofríe la cebolla y el pimiento en aceite de oliva a fuego medio unos 10 minutos.',
+    'Añade el calabacín|Añade el calabacín y cocina 10 minutos, removiendo de vez en cuando.',
+    'Cuece con el tomate|Ralla los tomates, añade sal y cocina a fuego lento 15 minutos hasta que espese.',
+  ],
+  tortilla: [
+    'Corta las patatas y la cebolla|Pela las patatas y córtalas en láminas finas. Corta también la cebolla.',
+    'Pocha en aceite|Cocina las patatas y la cebolla en aceite de oliva a fuego suave unos 20 minutos, hasta que estén tiernas pero sin dorar. Escúrrelas y guarda un poco de aceite.',
+    'Mezcla con los huevos|Bate los huevos con sal, añade las patatas y la cebolla templadas y déjalo reposar 5 minutos.',
+    'Cuaja y da la vuelta|Cuájala en una sartén a fuego medio unos 4 minutos, pon un plato encima y dale la vuelta con cuidado; cocina el otro lado 3 minutos.',
+  ],
+  'patatas-bravas': [
+    'Corta las patatas|Corta las patatas en trozos del tamaño de un bocado y sécalas bien.',
+    'Asa las patatas|Mézclalas con aceite y sal y ásalas a 220°C unos 35 minutos, dándoles la vuelta una vez, hasta que estén doradas y crujientes.',
+    'Prepara la salsa picante|Calienta el ajo y el pimentón en un poco de aceite durante 30 segundos, añade el tomate rallado y cocina 10 minutos hasta que espese. Tritúralo si quieres.',
+    'Sirve|Echa la salsa sobre las patatas calientes y sirve.',
+  ],
+  ensaladilla: [
+    'Cuece las verduras|Cuece las patatas y las zanahorias en agua con sal unos 20 minutos, hasta que estén tiernas, y añade los guisantes los últimos 3 minutos.',
+    'Cuece los huevos|Cuece los huevos 10 minutos, enfríalos en agua fría y pélalos.',
+    'Corta y deja enfriar|Corta las patatas, las zanahorias y los huevos en dados pequeños y deja que todo se enfríe por completo.',
+    'Mezcla y enfría|Añade la mayonesa y la sal y déjalo enfriar al menos 30 minutos antes de servir. Este tiempo de frío se suma al de la clase.',
+  ],
+  gazpacho: [
+    'Corta todo|Trocea los tomates, el pepino y el pimiento, y pela el ajo.',
+    'Tritura|Tritura las verduras con el aceite, el vinagre y la sal hasta que quede muy fino.',
+    'Enfría|Enfríalo en la nevera al menos una hora. Este tiempo de frío se suma al de la clase.',
+    'Sirve frío|Prueba, ajusta la sal y el vinagre y sirve muy frío en vasos o cuencos.',
+  ],
+  salmorejo: [
+    'Remoja el pan|Trocea el pan y remójalo en un poco de agua unos minutos.',
+    'Tritura los tomates|Tritura los tomates con el ajo hasta que quede fino y cuélalo si quieres.',
+    'Añade el pan|Añade el pan escurrido, tritura y ve echando el aceite poco a poco hasta obtener una crema espesa. Aliña con vinagre y sal.',
+    'Enfría y sirve|Enfríalo al menos una hora y sírvelo frío. Este tiempo de frío se suma al de la clase.',
+  ],
+  'espinacas-garbanzos': [
+    'Prepara los ingredientes|Escurre y lava los garbanzos y lava las espinacas. Lamina el ajo.',
+    'Fríe el ajo|Calienta el ajo en aceite de oliva a fuego suave un minuto, sin que se dore, y retira la sartén del fuego para añadir el pimentón.',
+    'Cuece las espinacas|Vuelve a poner la sartén al fuego, añade las espinacas y cocina hasta que se ablanden.',
+    'Añade los garbanzos|Añade los garbanzos con un chorrito de agua y caliéntalos 5 minutos. Sazona con sal.',
+  ],
+  'paella-verduras': [
+    'Prepara las verduras|Corta el pimiento, quita las puntas a las judías verdes y ralla los tomates. Calienta el caldo con el azafrán.',
+    'Sofríe las verduras|Sofríe el pimiento y las judías verdes en aceite de oliva, en una sartén ancha, durante 8 minutos. Añade el tomate y cocina 5 minutos.',
+    'Añade el arroz|Rehoga el arroz un minuto, vierte el caldo caliente y la sal, hierve y cocina a fuego suave sin remover unos 18 minutos.',
+    'Reposa y sirve|Retira la sartén del fuego, tápala y déjala reposar 5 minutos antes de servir.',
+  ],
 };
 export function translatedStep(recipe, index) {
   const [title, instruction] = copy[recipe.id][index].split('|');

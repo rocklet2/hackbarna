@@ -32,3 +32,13 @@ test('saved progress survives serialization and malformed storage falls back saf
   assert.deepEqual(readJourneys({getItem:()=>{throw Error('blocked');}}),{});
   assert.equal(restoreJourney({...original,step:99},recipe).step,recipe.steps.length-1);
 });
+test('a wrong first answer is remembered as a miss, and a later pass does not erase it',async()=>{
+  const { submitAnswer, challengeFor } = await import('./lesson-challenge.js');
+  const j=freshJourney();
+  const right=challengeFor(recipe,0,0).answer;
+  assert.equal(submitAnswer(j,recipe,0,'definitely-not-it',0),false);
+  assert.equal(submitAnswer(j,recipe,0,right,0),true);
+  assert.deepEqual(j.missedSteps,[0]);
+  assert.deepEqual(j.passedSteps,[0]);
+  assert.deepEqual(restoreJourney({missedSteps:[0,0,99,'x']},recipe).missedSteps,[0]);
+});

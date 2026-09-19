@@ -4,7 +4,8 @@ import { recipes } from "./data.js";
 import { complexityOf, complexityLabel, dishesFor, pickForPlan } from "./welcome/dishes.js";
 import { phrases } from "./journey.js";
 import { shopScript, ingredientWords, wordFeedback, gradeRepetition, feedbackFor } from "./welcome/shop.js";
-import { planById } from "./welcome/places.js";
+import { planById, placesFor } from "./welcome/places.js";
+import { translatedStep } from "./lesson-translations.js";
 
 const CA_CITIES = ["Barcelona, ES", "Girona, ES", "Tarragona, ES"];
 const byName = (n) => recipes.find((r) => r.name === n);
@@ -97,7 +98,7 @@ test("the shop lesson names the dish's own ingredient", () => {
 });
 
 test("the shop lesson works in every language", () => {
-  for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"], ["pt", "Salada de feijão-frade"]]) {
+  for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"], ["pt", "Salada de feijão-frade"], ["es", "Gazpacho andaluz"]]) {
     const recipe = recipes.find((r) => r.language === lang && r.name === name) ||
       recipes.find((r) => r.language === lang);
     for (const level of [0, 1, 2]) {
@@ -162,7 +163,7 @@ test("the ingredient lesson teaches at most four words", () => {
 });
 
 test("the ingredient list works in every language we teach", () => {
-  for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"], ["pt", "Salada de feijão-frade"]]) {
+  for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"], ["pt", "Salada de feijão-frade"], ["es", "Gazpacho andaluz"]]) {
     const recipe = recipes.find((r) => r.language === lang && r.name === name);
     assert.ok(ingredientWords(lang, recipe).taught.length > 0, `${lang} teaches something`);
   }
@@ -175,4 +176,30 @@ test("word feedback never says wrong, and does not repeat itself four times runn
     assert.doesNotMatch(wordFeedback(v, "pa", 0).text, /wrong|incorrect|failed|no,/i);
   }
   assert.equal(wordFeedback("again", "pa", 0).advance, false);
+});
+
+test("every Spanish dish has step-by-step Spanish copy, checked against its English steps", () => {
+  const spanish = recipes.filter((r) => r.language === "es");
+  assert.ok(spanish.length >= 9);
+  for (const r of spanish) {
+    for (let i = 0; i < r.steps.length; i += 1) {
+      const step = translatedStep(r, i);
+      assert.ok(step.title && step.instruction, `${r.id} step ${i + 1} is translated`);
+    }
+  }
+});
+
+test("every Spanish place has dishes and a beginner option", () => {
+  for (const place of placesFor("es")) {
+    const dishes = dishesFor({ language: "es", cities: place.cities, level: 0 });
+    assert.ok(dishes.length >= 4, `${place.name} has ${dishes.length}`);
+    assert.ok(dishes.some((d) => d.minLevel === 0), `${place.name} has a beginner dish`);
+  }
+});
+
+test("Spanish ingredient words are taught from the curated lists", () => {
+  for (const r of recipes.filter((x) => x.language === "es")) {
+    const { taught } = ingredientWords("es", r);
+    assert.ok(taught.length >= 3, `${r.name} teaches ${taught.length} words`);
+  }
 });

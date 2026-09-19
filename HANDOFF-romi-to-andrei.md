@@ -1,5 +1,12 @@
 # Handoff: 2026-09-19 (from Romi via Claude)
 
+## Added later the same day: the end-of-lesson experience
+**The plain "you finished" card in `completion()` is replaced by three screens** (`src/finish/`): celebrate plus optional dish photo, what you learned (level estimate, phrases to say again, one sourced culture fact), and tomorrow (2-minute review, seeded streak strip, copyable tutor summary, next dish).
+
+**Changes in your files, please glance at them:** `src/main.js` (`completion()` delegates to the module; new actions `finish-next`, `finish-back`, `copy-brief`; the `change` listener now also handles the photo input; `openRecipe` and `restart-lesson` reset the finish state). `src/journey.js` and `src/lesson-challenge.js`: the journey now records `missedSteps` (a step answered wrong before it was passed), which is what feeds "say it again tomorrow". Old saved journeys load fine (missing field becomes empty). The old `.completion*` CSS in `style.css` is now unused; I left it alone.
+
+**Watch out:** the streak strip is seeded demo data and says so on screen. The tutor summary is copy-to-clipboard only, nothing is sent anywhere. The photo is not analysed; hooking the photo-check rubric in there is the natural next step. The level nudge is a plain rule on first-try answers (80% or more nudges up), not a model, and is worded as an estimate. "Bon profit!", "Buon appetito!" and "Bom apetite!" are the only new target-language strings and are unreviewed. New tests are in `src/finish.test.js`.
+
 ## Finished
 **The whole onboarding journey, steps 1 to 5, built as a separate module. Demo simplified to focus on one day only.**
 Entry page `welcome.html`, code in `src/welcome/`. Your wizard at `/` still works exactly as before.
@@ -10,6 +17,8 @@ Entry page `welcome.html`, code in `src/welcome/`. Your wizard at `/` still work
 4. **Place** — "Where would you like to cook today?" as somewhere you travel: three Catalan towns, Lombardy/Lazio/Emilia-Romagna, Portugal or Brazil. Each maps to the cities your recipes are tagged with.
 5. **Dish** — ranked by complexity (step count leads) so a beginner gets pa amb tomàquet and an advanced learner gets panellets.
 6. **Shop and connect** — a spoken lesson before the market, pitched at level. **It imports your `phrases()` from `src/journey.js` rather than copying it**, so shop language has one source.
+
+**Spanish added as a fourth language** (`es`, moved out of coming-soon): 9 dishes in `src/more-recipes.js` (ensalada de tomate, pisto, tortilla de patatas, patatas bravas, ensaladilla rusa, gazpacho andaluz, salmorejo, espinacas con garbanzos, paella de verduras), Spanish step copy in `src/lesson-translations.js`, `lessonUi.es` and `advancedCulture.es` in `src/main.js`, a Spain language entry and a Wikipedia-sourced story in `src/data.js`, and Spanish phrases/templates in `src/journey.js`. I also made the culture note in `cultureFact` use a region that belongs to the dish's language (it said "In Barcelona" for a Spanish dish). New city tags `Madrid, ES`, `Sevilla, ES`, `Valencia, ES`. All Spanish text is unreviewed; Romi can verify it.
 
 **Demo catalogue change (made in a Codex session, then merged with your realtime-agent commits):** Pa amb tomàquet is filtered out in `src/data.js` and its `word-align.js` entry deleted, Escalivada now starts at the beginner level, and advanced learners skip the ingredient-word screen (market talk goes straight to the recipe). Tests were updated to match (first Catalan dish is now Mongetes). Please check that your recipe page still behaves without Pa amb tomàquet.
 

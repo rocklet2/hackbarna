@@ -1,6 +1,6 @@
 export const STORAGE_KEY = 'taula-journeys-v4';
 export function freshJourney() {
-  return { step: 0, checked: [], drafts: {}, completed: false, passedSteps: [], phase: "guide" };
+  return { step: 0, checked: [], drafts: {}, completed: false, passedSteps: [], missedSteps: [], phase: "guide" };
 }
 export function readJourneys(storage) {
   try {
@@ -14,6 +14,7 @@ export function restoreJourney(value, recipe) {
   j.completed = value.completed === true;
   j.phase = value.phase === "quiz" ? "quiz" : "guide";
   j.passedSteps = Array.isArray(value.passedSteps) ? [...new Set(value.passedSteps.filter(n => Number.isInteger(n) && n >= 0 && n < recipe.steps.length))] : [];
+  j.missedSteps = Array.isArray(value.missedSteps) ? [...new Set(value.missedSteps.filter(n => Number.isInteger(n) && n >= 0 && n < recipe.steps.length))] : [];
   j.step = Number.isInteger(value.step) ? Math.max(0,Math.min(recipe.steps.length-1,value.step)) : 0;
   j.checked = Array.isArray(value.checked) ? [...new Set(value.checked.filter(n=>Number.isInteger(n)&&n>=0&&n<recipe.ingredients.length))] : [];
   if(value.drafts && typeof value.drafts==='object') for(const [key,text] of Object.entries(value.drafts)) if(/^\d+$/.test(key)&&typeof text==='string') j.drafts[key]=text.slice(0,5000);
@@ -25,6 +26,7 @@ export function phrases(language, word, wordEn) {
     ca: [['Bon dia!','Good morning!'],[`Teniu ${word}?`,`Do you have ${en}?`],['Quant costa?','How much does it cost?'],['En voldria mig quilo, si us plau.','I would like half a kilo, please.'],['Estic aprenent català. Podem parlar en català?','I’m learning Catalan. Can we speak in Catalan?']],
     it: [['Buongiorno!','Good morning!'],[`Avete ${word}?`,`Do you have ${en}?`],['Quanto costa?','How much does it cost?'],['Ne vorrei mezzo chilo, per favore.','I would like half a kilo, please.'],['Sto imparando l’italiano. Possiamo parlare in italiano?','I’m learning Italian. Can we speak in Italian?']],
     pt: [['Bom dia!','Good morning!'],[`Tem ${word}?`,`Do you have ${en}?`],['Quanto custa?','How much does it cost?'],['Queria meio quilo, por favor.','I would like half a kilo, please.'],['Estou a aprender português. Podemos falar em português?','I’m learning Portuguese. Can we speak in Portuguese?']],
+    es: [['¡Buenos días!','Good morning!'],[`¿Tiene ${word}?`,`Do you have ${en}?`],['¿Cuánto cuesta?','How much does it cost?'],['Quería medio kilo, por favor.','I would like half a kilo, please.'],['Estoy aprendiendo español. ¿Podemos hablar en español?','I’m learning Spanish. Can we speak in Spanish?']],
   };
   return rows[language];
 }
@@ -48,6 +50,12 @@ const askTemplates = {
     (w, en) => [`Queria ${w}, por favor.`, `I’d like ${en}, please.`],
     (w, en) => [`Estou à procura de ${w}.`, `I’m looking for ${en}.`],
     (w, en) => [`Ainda tem ${w}?`, `Do you still have ${en}?`],
+  ],
+  es: [
+    (w, en) => [`¿Tiene ${w}?`, `Do you have ${en}?`],
+    (w, en) => [`Quería ${w}, por favor.`, `I’d like ${en}, please.`],
+    (w, en) => [`Busco ${w}.`, `I’m looking for ${en}.`],
+    (w, en) => [`¿Todavía le queda ${w}?`, `Do you still have ${en} left?`],
   ],
 };
 export function askPhraseFor(language, ingredient, words, index = 0) {

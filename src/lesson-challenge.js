@@ -15,6 +15,11 @@ export function stepPassed(journey, index) {
 export function submitAnswer(journey, recipe, index, answer, level = 0) {
   const correct = normalizeAnswer(answer) === normalizeAnswer(challengeFor(recipe, index, level).answer);
   if (correct && !stepPassed(journey, index)) journey.passedSteps.push(index);
+  // A miss before the pass is what the finish screen calls "say it again tomorrow".
+  if (!correct && !stepPassed(journey, index)) {
+    journey.missedSteps ??= [];
+    if (!journey.missedSteps.includes(index)) journey.missedSteps.push(index);
+  }
   return correct;
 }
 
@@ -32,7 +37,7 @@ export function challengeFor(recipe, index, level = 0) {
   if (level >= 3) {
     const sentence = target.instruction.split(/(?<=[.!?])\s+/)[0];
     const answer = sentence.split(/\s+/)[0];
-    const prompts = { ca: 'Completa la instrucció d’aquest pas.', it: 'Completa l’istruzione di questo passaggio.', pt: 'Completa a instrução deste passo.' };
+    const prompts = { ca: 'Completa la instrucció d’aquest pas.', it: 'Completa l’istruzione di questo passaggio.', pt: 'Completa a instrução deste passo.', es: 'Completa la instrucción de este paso.' };
     return { kind: 'write', prompt: prompts[recipe.language] || 'Complete the instruction from this step.', sentence: sentence.replace(answer, '_____'), answer, hint: sentence, success: sentence };
   }
   const sentence = level >= 2;
