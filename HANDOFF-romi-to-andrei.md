@@ -11,6 +11,10 @@ Entry page `welcome.html`, code in `src/welcome/`. Your wizard at `/` still work
 5. **Dish** — ranked by complexity (step count leads) so a beginner gets pa amb tomàquet and an advanced learner gets panellets.
 6. **Shop and connect** — a spoken lesson before the market, pitched at level. **It imports your `phrases()` from `src/journey.js` rather than copying it**, so shop language has one source.
 
+**Third pass:** the stall lesson is now followed by a second spoken lesson on the recipe's own shopping list, which replaces the old "You are ready for the market" end screen. One ingredient per turn, each in a different frame ("Voldria...", "Busco...", "Encara us queda...?", "Teniu...?"), closing on whichever market phrase the stall lesson did not already use. The end screen hands the phrases back as a list to shop from.
+
+**It generates no target-language text.** The sentence frames are your `askPhraseFor` templates and the nouns are the curated word lists (recipe `words` first, then the language's own list as a fallback). An ingredient with no curated word is named and skipped, the same way an unsupported language is.
+
 **Second pass:** the hello bubble on the level screen is gone; the first screen now cycles "hello" through ten languages above "Cook. Talk. Learn.". Catalan places are five towns (Barcelona, Girona, Valls, Tarragona, Lleida); Pays Catalan removed. The dish screen heading is in Catalan ("Aquesta nit, a Girona") and shows up to four dishes to pick from.
 
 Removed: "Cuines avui, o prepares la setmana?" step that let learners choose between cooking one dish or planning a week. Demo now automatically focuses on one dish and one day.
@@ -24,6 +28,8 @@ Removed: "Cuines avui, o prepares la setmana?" step that let learners choose bet
 2. **Which page is the front door?** `/` is your wizard, `/welcome.html` is this. Both now ask language, level and place and choose a dish. Shipping both means two front doors that contradict each other. (The planning step was removed, so this is now a cleaner comparison.)
 
 ## Watch out for
+- **Singular words meet plural ingredients, and the Catalan is probably wrong.** The list lesson pairs your word list with the recipe's ingredient line, so Panellets teaches "Voldria ametlla, si us plau." for "200 g ground almonds" — singular, where a speaker would almost certainly say the plural. I cannot check Catalan, so I have not touched it. This needs a speaker, and the fix likely belongs in the word lists rather than in my lesson code.
+- **The onboarding is now eight say-it-back turns** (three at the stall, five on the list). That is a real lesson but it is long for a stage demo. If we need it shorter, cap `MAX_ITEMS` in `src/welcome/shop.js` or add a skip.
 - **I edited `src/more-recipes.js` (yours):** added espinacs, calçots amb romesco and samfaina, and changed the `regions` on coca, mongetes and crema so each town has its own dishes. New town tags `Valls, ES` and `Lleida, ES` only exist there. Pa amb tomàquet and panellets in `content/catalonia.json` still list Barcelona, Girona and Tarragona only.
 - The dish-to-town pairings are my judgment, and the new recipes and their Catalan words are unreviewed. A Catalan speaker should check both.
 - **`phrases()` is indexed by position** in my step 6: row 0 greeting, 1 "do you have X", 2 "how much", 3 "half a kilo", 4 "I'm learning X". Beginners get 0,1,2 and advanced get 0,4,3. If you reorder those rows the shop lesson silently changes meaning. Named keys would be safer if you are editing it anyway.

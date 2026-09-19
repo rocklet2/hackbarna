@@ -133,3 +133,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .sayrow .hint { margin: 0; }
 .sayrow .micoff { background: transparent; border: 0; color: var(--green); text-decoration: underline; font-size: 13px; padding: 6px 0; }
 .sayrow .micoff:disabled { color: var(--muted); text-decoration: none; }
+
+/* The end screen hands back the phrases, as something to shop from. */
+.recap { display: flex; flex-direction: column; gap: 8px; margin: 2px 0 6px; }
+.recap .line { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.recap .target { font-weight: 600; }
+.recap .en { color: var(--muted); font-size: 13px; }
+.recap .why { color: var(--orange); font-size: 12px; }

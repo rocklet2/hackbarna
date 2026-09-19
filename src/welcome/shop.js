@@ -11,7 +11,8 @@
 // cannot hear an accent and does not try to. That matches the project guardrail
 // of no pronunciation scoring: we promise word and phrase feedback only.
 
-import { phrases } from "../journey.js";
+import { phrases, askPhraseFor } from "../journey.js";
+import { languages } from "../data.js";
 
 /**
  * Build the lesson. Andrei's `phrases()` returns five rows in a fixed order:
@@ -76,4 +77,65 @@ export function feedbackFor(verdict, target) {
     return { text: `Let us leave that one for the market. It is “${target}”, and it will be on your list.`, advance: true };
   }
   return { text: `Listen once more: “${target}”. Say it however it comes out.`, advance: false };
+}
+
+/* ---------- the list lesson: asking for what the recipe needs ---------- */
+//
+// NOTHING HERE INVENTS TARGET-LANGUAGE TEXT. The sentence frames are Andrei's
+// `askPhraseFor` templates and the nouns are the curated word lists, so a
+// speaker reviewing those files reviews this lesson too. An ingredient with no
+// curated word is named as missing rather than translated on the spot.
+
+/** Recipe words first, then the language's own list, so a recipe need not name every word. */
+function vocabularyFor(language, recipe) {
+  const lang = languages.find((l) => l.id === language);
+  return [...(recipe?.words || []), ...(lang?.words || [])];
+}
+
+/** What each frame is actually for. Indexed like `askPhraseFor`'s templates. */
+const FRAME_NOTES = [
+  "The plain one: do they have it.",
+  "The polite one, for when you have already decided.",
+  "For when you cannot see it on the stall.",
+  "For late in the market, when things are running out.",
+];
+
+const MAX_ITEMS = 4;
+
+/**
+ * A spoken walk through the shopping list: one ingredient per turn, each in a
+ * different frame, so the learner leaves with four ways to ask rather than one
+ * sentence repeated. The closing line is whichever market phrase the stall
+ * lesson did not already use, so the two lessons never teach the same thing twice.
+ */
+export function ingredientLesson(language, level, recipe) {
+  const vocabulary = vocabularyFor(language, recipe);
+  const matched = [];
+  const unknown = [];
+
+  for (const ingredient of recipe?.ingredients || []) {
+    // Start at frame 1: frame 0 is "do you have X", which the stall lesson just taught.
+    const frame = (matched.length + 1) % FRAME_NOTES.length;
+    const ask = askPhraseFor(language, ingredient, vocabulary, frame);
+    if (ask) matched.push({ ingredient, frame, target: ask[0], en: ask[1] });
+    else unknown.push(ingredient);
+  }
+
+  const items = matched.slice(0, MAX_ITEMS);
+  const first = recipe?.words?.[0] || ["", ""];
+  const rows = phrases(language, first[0], first[1]) || [];
+  // Beginners were taught the price question and never asked for an amount;
+  // advanced learners asked for an amount and never asked the price.
+  const closer = level >= 2
+    ? { row: rows[2], why: "And the one you will ask at every stall after that." }
+    : { row: rows[3], why: "Every stall asks how much. This is the amount, whatever you are buying." };
+
+  const turns = items.map((item) => ({
+    target: item.target,
+    en: item.en,
+    why: `${FRAME_NOTES[item.frame]} Your list says ${item.ingredient}.`,
+  }));
+  if (closer.row) turns.push({ target: closer.row[0], en: closer.row[1], why: closer.why });
+
+  return { turns, items, unknown };
 }
