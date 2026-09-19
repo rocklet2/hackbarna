@@ -193,7 +193,7 @@ log.addEventListener("click", (e) => {
 
 // ---------- welcome ----------
 const start = document.createElement("button");
-start.className = "mic"; start.style.alignSelf = "center"; start.textContent = "Start cooking";
+start.className = "mic"; start.style.cssText = "align-self:center;flex:none;padding:0 32px;"; start.textContent = "Start cooking";
 start.onclick = () => { start.remove(); state.started = true; startTurn(0); };
 addMsg("sys", { text: "Cook panellets with a Catalan-speaking coach. Talk, don't tap: answer out loud (or type), and send a photo when you want a check." });
 log.append(start);
