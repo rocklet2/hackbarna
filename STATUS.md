@@ -3,9 +3,9 @@
 Each person updates only their own section.
 
 ## Romi
-- **Finished:** onboarding steps 1, 2a and 2b built as a separate module (`welcome.html`, `src/welcome/`), so `src/main.js` is untouched. Spoken language question with a ten-language catalogue (only three selectable, the rest honestly marked not ready), name asked in the target language then a greeting by name, and a three-turn conversational level check producing a starting estimate. Grader is a documented heuristic with a seam for an LLM rubric. 12 new tests, all 31 pass. Also fixed the Vite JSON import warning Andrei flagged. SLNG key verified working: Fish TTS returns Catalan audio in ~0.5s.
-- **Next:** decide the entry point (`/` vs `/welcome.html`), then steps 3 to 6 per `docs/ONBOARDING_JOURNEY.md`. Catalan review still blocks a real demo.
-- **Blocked:** nothing. Calling SLNG from the browser needs a small backend for the key, so browser speech is in use for now.
+- **Finished:** the whole onboarding journey, steps 1 to 6, as a separate module (`welcome.html`, `src/welcome/`). None of Andrei's files touched. Spoken language question with a ten-language catalogue, name asked in the target language then a greeting by name, a three-turn conversational level check, place as travel, planning (today or the week), dish ranked by complexity, and a spoken shop-and-connect lesson that reuses Andrei's `phrases()`. 55 tests pass. SLNG key verified: Fish TTS returns Catalan audio in ~0.5s.
+- **Next:** settle the front door with Andrei (`/` vs `/welcome.html`) and which dish ranker wins. See `docs/ONBOARDING_JOURNEY.md` section 8. Catalan review still blocks a real demo.
+- **Blocked:** nothing in code. Two decisions need Andrei, listed in the handoff.
 
 ## Andrei
 - **Finished:** Setup is a mobile-first, one-question-per-screen wizard (src/main.js `onboard*` functions): language → level → place → meal. Level is a short 3-question conversational check using real target-language phrases. Preferences persist to localStorage — a returning visitor skips straight to the menu.
