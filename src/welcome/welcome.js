@@ -11,11 +11,8 @@ import { recipeUrl } from "../learner-profile.js";
 import "./welcome.css";
 import { SUPPORTED, COMING_SOON, matchLanguage, greetingFor, byId } from "./catalogue.js";
 import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor } from "./levelcheck.js";
-import {
-  placesFor, placeById, matchPlace, placeQuestionFor, tonightFor,
-  PLANS, planById, matchPlan,
-} from "./places.js";
-import { dishesFor, pickForPlan, complexityLabel, nextOptions } from "./dishes.js";
+import { placesFor, placeById, matchPlace, placeQuestionFor, tonightFor } from "./places.js";
+import { dishesFor, complexityLabel } from "./dishes.js";
 import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
 
@@ -248,16 +245,16 @@ function startDishes() {
   state.step = "dishes";
   const place = placeById(state.language, state.place);
   const ranked = dishesFor({ language: state.language, cities: place?.cities || [], level: state.level });
-  state.dishes = pickForPlan(ranked, planById(state.plan));
+  // Nothing is preselected: the learner chooses.
+  state.dishes = [];
   renderDishes(ranked);
 }
 
 function renderDishes(ranked) {
-  const plan = planById(state.plan);
   const place = placeById(state.language, state.place);
   const chosen = state.dishes;
 
-  if (!chosen.length) {
+  if (!ranked.length) {
     app.innerHTML = chrome(`<div class="stage">
       <h1 class="ask">Nothing to cook here yet.</h1>
       <p class="hint">We have no dishes for ${esc(place.name)} at your level.</p>
@@ -267,7 +264,6 @@ function renderDishes(ranked) {
     return;
   }
 
-  const many = chosen.length > 1;
   const tonight = tonightFor(state.language, place);
   const card = (r) => `<button class="card" data-dish="${esc(r.id)}" aria-pressed="${chosen.includes(r)}">
       <span class="name">${esc(r.name)}</span>
@@ -275,20 +271,15 @@ function renderDishes(ranked) {
       <span class="detail">${esc(r.description)}</span>
       <span class="words">${r.words.slice(0, 4).map((w) => esc(w[0])).join(" · ")}</span>
     </button>`;
-  // One day means one dish: show a short menu and let the learner pick.
-  const menu = many ? chosen : ranked.slice(0, 4);
 
   app.innerHTML = chrome(`<div class="stage">
-    <h1 class="ask">${many ? `Your week in ${esc(place.name)}` : `
+    <h1 class="ask">
       <span class="target">${esc(tonight.target)}</span>
-      <span class="en">${esc(tonight.en)}</span>`}</h1>
-    <p class="hint">${many
-      ? `${chosen.length} dishes, one shopping trip, chosen for ${esc(LEVEL_NAMES[state.level])}.`
-      : `Pick one. The first is our suggestion for ${esc(LEVEL_NAMES[state.level])}.`}</p>
-    <div class="cards" style="grid-template-columns:1fr">${menu.map(card).join("")}</div>
-    <div class="mic-row" style="gap:10px">
-      ${nextOptions(chosen.length).map((o) => `<button class="mic ${o.id === "shop" ? "" : "alt"}"
-        data-next="${o.id}">${esc(o.name)}</button>`).join("")}
+      <span class="en">${esc(tonight.en)}</span>
+    </h1>
+    <div class="cards" style="grid-template-columns:1fr;margin-top:14px">${ranked.slice(0, 4).map(card).join("")}</div>
+    <div class="mic-row sticky">
+      <button class="mic" id="next" ${chosen.length ? "" : "disabled"}>Learn what to say at the market</button>
     </div>
   </div>`);
 
@@ -298,9 +289,7 @@ function renderDishes(ranked) {
       renderDishes(ranked);
     };
   });
-  app.querySelectorAll("[data-next]").forEach((b) => {
-    b.onclick = () => (b.dataset.next === "shop" ? startShop() : renderHandoff("cook"));
-  });
+  el("next").onclick = startShop;
 }
 
 /* ---------- step 6: the stall conversation ---------- */

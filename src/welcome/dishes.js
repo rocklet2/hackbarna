@@ -73,17 +73,3 @@ export function pickForPlan(dishes, plan) {
   const wanted = plan?.dishes || 1;
   return dishes.slice(0, Math.min(wanted, dishes.length));
 }
-
-/** What the learner can do next, which depends on whether it is one dish or several. */
-export function nextOptions(selectedCount) {
-  const options = [];
-  if (selectedCount === 1) {
-    options.push({ id: "cook", name: "Take me straight to the recipe", detail: "Start cooking now." });
-  }
-  options.push({
-    id: "shop",
-    name: "Learn what to say at the market",
-    detail: "Learn how to ask for what you need, then go and get it.",
-  });
-  return options;
-}

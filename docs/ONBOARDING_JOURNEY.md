@@ -91,9 +91,7 @@ Recipes are matched to level **by complexity, not just by minutes**:
 - **Intermediate:** in between, aimed at the middle of whatever the catalogue offers.
 - **Advanced:** more steps, real technique, richer vocabulary. *(panellets: 6 steps; crema catalana: custard and caramelising)*
 
-After choosing, two ways forward:
-1. **"Take me straight to the recipe"** (when it is a single dish)
-2. **"Learn what to say at the market"** → step 6
+Up to four dishes are listed and **none is preselected**; the learner taps one, and only then can they continue. There is no shortcut to the recipe: the single way forward is **"Learn what to say at the market"** → step 6, then the ingredient words, then the recipe.
 
 ### Step 6 — Shop and connect (about 15s)
 A **small spoken lesson**, matched to level:

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { recipes } from "./data.js";
-import { complexityOf, complexityLabel, dishesFor, pickForPlan, nextOptions } from "./welcome/dishes.js";
+import { complexityOf, complexityLabel, dishesFor, pickForPlan } from "./welcome/dishes.js";
 import { phrases } from "./journey.js";
 import { shopScript, ingredientWords, wordFeedback, gradeRepetition, feedbackFor } from "./welcome/shop.js";
 import { planById } from "./welcome/places.js";
@@ -60,12 +60,6 @@ test("only dishes from the chosen place are offered", () => {
 test("the plan decides how many dishes come back", () => {
   const dishes = dishesFor({ language: "ca", cities: CA_CITIES, level: 1 });
   assert.equal(pickForPlan(dishes, planById("today")).length, 1);
-});
-
-test("one dish can go straight to cooking, several cannot", () => {
-  assert.ok(nextOptions(1).some((o) => o.id === "cook"));
-  assert.ok(nextOptions(1).some((o) => o.id === "shop"));
-  assert.equal(nextOptions(3).some((o) => o.id === "cook"), false, "you cannot cook three dishes at once");
 });
 
 test("the market lesson changes with every level", () => {
@@ -182,11 +176,3 @@ test("word feedback never says wrong, and does not repeat itself four times runn
   }
   assert.equal(wordFeedback("again", "pa", 0).advance, false);
 });
-
-test("the shopping CTA no longer promises planning", () => {
-  for (const n of [1, 3]) {
-    const shop = nextOptions(n).find((o) => o.id === "shop");
-    assert.doesNotMatch(shop.name, /plan/i);
-  }
-});
-
