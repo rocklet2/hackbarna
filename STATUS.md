@@ -3,10 +3,9 @@
 Each person updates only their own section.
 
 ## Romi
-- **Finished:** repo created and connected, CLAUDE.md protocol set up, project brief saved to docs/PROJECT_BRIEF.md
-- **Decided:** demo is Catalonia / Catalan / panellets; progress design in docs/PROGRESS_DESIGN.md
-- **Next:** find a Catalan reviewer, decide roles, then run the first-hour tests (SLNG Catalan, vision, Galtea)
-- **Blocked:** nothing
+- **Finished:** onboarding steps 1, 2a and 2b built as a separate module (`welcome.html`, `src/welcome/`), so `src/main.js` is untouched. Spoken language question with a ten-language catalogue (only three selectable, the rest honestly marked not ready), name asked in the target language then a greeting by name, and a three-turn conversational level check producing a starting estimate. Grader is a documented heuristic with a seam for an LLM rubric. 12 new tests, all 31 pass. Also fixed the Vite JSON import warning Andrei flagged. SLNG key verified working: Fish TTS returns Catalan audio in ~0.5s.
+- **Next:** decide the entry point (`/` vs `/welcome.html`), then steps 3 to 6 per `docs/ONBOARDING_JOURNEY.md`. Catalan review still blocks a real demo.
+- **Blocked:** nothing. Calling SLNG from the browser needs a small backend for the key, so browser speech is in use for now.
 
 ## Andrei
 - **Finished:** Setup is a mobile-first, one-question-per-screen wizard (src/main.js `onboard*` functions): language → level → place → meal. Level is a short 3-question conversational check using real target-language phrases. Preferences persist to localStorage — a returning visitor skips straight to the menu.

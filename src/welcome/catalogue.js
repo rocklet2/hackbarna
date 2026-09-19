@@ -17,6 +17,7 @@ export const SUPPORTED = [
     askName: { target: "Com et dius?", en: "What should I call you?" },
     greeting: (name) => `Hola, ${name}!`,
     voice: "ca",
+    speech: "ca-ES",
   },
   {
     id: "it",
@@ -28,6 +29,7 @@ export const SUPPORTED = [
     askName: { target: "Come ti chiami?", en: "What should I call you?" },
     greeting: (name) => `Ciao, ${name}!`,
     voice: "it",
+    speech: "it-IT",
   },
   {
     id: "pt",
@@ -39,6 +41,7 @@ export const SUPPORTED = [
     askName: { target: "Como te chamas?", en: "What should I call you?" },
     greeting: (name) => `Olá, ${name}!`,
     voice: "pt",
+    speech: "pt-PT",
   },
 ];
 

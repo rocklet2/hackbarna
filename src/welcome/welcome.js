@@ -5,9 +5,29 @@
 // keeps working while this is built. Entry page is welcome.html.
 import "./welcome.css";
 import { SUPPORTED, COMING_SOON, matchLanguage, extractName, greetingFor, byId } from "./catalogue.js";
+import {
+  turnsFor, acknowledgementsFor, gradeReply, estimateLevel, shouldStopEarly, LEVEL_NAMES,
+} from "./levelcheck.js";
 
 const app = document.querySelector("#app");
-const state = { step: "language", language: null, name: null };
+const state = { step: "language", language: null, name: null, turn: 0, grades: [], thread: [] };
+
+/* ---------- remembering the learner ---------- */
+// The level check runs on the first visit only, so it has to survive a reload.
+const STORE = "taula-welcome-v1";
+function saveProfile(extra = {}) {
+  try {
+    localStorage.setItem(STORE, JSON.stringify({
+      language: state.language, name: state.name, checkedAt: new Date().toISOString(), ...extra,
+    }));
+  } catch { /* private browsing: the flow still works, it just asks again */ }
+}
+function loadProfile() {
+  try {
+    const p = JSON.parse(localStorage.getItem(STORE) || "null");
+    return p && p.language && p.name && Number.isInteger(p.level) ? p : null;
+  } catch { return null; }
+}
 
 /* ---------- speech out ---------- */
 let voices = [];
@@ -210,16 +230,188 @@ function renderGreeting() {
     <div class="hello">${esc(hello)}</div>
     <div class="sub">That is hello in ${esc(lang.name)}. You just used your first word.</div>
     <button class="next" id="next">Continue</button>
-    <div class="note" style="text-align:left">
-      <b>Next: the quick check (step 2b)</b>
-      Three short exchanges so the coach can pitch the first lesson at the right level.
-      Not built yet.
-    </div>
   </div>`);
   setTimeout(() => say(hello, lang.voice), 350);
-  el("next").onclick = () => {
-    alert("Step 2b (the level check) is not built yet.\n\nSteps 3 to 7 are in the existing app at /");
-  };
+  el("next").onclick = startCheck;
 }
 
-renderLanguage();
+/* ---------- step 2b: the quick check ---------- */
+function startCheck() {
+  state.step = "check";
+  state.turn = 0; state.grades = []; state.thread = [];
+  renderCheck();
+  askTurn();
+}
+
+function askTurn() {
+  const lang = byId(state.language);
+  const turn = turnsFor(state.language)[state.turn];
+  state.thread.push({ who: "coach", target: turn.target, en: turn.en });
+  renderCheck();
+  setTimeout(() => say(turn.target, lang.voice), 300);
+}
+
+function renderCheck(listening = false) {
+  const lang = byId(state.language);
+  const turns = turnsFor(state.language);
+  const bubbles = state.thread.map((m) => {
+    if (m.who === "me") return `<div class="bubble me">${esc(m.text)}</div>`;
+    if (m.who === "ack") return `<div class="bubble coach ack">${esc(m.text)}</div>`;
+    return `<div class="bubble coach"><div class="target">${esc(m.target)}</div>
+      <div class="en">${esc(m.en)}</div></div>`;
+  }).join("");
+
+  app.innerHTML = chrome(`<div class="stage">
+    <div class="turnbar">
+      ${turns.map((_, i) => `<i class="${i < state.turn ? "done" : ""} ${i === state.turn ? "current" : ""}"></i>`).join("")}
+      <span>${Math.min(state.turn + 1, turns.length)} of ${turns.length}</span>
+    </div>
+    <div class="thread" id="thread">${bubbles}</div>
+    <div class="mic-row">
+      <button class="mic ${listening ? "rec" : ""}" id="mic">🎙️ <span id="micLabel">${
+        listening ? "Listening… tap to stop" : `Answer in ${esc(lang.name)}, or in English`
+      }</span></button>
+      <div class="heard" id="heard"></div>
+    </div>
+    <form class="typed" id="typed">
+      <input id="replyInput" autocomplete="off" placeholder="Or type your answer" />
+      <button type="submit">Send</button>
+    </form>
+    <button class="say" id="dunno">I do not know this one</button>
+    <button class="say" id="skip">I would rather just pick my level</button>
+  </div>`);
+
+  el("thread").scrollTop = el("thread").scrollHeight;
+  el("mic").onclick = toggleCheckMic;
+  el("typed").onsubmit = (e) => {
+    e.preventDefault();
+    const v = el("replyInput").value.trim();
+    if (v) submitReply(v);
+  };
+  // Saying "I don't know" is an answer too, and the only way a learner can tell
+  // us they are stuck. Without it the early stop below could never fire.
+  el("dunno").onclick = () => submitReply("", "I do not know this one");
+  el("skip").onclick = renderPicker;
+  if (!SR) el("heard").textContent = "Voice is not available here, so type your answer.";
+}
+
+function toggleCheckMic() {
+  if (recActive) { stopListening(); return; }
+  speechSynthesis?.cancel?.();
+  const lang = byId(state.language);
+  const started = listen({
+    // Listen in the target language: what we want to measure is whether they reach for it.
+    lang: lang.speech,
+    onText: (t) => { const h = el("heard"); if (h) h.textContent = t; },
+    onDone: (text, err) => {
+      renderCheck(false);
+      if (err === "blocked") { el("heard").textContent = "Microphone blocked. Type your answer instead."; return; }
+      if (!text) { el("heard").textContent = "I did not catch that. Try again, or type it."; return; }
+      submitReply(text);
+    },
+  });
+  if (!started) { el("heard").textContent = "Voice did not start. Type your answer instead."; return; }
+  renderCheck(true);
+}
+
+/** `shown` lets an empty reply ("I do not know") still appear in the thread. */
+function submitReply(text, shown = text) {
+  stopListening();
+  const turns = turnsFor(state.language);
+  const turn = turns[state.turn];
+  const grade = gradeReply(text, turn, state.language);
+  state.grades.push(grade);
+  state.thread.push({ who: "me", text: shown });
+
+  const ack = acknowledgementsFor(state.language);
+  const word = grade.score >= 3 ? ack.strong : grade.score >= 2 ? ack.some : ack.none;
+  state.thread.push({ who: "ack", text: word });
+  renderCheck();
+  setTimeout(() => say(word, byId(state.language).voice), 200);
+
+  const done = shouldStopEarly(state.grades) || state.turn >= turns.length - 1;
+  setTimeout(() => {
+    if (done) { finishCheck(); return; }
+    state.turn += 1;
+    askTurn();
+  }, 1100);
+}
+
+function finishCheck() {
+  const { level, reason } = estimateLevel(state.grades);
+  state.step = "done";
+  saveProfile({ level });
+  renderResult(level, reason);
+}
+
+function renderResult(level, reason) {
+  const lang = byId(state.language);
+  app.innerHTML = chrome(`<div class="stage">
+    <div class="result">
+      <div class="estimate">Starting point</div>
+      <div class="level">${esc(LEVEL_NAMES[level])}</div>
+      <div class="reason">${esc(reason)}</div>
+    </div>
+    <div class="note">
+      <b>This is an estimate, not a test result.</b>
+      It sets where your first lesson starts, and it moves as you cook.
+      It is not a CEFR level.
+    </div>
+    <div class="note" style="background:var(--paper);border:1px solid var(--line)">
+      <b>Next: steps 3 to 6</b>
+      Where you would like to cook, what you are planning, the dish, then shop and connect.
+      Not built yet: continue in the existing app.
+    </div>
+    <div class="mic-row">
+      <a class="mic" href="/" style="text-decoration:none">Open the recipe app</a>
+    </div>
+    <button class="say" id="again">Start over</button>
+  </div>`);
+  el("again").onclick = restart;
+  setTimeout(() => say(greetingFor(state.language, state.name), lang.voice), 250);
+}
+
+/** The "let me just pick" escape hatch, so nobody is trapped in a conversation. */
+function renderPicker() {
+  stopListening();
+  app.innerHTML = chrome(`<div class="stage">
+    <h1 class="ask">Where would you say you are?</h1>
+    <p class="hint">No test. You can change this whenever you like.</p>
+    <div class="cards" style="grid-template-columns:1fr">
+      ${LEVEL_NAMES.map((n, i) => `<button class="card" data-level="${i}">
+        <span class="name">${esc(n)}</span></button>`).join("")}
+    </div>
+  </div>`);
+  app.querySelectorAll("[data-level]").forEach((b) => {
+    b.onclick = () => {
+      const level = Number(b.dataset.level);
+      state.step = "done";
+      saveProfile({ level, picked: true });
+      renderResult(level, "You picked this yourself, so we start there.");
+    };
+  });
+}
+
+function restart() {
+  try { localStorage.removeItem(STORE); } catch {}
+  Object.assign(state, { step: "language", language: null, name: null, turn: 0, grades: [], thread: [] });
+  renderLanguage();
+}
+
+/** A returning learner is not asked again: the check is a first-visit thing. */
+function renderWelcomeBack(profile) {
+  const lang = byId(profile.language);
+  app.innerHTML = chrome(`<div class="greet">
+    <div class="hello">${esc(greetingFor(profile.language, profile.name))}</div>
+    <div class="sub">Starting point: ${esc(LEVEL_NAMES[profile.level])} in ${esc(lang.name)}.
+      We only ask those questions once.</div>
+    <a class="next" href="/" style="text-decoration:none;display:inline-flex;align-items:center">Open the recipe app</a>
+    <button class="say" id="again" style="align-self:center">Start over</button>
+  </div>`);
+  el("again").onclick = restart;
+  setTimeout(() => say(greetingFor(profile.language, profile.name), lang.voice), 300);
+}
+
+const saved = loadProfile();
+if (saved) renderWelcomeBack(saved);
+else renderLanguage();
