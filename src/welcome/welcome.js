@@ -22,7 +22,7 @@ const app = document.querySelector("#app");
 const state = {
   step: "language", language: null,
   level: null, place: null, plan: null,
-  dishes: [], stage: "shop", line: 0, thread: [], tries: 0,
+  dishes: [], line: 0, thread: [], tries: 0,
 };
 
 /* ---------- remembering the learner ---------- */
@@ -299,23 +299,14 @@ function renderDishes(ranked) {
   });
 }
 
-/* ---------- step 6: the stall, then your list ---------- */
-//
-// Two spoken lessons share this screen. The first is the stall conversation,
-// the second walks the recipe's own shopping list. They differ only in their
-// script and their label, so they run through one renderer.
+/* ---------- step 6: the stall conversation ---------- */
 
-function lessonFor(stage) {
-  const recipe = state.dishes[0];
-  if (stage === "list") {
-    return { script: ingredientLesson(state.language, state.level, recipe).turns, label: "Your list" };
-  }
-  return { script: shopScript(state.language, state.level, recipe), label: "Shop & connect" };
+function lessonFor() {
+  return { script: shopScript(state.language, state.level, state.dishes[0]), label: "Shop & connect" };
 }
 
 function startShop() {
   state.step = "shop";
-  state.stage = "shop";
   state.line = 0; state.thread = []; state.tries = 0;
   state.thread.push({ who: "sys", text: state.level >= 2
     ? "At the market, the useful thing is not ordering. It is getting them to speak to you."
@@ -324,27 +315,8 @@ function startShop() {
   setTimeout(() => sayLessonLine(), 400);
 }
 
-/** The list lesson opens by naming what it will and will not teach. */
-function startList() {
-  const { items, unknown } = ingredientLesson(state.language, state.level, state.dishes[0]);
-  if (!items.length) { renderHandoff("shop"); return; }
-
-  state.stage = "list";
-  state.line = 0; state.thread = []; state.tries = 0;
-  const lang = byId(state.language);
-  state.thread.push({ who: "sys", text: `Now the list for ${state.dishes[0].name}. `
-    + `${items.length} things to ask for, each a different way of asking. Say each one back to me.` });
-  if (unknown.length) {
-    // Same honesty rule as an unsupported language: name the gap, do not translate on the spot.
-    state.thread.push({ who: "sys", text: `We will skip ${unknown.join(", ")}. `
-      + `There is no checked ${lang.name} word for that yet, and we would rather leave it out than invent one.` });
-  }
-  renderLesson();
-  setTimeout(() => sayLessonLine(), 500);
-}
-
 function sayLessonLine() {
-  const { script } = lessonFor(state.stage);
+  const { script } = lessonFor();
   const line = script[state.line];
   if (!line) return;
   state.thread.push({ who: "coach", target: line.target, en: line.en, why: line.why });
@@ -354,7 +326,7 @@ function sayLessonLine() {
 
 function renderLesson() {
   const lang = byId(state.language);
-  const { script, label } = lessonFor(state.stage);
+  const { script, label } = lessonFor();
   const bubbles = state.thread.map((m) => {
     if (m.who === "me") return `<div class="bubble me">${esc(m.text)}</div>`;
     if (m.who === "sys") return `<div class="bubble sys">${esc(m.text)}</div>`;
@@ -397,16 +369,15 @@ function renderLesson() {
   mic.listenFor((text) => submitLesson(text), "answer");
 }
 
-/** Skip moves on from the current lesson: the stall to the list, the list to the end. */
 function skipLesson() {
   mic.listenFor(null);
   speechSynthesis?.cancel?.();
-  if (state.stage === "shop") startList(); else renderHandoff("shop");
+  renderHandoff("shop");
 }
 
 function submitLesson(text) {
   mic.listenFor(null);
-  const { script } = lessonFor(state.stage);
+  const { script } = lessonFor();
   const line = script[state.line];
   const { verdict } = gradeRepetition(text, line.target);
   state.tries += 1;
@@ -422,7 +393,6 @@ function submitLesson(text) {
   state.line += 1; state.tries = 0;
   setTimeout(() => {
     if (state.line < script.length) { sayLessonLine(); return; }
-    if (state.stage === "shop") { startList(); return; }
     renderHandoff("shop");
   }, 1100);
 }
@@ -455,7 +425,7 @@ function renderHandoff(via) {
 function restart() {
   try { localStorage.removeItem(STORE); } catch {}
   Object.assign(state, { step: "language", language: null,
-    level: null, place: null, plan: null, dishes: [], stage: "shop" });
+    level: null, place: null, plan: null, dishes: [] });
   renderLanguage();
 }
 

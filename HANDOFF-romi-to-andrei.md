@@ -11,7 +11,9 @@ Entry page `welcome.html`, code in `src/welcome/`. Your wizard at `/` still work
 5. **Dish** — ranked by complexity (step count leads) so a beginner gets pa amb tomàquet and an advanced learner gets panellets.
 6. **Shop and connect** — a spoken lesson before the market, pitched at level. **It imports your `phrases()` from `src/journey.js` rather than copying it**, so shop language has one source.
 
-**Third pass:** the stall lesson is now followed by a second spoken lesson on the recipe's own shopping list, which replaces the old "You are ready for the market" end screen. One ingredient per turn, each in a different frame ("Voldria...", "Busco...", "Encara us queda...?", "Teniu...?"), closing on whichever market phrase the stall lesson did not already use. The end screen hands the phrases back as a list to shop from.
+**Cut later the same day:** the practised list lesson (four say-it-back turns on the ingredients) was removed as too much for the demo. The stall lesson now goes straight to the end screen, which still shows the four ingredient phrases as a reference list. `ingredientLesson` remains because it builds that list; the Skip button now jumps from the stall lesson to it.
+
+**Third pass (partly superseded by the cut above):** the stall lesson is now followed by a second spoken lesson on the recipe's own shopping list, which replaces the old "You are ready for the market" end screen. One ingredient per turn, each in a different frame ("Voldria...", "Busco...", "Encara us queda...?", "Teniu...?"), closing on whichever market phrase the stall lesson did not already use. The end screen hands the phrases back as a list to shop from.
 
 **It generates no target-language text.** The sentence frames are your `askPhraseFor` templates and the nouns are the curated word lists (recipe `words` first, then the language's own list as a fallback). An ingredient with no curated word is named and skipped, the same way an unsupported language is.
 
