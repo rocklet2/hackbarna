@@ -10,7 +10,7 @@ Romi and Andrei both use this repo via their own Claude Code sessions. Everythin
 - **Event:** HackBarna / AI Summit Barcelona, 19-20 Sep 2026, at Norrsken House Barcelona (Norrsken is the host; note the double r).
 - **Challenge:** Preply, "Best use of AI for Learning".
 - **Product:** [APP NAME], a language learning app that also teaches a place and its culture through its food. Cook step by step with voice, photo checks and feedback in the local language; levels move from ingredient words to fluent conversation plus recipe history and cultural facts.
-- **Demo:** Catalonia, Catalan, panellets. Config in `config/catalonia.yaml`. Progress design in `docs/PROGRESS_DESIGN.md`.
+- **Demo:** Catalonia, Catalan, panellets. All Catalan content lives in ONE file, `content/catalonia.json` (single source of truth; edit content there, never duplicate it in code). Progress design in `docs/PROGRESS_DESIGN.md`.
 - **Full brief:** `docs/PROJECT_BRIEF.md` (idea, sponsor tech, risks, build order, demo flow, open questions). Read it before building anything.
 
 ### Non-negotiable guardrails

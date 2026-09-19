@@ -12,7 +12,7 @@ It sends each phrase to SLNG's Soniox TTS with language "ca", saves a WAV per ph
 test-output/, prints latency, and (macOS) makes a local Catalan fallback with the built-in
 "Montse" voice for comparison. Then LISTEN and score with a Catalan speaker.
 
-Phrases are the words already in config/catalonia.yaml. They are UNREVIEWED Catalan:
+Phrases are the words already in content/catalonia.json. They are UNREVIEWED Catalan:
 a Catalan speaker must confirm the text before we judge the audio.
 """
 import json, os, subprocess, sys, time, urllib.error, urllib.request

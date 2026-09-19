@@ -112,4 +112,4 @@ Not relevant: Titan OS (content recommendation), Cognition (Devin for X), Norrsk
 - **Country and language:** Catalonia, Catalan.
 - **Dish:** panellets.
 - **Blocker:** Catalan is not a language Romi can verify. A Catalan speaker must review all strings and test labels before the demo. SLNG Catalan coverage is untested.
-- **Config:** [config/catalonia.yaml](../config/catalonia.yaml) is the single source for stages, vocabulary, questions, photo rubrics and culture facts. All entries start unreviewed.
+- **Config:** [content/catalonia.json](../content/catalonia.json) is the single source for recipes and steps, vocabulary, the conversation script, questions, photo rubrics and culture facts (merged 2026-09-19 from `config/catalonia.yaml` and Andrei's `src/data.js`). All entries start unreviewed.

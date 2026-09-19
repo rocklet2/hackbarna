@@ -1,21 +1,19 @@
-// Design-preview content, independent from Romi's production Catalonia config.
+// Catalan content comes from content/catalonia.json, the single source of truth shared with the
+// conversational prototype (src/talk). Italian and Portuguese fixtures below are design-preview only.
 // Target-language copy and cooking instructions require human review before public demo.
+import catalonia from "../content/catalonia.json" with { type: "json" };
+
+const catalanLanguage = { ...catalonia.language, words: catalonia.language.words.map((w) => [w.ca, w.en]) };
+// The lesson UI expects steps and words as tuples.
+const catalanRecipes = catalonia.recipes.map((r) => ({
+  ...r,
+  language: "ca",
+  steps: r.steps.map((st) => [st.title, st.guidance, st.phrase, st.gloss]),
+  words: r.words.map((w) => [w.ca, w.en]),
+}));
+
 export const languages = [
-  {
-    id: "ca",
-    name: "Catalan",
-    hello: "Bon dia!",
-    flag: "▰",
-    regionLabel: "Catalonia",
-    regions: ["Barcelona, ES", "Girona, ES", "Tarragona, ES"],
-    words: [
-      ["pa", "bread"],
-      ["tomàquet", "tomato"],
-      ["oli", "oil"],
-      ["sal", "salt"],
-    ],
-    review: "unreviewed",
-  },
+  catalanLanguage,
   {
     id: "it",
     name: "Italian",
@@ -81,14 +79,6 @@ export const levels = [
     icon: "Ⅳ",
   },
 ];
-const barcelonaSource = {
-  name: "Barcelona Tourism · Bread & traditions",
-  url: "https://bid.barcelonaturisme.com/wv3/en/enjoy/101/bread-a-staple-food-to-tempt-your-palate-.html",
-};
-const vegetablesSource = {
-  name: "Barcelona City Council · Catalan cuisine",
-  url: "https://www.meet.barcelona/es/visitala-y-amala/gastronomia/la-cocina-catalana",
-};
 const portugalSource = {
   name: "Visit Portugal · Porto & the North",
   url: "https://www.visitportugal.com/en/node/73749",
@@ -124,178 +114,7 @@ const recipe = (
   ...extra,
 });
 export const recipes = [
-  recipe(
-    "tomato-bread",
-    "ca",
-    "Pa amb tomàquet",
-    "A ripe tomato. Good bread. Your first words in Catalan.",
-    0,
-    10,
-    ["vegan"],
-    [
-      "2 slices of rustic bread",
-      "1 ripe tomato",
-      "1 tbsp extra-virgin olive oil",
-      "A pinch of salt",
-    ],
-    [
-      [
-        "Meet your ingredients",
-        "Put the bread, tomato, olive oil and salt on the counter. A good meal can start with just four ingredients.",
-        "pa · tomàquet · oli · sal",
-        "bread · tomato · oil · salt",
-      ],
-      [
-        "Toast the bread",
-        "Lightly toast two slices until the edges are crisp. Leave a little softness in the middle.",
-        "El pa",
-        "The bread",
-      ],
-      [
-        "Let the tomato do the work",
-        "Cut the tomato in half. Rub the cut side over the warm bread, letting the pulp sink into the surface.",
-        "El tomàquet",
-        "The tomato",
-      ],
-      [
-        "A little oil, a little salt",
-        "Drizzle with olive oil, add a pinch of salt, and serve straight away. Point to each ingredient and name it.",
-        "Bon profit!",
-        "Enjoy your meal!",
-      ],
-    ],
-    [
-      ["pa", "bread"],
-      ["tomàquet", "tomato"],
-      ["oli", "oil"],
-      ["sal", "salt"],
-    ],
-    {
-      title: "More than something on toast.",
-      text: "In Catalonia, bread rubbed with tomato is an everyday culinary ritual. The tomato is rubbed directly into the bread, then finished with olive oil. Something so simple becomes a way to share a table.",
-      source: barcelonaSource,
-    },
-    {
-      image: "toast",
-      regions: ["Barcelona, ES", "Girona, ES", "Tarragona, ES"],
-    },
-  ),
-  recipe(
-    "escalivada",
-    "ca",
-    "Escalivada",
-    "Roasted vegetables, slow moments, and a few new phrases.",
-    1,
-    45,
-    ["vegan", "gluten-free"],
-    ["1 red pepper", "1 aubergine", "1 onion", "2 tbsp olive oil", "Salt"],
-    [
-      [
-        "A colorful beginning",
-        "Gather and wash your vegetables. Name their colors before you start.",
-        "vermell · morat",
-        "red · purple",
-      ],
-      [
-        "Into the oven",
-        "Heat the oven to 200°C. Put the vegetables on a tray and rub with a little oil.",
-        "El forn",
-        "The oven",
-      ],
-      [
-        "Take your time",
-        "Roast for about 35 minutes, turning halfway, until softened. Use this quiet moment to read the story.",
-        "Les verdures",
-        "The vegetables",
-      ],
-      [
-        "Peel and share",
-        "Allow to cool enough to handle. Peel and remove seeds, tear into strips, and dress with oil and salt.",
-        "A taula!",
-        "To the table!",
-      ],
-    ],
-    [
-      ["pebrot", "pepper"],
-      ["albergínia", "aubergine"],
-      ["ceba", "onion"],
-      ["forn", "oven"],
-    ],
-    {
-      title: "A classic made from vegetables.",
-      text: "Barcelona’s traditional recipe repertoire includes escalivada: a salad of roasted peppers, aubergines and other vegetables. Here the vegetables themselves take the leading role.",
-      source: vegetablesSource,
-    },
-  ),
-  recipe(
-    "panellets",
-    "ca",
-    "Panellets",
-    "Little almond sweets with a whole season inside them.",
-    2,
-    50,
-    ["vegetarian", "gluten-free"],
-    [
-      "200 g ground almonds",
-      "150 g sugar",
-      "1 egg, separated",
-      "100 g pine nuts",
-      "Lemon zest",
-    ],
-    [
-      [
-        "Meet the autumn table",
-        "Measure the almonds and sugar. Set aside the pine nuts and separate the egg.",
-        "ametlla · sucre · ou",
-        "almond · sugar · egg",
-      ],
-      [
-        "Make the dough",
-        "Mix the almonds, sugar and lemon zest. Add egg white a little at a time to make a workable dough.",
-        "Barrejar",
-        "To mix",
-      ],
-      [
-        "A moment to rest",
-        "Rest the dough for 20 minutes. Read the Castanyada story while you wait.",
-        "El bol",
-        "The bowl",
-      ],
-      [
-        "Roll, then coat",
-        "Shape small balls. Press pine nuts onto the outside and brush lightly with beaten yolk.",
-        "Els pinyons",
-        "The pine nuts",
-      ],
-      [
-        "Into the oven",
-        "Bake on a lined tray at 200°C for about 10 minutes. Let the sweets cool before moving them.",
-        "El forn",
-        "The oven",
-      ],
-      [
-        "Share the story",
-        "Serve your panellets and describe the process in your own words. What makes a food feel festive?",
-        "Bona Castanyada!",
-        "Happy Castanyada!",
-      ],
-    ],
-    [
-      ["ametlla", "almond"],
-      ["sucre", "sugar"],
-      ["ou", "egg"],
-      ["pinyons", "pine nuts"],
-    ],
-    {
-      title: "A little taste of the Castanyada.",
-      text: "Panellets are eaten during the Castanyada, the chestnut celebration that forms part of All Saints festivities. Seasonal sweets turn a bakery visit into a small encounter with Catalan tradition.",
-      source: barcelonaSource,
-    },
-    {
-      image: "bakery",
-      regions: ["Barcelona, ES", "Girona, ES", "Tarragona, ES"],
-    },
-  ),
+  ...catalanRecipes,
   recipe(
     "bruschetta",
     "it",

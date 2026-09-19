@@ -1,0 +1,624 @@
+{
+  "_note": "SINGLE SOURCE OF TRUTH for Catalonia content. Read by src/data.js (menu and lessons) and src/talk/script.js (conversation). Every Catalan string is UNREVIEWED until a Catalan speaker signs off. Culture facts need a source and Romi's verification before a public demo.",
+  "country": "Catalonia",
+  "language": {
+    "id": "ca",
+    "name": "Catalan",
+    "hello": "Bon dia!",
+    "flag": "▰",
+    "regionLabel": "Catalonia",
+    "regions": [
+      "Barcelona, ES",
+      "Girona, ES",
+      "Tarragona, ES"
+    ],
+    "words": [
+      {
+        "ca": "pa",
+        "en": "bread"
+      },
+      {
+        "ca": "tomàquet",
+        "en": "tomato"
+      },
+      {
+        "ca": "oli",
+        "en": "oil"
+      },
+      {
+        "ca": "sal",
+        "en": "salt"
+      }
+    ],
+    "review": "unreviewed"
+  },
+  "review": {
+    "reviewer": null,
+    "reviewed_on": null
+  },
+  "demo_dish": "panellets",
+  "recipes": [
+    {
+      "id": "tomato-bread",
+      "name": "Pa amb tomàquet",
+      "description": "A ripe tomato. Good bread. Your first words in Catalan.",
+      "minLevel": 0,
+      "minutes": 10,
+      "tags": [
+        "vegan"
+      ],
+      "image": "toast",
+      "regions": [
+        "Barcelona, ES",
+        "Girona, ES",
+        "Tarragona, ES"
+      ],
+      "ingredients": [
+        "2 slices of rustic bread",
+        "1 ripe tomato",
+        "1 tbsp extra-virgin olive oil",
+        "A pinch of salt"
+      ],
+      "steps": [
+        {
+          "title": "Meet your ingredients",
+          "guidance": "Put the bread, tomato, olive oil and salt on the counter. A good meal can start with just four ingredients.",
+          "phrase": "pa · tomàquet · oli · sal",
+          "gloss": "bread · tomato · oil · salt"
+        },
+        {
+          "title": "Toast the bread",
+          "guidance": "Lightly toast two slices until the edges are crisp. Leave a little softness in the middle.",
+          "phrase": "El pa",
+          "gloss": "The bread"
+        },
+        {
+          "title": "Let the tomato do the work",
+          "guidance": "Cut the tomato in half. Rub the cut side over the warm bread, letting the pulp sink into the surface.",
+          "phrase": "El tomàquet",
+          "gloss": "The tomato"
+        },
+        {
+          "title": "A little oil, a little salt",
+          "guidance": "Drizzle with olive oil, add a pinch of salt, and serve straight away. Point to each ingredient and name it.",
+          "phrase": "Bon profit!",
+          "gloss": "Enjoy your meal!"
+        }
+      ],
+      "words": [
+        {
+          "ca": "pa",
+          "en": "bread"
+        },
+        {
+          "ca": "tomàquet",
+          "en": "tomato"
+        },
+        {
+          "ca": "oli",
+          "en": "oil"
+        },
+        {
+          "ca": "sal",
+          "en": "salt"
+        }
+      ],
+      "story": {
+        "title": "More than something on toast.",
+        "text": "In Catalonia, bread rubbed with tomato is an everyday culinary ritual. The tomato is rubbed directly into the bread, then finished with olive oil. Something so simple becomes a way to share a table.",
+        "source": {
+          "name": "Barcelona Tourism · Bread & traditions",
+          "url": "https://bid.barcelonaturisme.com/wv3/en/enjoy/101/bread-a-staple-food-to-tempt-your-palate-.html"
+        }
+      },
+      "review": "unreviewed"
+    },
+    {
+      "id": "escalivada",
+      "name": "Escalivada",
+      "description": "Roasted vegetables, slow moments, and a few new phrases.",
+      "minLevel": 1,
+      "minutes": 45,
+      "tags": [
+        "vegan",
+        "gluten-free"
+      ],
+      "image": "vegetables",
+      "regions": [],
+      "ingredients": [
+        "1 red pepper",
+        "1 aubergine",
+        "1 onion",
+        "2 tbsp olive oil",
+        "Salt"
+      ],
+      "steps": [
+        {
+          "title": "A colorful beginning",
+          "guidance": "Gather and wash your vegetables. Name their colors before you start.",
+          "phrase": "vermell · morat",
+          "gloss": "red · purple"
+        },
+        {
+          "title": "Into the oven",
+          "guidance": "Heat the oven to 200°C. Put the vegetables on a tray and rub with a little oil.",
+          "phrase": "El forn",
+          "gloss": "The oven"
+        },
+        {
+          "title": "Take your time",
+          "guidance": "Roast for about 35 minutes, turning halfway, until softened. Use this quiet moment to read the story.",
+          "phrase": "Les verdures",
+          "gloss": "The vegetables"
+        },
+        {
+          "title": "Peel and share",
+          "guidance": "Allow to cool enough to handle. Peel and remove seeds, tear into strips, and dress with oil and salt.",
+          "phrase": "A taula!",
+          "gloss": "To the table!"
+        }
+      ],
+      "words": [
+        {
+          "ca": "pebrot",
+          "en": "pepper"
+        },
+        {
+          "ca": "albergínia",
+          "en": "aubergine"
+        },
+        {
+          "ca": "ceba",
+          "en": "onion"
+        },
+        {
+          "ca": "forn",
+          "en": "oven"
+        }
+      ],
+      "story": {
+        "title": "A classic made from vegetables.",
+        "text": "Barcelona’s traditional recipe repertoire includes escalivada: a salad of roasted peppers, aubergines and other vegetables. Here the vegetables themselves take the leading role.",
+        "source": {
+          "name": "Barcelona City Council · Catalan cuisine",
+          "url": "https://www.meet.barcelona/es/visitala-y-amala/gastronomia/la-cocina-catalana"
+        }
+      },
+      "review": "unreviewed"
+    },
+    {
+      "id": "panellets",
+      "name": "Panellets",
+      "description": "Little almond sweets with a whole season inside them.",
+      "minLevel": 2,
+      "minutes": 50,
+      "tags": [
+        "vegetarian",
+        "gluten-free"
+      ],
+      "image": "bakery",
+      "regions": [
+        "Barcelona, ES",
+        "Girona, ES",
+        "Tarragona, ES"
+      ],
+      "ingredients": [
+        "200 g ground almonds",
+        "150 g sugar",
+        "1 egg, separated",
+        "100 g pine nuts",
+        "Lemon zest"
+      ],
+      "steps": [
+        {
+          "title": "Meet the autumn table",
+          "guidance": "Measure the almonds and sugar. Set aside the pine nuts and separate the egg.",
+          "phrase": "ametlla · sucre · ou",
+          "gloss": "almond · sugar · egg"
+        },
+        {
+          "title": "Make the dough",
+          "guidance": "Mix the almonds, sugar and lemon zest. Add egg white a little at a time to make a workable dough.",
+          "phrase": "Barrejar",
+          "gloss": "To mix"
+        },
+        {
+          "title": "A moment to rest",
+          "guidance": "Rest the dough for 20 minutes. Read the Castanyada story while you wait.",
+          "phrase": "El bol",
+          "gloss": "The bowl"
+        },
+        {
+          "title": "Roll, then coat",
+          "guidance": "Shape small balls. Press pine nuts onto the outside and brush lightly with beaten yolk.",
+          "phrase": "Els pinyons",
+          "gloss": "The pine nuts"
+        },
+        {
+          "title": "Into the oven",
+          "guidance": "Bake on a lined tray at 200°C for about 10 minutes. Let the sweets cool before moving them.",
+          "phrase": "El forn",
+          "gloss": "The oven"
+        },
+        {
+          "title": "Share the story",
+          "guidance": "Serve your panellets and describe the process in your own words. What makes a food feel festive?",
+          "phrase": "Bona Castanyada!",
+          "gloss": "Happy Castanyada!"
+        }
+      ],
+      "words": [
+        {
+          "ca": "ametlla",
+          "en": "almond"
+        },
+        {
+          "ca": "sucre",
+          "en": "sugar"
+        },
+        {
+          "ca": "ou",
+          "en": "egg"
+        },
+        {
+          "ca": "pinyons",
+          "en": "pine nuts"
+        }
+      ],
+      "story": {
+        "title": "A little taste of the Castanyada.",
+        "text": "Panellets are eaten during the Castanyada, the chestnut celebration that forms part of All Saints festivities. Seasonal sweets turn a bakery visit into a small encounter with Catalan tradition.",
+        "source": {
+          "name": "Barcelona Tourism · Bread & traditions",
+          "url": "https://bid.barcelonaturisme.com/wv3/en/enjoy/101/bread-a-staple-food-to-tempt-your-palate-.html"
+        }
+      },
+      "review": "unreviewed",
+      "conversation": [
+        {
+          "say": [
+            {
+              "ca": "Hola! Avui fem panellets.",
+              "en": "Hi! Today we're making panellets."
+            },
+            {
+              "ca": "Tens ametlla, sucre i un ou?",
+              "en": "Do you have almonds, sugar and an egg?"
+            }
+          ],
+          "kind": "ready",
+          "word": null,
+          "ok": {
+            "ca": "Perfecte!",
+            "en": "Perfect!"
+          }
+        },
+        {
+          "say": [
+            {
+              "ca": "Com es diu «egg» en català?",
+              "en": "How do you say “egg” in Catalan?"
+            }
+          ],
+          "kind": "word",
+          "accepts": [
+            "ou"
+          ],
+          "word": {
+            "ca": "ou",
+            "en": "egg"
+          },
+          "ok": {
+            "ca": "Molt bé! Ou.",
+            "en": "Very good! Egg."
+          },
+          "retry": {
+            "ca": "Gairebé! Escolta: ou.",
+            "en": "Almost! Listen: ou."
+          }
+        },
+        {
+          "say": [
+            {
+              "ca": "I «sugar»?",
+              "en": "And “sugar”?"
+            }
+          ],
+          "kind": "word",
+          "accepts": [
+            "sucre"
+          ],
+          "word": {
+            "ca": "sucre",
+            "en": "sugar"
+          },
+          "ok": {
+            "ca": "Sí, sucre!",
+            "en": "Yes, sugar!"
+          },
+          "retry": {
+            "ca": "Gairebé! Escolta: sucre.",
+            "en": "Almost! Listen: sucre."
+          }
+        },
+        {
+          "say": [
+            {
+              "ca": "Barreja l'ametlla i el sucre al bol.",
+              "en": "Mix the almond and the sugar in the bowl."
+            },
+            {
+              "ca": "Fet?",
+              "en": "Done? (Send a photo if you like.)"
+            }
+          ],
+          "kind": "photo",
+          "ok": {
+            "ca": "Molt bé!",
+            "en": "Very good!"
+          }
+        },
+        {
+          "say": [
+            {
+              "ca": "Afegeix l'ou a poc a poc.",
+              "en": "Add the egg little by little."
+            },
+            {
+              "ca": "Com es diu «to mix»?",
+              "en": "How do you say “to mix”?"
+            }
+          ],
+          "kind": "word",
+          "accepts": [
+            "barrejar",
+            "barreja"
+          ],
+          "word": {
+            "ca": "barrejar",
+            "en": "to mix"
+          },
+          "ok": {
+            "ca": "Exacte: barrejar!",
+            "en": "Exactly: to mix!"
+          },
+          "retry": {
+            "ca": "Gairebé! Escolta: barrejar.",
+            "en": "Almost! Listen: barrejar."
+          }
+        },
+        {
+          "say": [
+            {
+              "ca": "La massa reposa vint minuts.",
+              "en": "The dough rests for twenty minutes."
+            },
+            {
+              "ca": "Quants minuts? Digues-ho en català.",
+              "en": "How many minutes? Say it in Catalan."
+            }
+          ],
+          "kind": "word",
+          "accepts": [
+            "vint",
+            "20"
+          ],
+          "word": {
+            "ca": "vint",
+            "en": "twenty"
+          },
+          "timer": {
+            "label": "Dough rest",
+            "seconds": 1200
+          },
+          "ok": {
+            "ca": "Vint! Perfecte.",
+            "en": "Twenty! Perfect."
+          },
+          "retry": {
+            "ca": "Gairebé! Escolta: vint.",
+            "en": "Almost! Listen: vint."
+          },
+          "culture": "While it rests: panellets are eaten during the Castanyada, the chestnut celebration that is part of the All Saints festivities. (Source: Barcelona Tourism.)"
+        },
+        {
+          "say": [
+            {
+              "ca": "Fes boletes i posa-hi pinyons.",
+              "en": "Make little balls and press pine nuts on."
+            },
+            {
+              "ca": "Com es diu «pine nuts»?",
+              "en": "How do you say “pine nuts”?"
+            }
+          ],
+          "kind": "word",
+          "accepts": [
+            "pinyons",
+            "pinyo",
+            "pinyó"
+          ],
+          "word": {
+            "ca": "pinyons",
+            "en": "pine nuts"
+          },
+          "photoCheck": true,
+          "ok": {
+            "ca": "Pinyons, sí!",
+            "en": "Pine nuts, yes!"
+          },
+          "retry": {
+            "ca": "Gairebé! Escolta: pinyons.",
+            "en": "Almost! Listen: pinyons."
+          }
+        },
+        {
+          "say": [
+            {
+              "ca": "Al forn! Dos-cents graus, deu minuts.",
+              "en": "Into the oven! 200 degrees, ten minutes."
+            },
+            {
+              "ca": "Com es diu «oven»?",
+              "en": "How do you say “oven”?"
+            }
+          ],
+          "kind": "word",
+          "accepts": [
+            "forn"
+          ],
+          "word": {
+            "ca": "forn",
+            "en": "oven"
+          },
+          "timer": {
+            "label": "Oven",
+            "seconds": 600
+          },
+          "ok": {
+            "ca": "Forn! Molt bé.",
+            "en": "Oven! Very good."
+          },
+          "retry": {
+            "ca": "Gairebé! Escolta: forn.",
+            "en": "Almost! Listen: forn."
+          }
+        },
+        {
+          "say": [
+            {
+              "ca": "Bona Castanyada! Ho has fet molt bé.",
+              "en": "Happy Castanyada! You did very well."
+            }
+          ],
+          "kind": "end"
+        }
+      ]
+    }
+  ],
+  "glossary": {
+    "hola": "hi",
+    "avui": "today",
+    "fem": "we make",
+    "panellets": "panellets (almond sweets)",
+    "tens": "do you have",
+    "ametlla": "almond",
+    "sucre": "sugar",
+    "ou": "egg",
+    "forn": "oven",
+    "bol": "bowl",
+    "pinyons": "pine nuts",
+    "barreja": "mix",
+    "barrejar": "to mix",
+    "afegeix": "add",
+    "massa": "dough",
+    "vint": "twenty",
+    "deu": "ten",
+    "fes": "make",
+    "boletes": "little balls",
+    "molt": "very",
+    "bé": "well",
+    "perfecte": "perfect",
+    "fet": "done",
+    "dos-cents": "two hundred"
+  },
+  "vocabulary_by_level": [
+    {
+      "en": "almond",
+      "ca": "ametlla",
+      "level": 1,
+      "status": "unreviewed"
+    },
+    {
+      "en": "sugar",
+      "ca": "sucre",
+      "level": 1,
+      "status": "unreviewed"
+    },
+    {
+      "en": "egg",
+      "ca": "ou",
+      "level": 1,
+      "status": "unreviewed"
+    },
+    {
+      "en": "oven",
+      "ca": "forn",
+      "level": 1,
+      "status": "unreviewed"
+    },
+    {
+      "en": "bowl",
+      "ca": "bol",
+      "level": 1,
+      "status": "unreviewed"
+    },
+    {
+      "en": "pine nuts",
+      "ca": "pinyons",
+      "level": 1,
+      "status": "unreviewed"
+    },
+    {
+      "en": "to mix",
+      "ca": "barrejar",
+      "level": 1,
+      "status": "unreviewed"
+    }
+  ],
+  "photo_rubrics": {
+    "_note": "Appearance only. NEVER food safety. Output must include confidence; 'retake' is a valid verdict. TODO: criteria.",
+    "shaping": {
+      "criteria": [],
+      "verdicts": [
+        "good",
+        "fixable",
+        "retake"
+      ]
+    },
+    "coating": {
+      "criteria": [],
+      "verdicts": [
+        "good",
+        "fixable",
+        "retake"
+      ]
+    },
+    "baking_color": {
+      "criteria": [],
+      "verdicts": [
+        "good",
+        "fixable",
+        "retake"
+      ]
+    }
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "stage": "mix_dough",
+      "type": "recall",
+      "level": 1,
+      "prompt_en": "What is 'egg' in Catalan?",
+      "answer_ca": "ou",
+      "status": "unreviewed"
+    }
+  ],
+  "culture_facts": [
+    {
+      "id": "cf1",
+      "recipe": "panellets",
+      "level_min": 4,
+      "verified": false,
+      "followup_question": null,
+      "text_en": "Panellets are eaten during the Castanyada, the chestnut celebration that forms part of All Saints festivities. Seasonal sweets turn a bakery visit into a small encounter with Catalan tradition.",
+      "source": {
+        "name": "Barcelona Tourism · Bread & traditions",
+        "url": "https://bid.barcelonaturisme.com/wv3/en/enjoy/101/bread-a-staple-food-to-tempt-your-palate-.html"
+      }
+    }
+  ],
+  "seeded_history": {
+    "label": "Demo data, seeded"
+  }
+}
