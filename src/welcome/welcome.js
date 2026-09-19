@@ -50,6 +50,14 @@ const mic = createMic({ onState: (st) => { micState = st; paintMicBar(); } });
 function paintMicBar() {
   const btn = document.getElementById("micoff");
   if (!btn) return;
+  // The voice agent has its own mic track once connected — browser recognition steps aside
+  // (see the onState handler below), so this toggle would just re-introduce the two engines
+  // fighting over one microphone that caused steps to intermittently miss a spoken answer.
+  if (agentState.status === "connected") {
+    btn.textContent = "Voice guide listening";
+    btn.disabled = true;
+    return;
+  }
   btn.textContent = micState.error === "blocked" ? "Mic blocked" : micState.on ? "Mic on · turn off" : "Mic off · turn on";
   btn.disabled = micState.error === "blocked";
 }
@@ -63,7 +71,18 @@ function paintMicBar() {
 // (An earlier SLNG/LiveKit integration lived here; it never got a working connection.)
 let agentState = { status: "idle", speaking: false, error: null };
 const agent = createAgent({
-  onState: (st) => { agentState = st; paintAgent(); mic.setDeaf(st.speaking); },
+  onState: (st) => {
+    const wasConnected = agentState.status === "connected";
+    agentState = st;
+    paintAgent();
+    mic.setDeaf(st.speaking);
+    // Two speech-recognition engines fighting over the same microphone at once is exactly the
+    // kind of thing that drops or garbles a turn intermittently — once the agent has its own
+    // clean audio track, let it be the only one listening. Fall back to the browser's own
+    // recognition if the agent ever drops, so speaking still works.
+    if (st.status === "connected" && !wasConnected) mic.stop();
+    else if (st.status !== "connected" && wasConnected) mic.start();
+  },
   onUserTranscript: (text) => mic.feed(text),
 });
 
