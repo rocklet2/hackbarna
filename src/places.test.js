@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { recipes } from "./data.js";
 import {
   placesFor, matchPlace, matchPlan, PLANS, placeById, planById,
-  placeQuestionFor, tonightFor, dishQuestionFor,
+  placeQuestionFor, dishQuestionFor,
 } from "./welcome/places.js";
 
 test("a place is only offered as ready when recipes exist for its cities", () => {
@@ -42,12 +42,6 @@ test("matchPlace hears a place in a spoken answer", () => {
   assert.equal(matchPlace("calcots", "ca").id, "tarragona");
   assert.equal(matchPlace("bologna", "it").id, "emilia-romagna");
   assert.equal(matchPlace("brazil", "pt").id, "brazil");
-});
-
-test("the dish screen heading is in the language being learned", () => {
-  assert.equal(tonightFor("ca", placeById("ca", "girona")).target, "Aquesta nit, a Girona");
-  assert.equal(tonightFor("ca", placeById("ca", "girona")).en, "Tonight, in Girona");
-  assert.match(tonightFor("it", placeById("it", "lazio")).target, /^Stasera/);
 });
 
 test("matchPlace returns null when no place was named", () => {

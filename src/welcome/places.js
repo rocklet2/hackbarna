@@ -25,15 +25,6 @@ const DISH_QUESTION = {
 };
 export const dishQuestionFor = (languageId) => DISH_QUESTION[languageId] || DISH_QUESTION.ca;
 
-/** The dish screen heading, in the language being learned. */
-const TONIGHT = {
-  ca: (place) => ({ target: `Aquesta nit, a ${place.endonym}`, en: `Tonight, in ${place.name}` }),
-  it: (place) => ({ target: `Stasera, in ${place.endonym}`, en: `Tonight, in ${place.name}` }),
-  pt: (place) => ({ target: `Esta noite · ${place.endonym}`, en: `Tonight, in ${place.name}` }),
-  es: (place) => ({ target: `Esta noche, en ${place.endonym}`, en: `Tonight, in ${place.name}` }),
-};
-export const tonightFor = (languageId, place) => (TONIGHT[languageId] || TONIGHT.ca)(place);
-
 const PLACES = {
   ca: [
     {

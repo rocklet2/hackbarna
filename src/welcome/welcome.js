@@ -11,7 +11,7 @@ import { recipeUrl } from "../learner-profile.js";
 import "./welcome.css";
 import { SUPPORTED, COMING_SOON, matchLanguage, greetingFor, byId } from "./catalogue.js";
 import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor, levelLabelFor } from "./levelcheck.js";
-import { placesFor, placeById, matchPlace, placeQuestionFor, tonightFor, dishQuestionFor } from "./places.js";
+import { placesFor, placeById, matchPlace, placeQuestionFor, dishQuestionFor } from "./places.js";
 import { dishesFor, complexityLabel } from "./dishes.js";
 import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, marketHeadingFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
@@ -305,7 +305,6 @@ function startDishes() {
 
 function renderDishes(ranked) {
   const place = placeById(state.language, state.place);
-  const chosen = state.dishes;
 
   if (!ranked.length) {
     app.innerHTML = chrome(`<div class="stage">
@@ -317,7 +316,6 @@ function renderDishes(ranked) {
     return;
   }
 
-  const tonight = tonightFor(state.language, place);
   const question = dishQuestionFor(state.language);
   const card = (r) => `<button class="card" data-dish="${esc(r.id)}">
       <span class="name">${esc(r.name)}</span>
@@ -331,7 +329,6 @@ function renderDishes(ranked) {
       <span class="target">${esc(question.target)}</span>
       <span class="en">${esc(question.en)}</span>
     </h1>
-    <p class="hint">${esc(tonight.target)} · ${esc(tonight.en)}</p>
     <div class="cards" style="grid-template-columns:1fr;margin-top:14px">${ranked.slice(0, 4).map(card).join("")}</div>
   </div>`);
 
