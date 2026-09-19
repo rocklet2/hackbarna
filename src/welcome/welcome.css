@@ -22,7 +22,8 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .app {
   width: 100%; max-width: 480px; min-height: 100dvh; background: var(--bg);
   display: flex; flex-direction: column;
-  padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 18px);
+  /* 96px at the bottom keeps every control clear of the fixed voice orb (56px, 16px from the edge). */
+  padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 96px);
 }
 .app[data-tone="mint"] { --bg: var(--mint); --accent: var(--pink); }
 .app[data-tone="pink"] { --bg: var(--pink); --accent: var(--mint); }
