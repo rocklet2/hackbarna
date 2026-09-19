@@ -7,6 +7,7 @@ import { challengeFor, stepPassed, submitAnswer } from "./lesson-challenge.js";
 import { translatedStep } from "./lesson-translations.js";
 import { stepDirections } from "./lesson-copy.js";
 import { videoMarkup, requestStepVideo } from "./step-video.js";
+import { alignedInstruction } from "./word-align.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -33,6 +34,7 @@ const state = {
   timerRunning: false,
   drafts: {},
   collected: new Set(),
+  lastAutoSpokenKey: null,
 };
 const saved = readJourneys(localStorage);
 const lessonStore = saved.lessons && typeof saved.lessons === 'object' ? saved.lessons : {};
@@ -223,6 +225,10 @@ function cookingLesson() {
   const wait = isWaitStep(s[1]) ? waitMomentFor(r, waitStepsBefore) : null;
   const sidebar = r.steps.map((st, n) => `<li class="${n === i ? "current" : n < i ? "finished" : ""}"><button data-action="step" data-value="${n}" ${n > i ? "disabled" : ""}><span>${n < i ? icon("check") : String(n + 1).padStart(2, "0")}</span><div><strong lang="${state.language}">${translatedStep(r, n).title}</strong><small>${n === i ? "You are here" : n < i ? "Done" : "Coming up"}</small></div></button></li>`).join("");
   const story = wait ? `<section class="wait-discovery" aria-label="While you wait"><div class="eyebrow">${icon("sun")} WHILE YOU WAIT · ${language().name.toUpperCase()} CULTURE</div><h3>${wait.title}</h3>${wait.target ? `<p lang="${state.language}">${wait.target.split(/(?<=[.!?])\s+/)[0]}</p>` : ""}<p lang="en" class="${wait.target ? "english-translation" : ""}">${wait.text.split(/(?<=[.!?])\s+/).slice(0, wait.target ? 1 : 2).join(" ")}</p><a href="${wait.source.url}" target="_blank" rel="noreferrer">${wait.source.name} ↗</a></section>` : "";
+  const align = alignedInstruction(r.id, i);
+  const alignedMarkup = (chunks, side) => chunks.map(([ca, en], n) => `<span class="align-word" data-align="${n}">${escapeHtml(side === "ca" ? ca : en)}</span>`).join("");
+  const targetHtml = align ? alignedMarkup(align, "ca") : escapeHtml(translated.instruction);
+  const englishHtml = align ? alignedMarkup(align, "en") : escapeHtml(stepDirections(r, i).join(" "));
   return `<main class="page lesson-page">
     <div class="page-topline">${button(`${icon("back")} Menu`, "menu", "text-button")}<span>${language().name} <i>·</i> ${levels[state.level].name} <i>·</i> ${r.minutes} min</span></div>
     <div class="lesson-heading"><h1>${r.name}</h1>${badge(`${i + 1} / ${r.steps.length} steps`)}</div>
@@ -231,7 +237,7 @@ function cookingLesson() {
         ${!quiz ? videoMarkup(r, i, stepDirections(r, i)) : ""}
         <div class="step-progress"><span>STEP ${String(i + 1).padStart(2, "0")} <i>OF ${String(r.steps.length).padStart(2, "0")}</i></span><div><i style="width:${((i + 1) / r.steps.length) * 100}%"></i></div></div>
         <div class="lesson-phases" aria-label="Lesson stage"><span class="${!quiz ? 'active' : 'done'}">1 · Cook</span><span aria-hidden="true">→</span><span class="${quiz ? 'active' : ''}">2 · Practice</span></div>
-        ${quiz ? exercise(r, i) : `<div class="instruction-card"><div class="phrase-row"><h2 lang="${state.language}">${translated.title}</h2>${speakButton(translated.instruction, state.language)}</div><p class="target-instruction" lang="${state.language}">${translated.instruction}</p><p class="english-translation" lang="en">${stepDirections(r, i).join(" ")}</p></div>${story}`}
+        ${quiz ? exercise(r, i) : `<div class="instruction-card"><div class="phrase-row"><h2 lang="${state.language}">${translated.title}</h2>${speakButton(translated.instruction, state.language)}</div><p class="target-instruction" lang="${state.language}">${targetHtml}</p><p class="english-translation" lang="en">${englishHtml}</p></div>${story}`}
         <div class="step-footer">${button(`${icon("back")} ${quiz ? "Review guide" : "Back"}`, "previous", "text-button", i === 0 && !quiz ? "disabled" : "")}${quiz ? button(`${i === r.steps.length - 1 ? "Finish recipe" : "Next cooking step"} ${icon("arrow")}`, "next", "primary", stepPassed(state.journey, i) ? "" : 'disabled aria-describedby="challenge-feedback"') : button(`Ready to practice ${icon("arrow")}`, "start-quiz")}</div>
       </section>
       <aside class="lesson-sidebar"><span class="eyebrow">THE RECIPE</span><ol class="steps">${sidebar}</ol></aside>
@@ -243,6 +249,7 @@ function completion(r) {
 }
 
 function render(focus = false) {
+  document.body.classList.toggle("lesson-brand", state.screen === 2);
   app.innerHTML = `${header()}${state.screen === 0 ? setup() : state.screen === 1 ? menu() : lesson()}<footer class="footer"><span>taula <i>·</i> A taste for language.</span><span>Made for curious people with an appetite.</span><span>Local prototype · content review pending</span></footer><div id="toast" role="status"></div>`;
   saveProgress();
   if(storageFailed) app.querySelector(".footer").insertAdjacentHTML("beforeend", "<strong>Browser storage unavailable; progress lasts only this visit.</strong>");
@@ -254,6 +261,7 @@ function render(focus = false) {
     h.setAttribute("tabindex", "-1");
     h.focus({ preventScroll: true });
   }
+  maybeAutoSpeakStep();
 }
 
 function timerText() {
@@ -276,16 +284,57 @@ function toast(message) {
   setTimeout(() => el.classList.remove("visible"), 4000);
 }
 const speechLocales = { ca: "ca-ES", it: "it-IT", pt: "pt-PT" };
-function speak(text, lang) {
-  if (!("speechSynthesis" in window)) { toast("Audio isn't supported in this browser."); return; }
+function speakBrowser(text, lang, notify) {
+  if (!("speechSynthesis" in window)) { if (notify) toast("Audio isn't supported in this browser."); return; }
   try {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = speechLocales[lang] || lang;
     window.speechSynthesis.speak(utterance);
-  } catch { toast("Couldn't play audio just now."); }
+  } catch { if (notify) toast("Couldn't play audio just now."); }
 }
-const speakButton = (text, lang) => `<button class="speak-btn" data-action="speak" data-value="${text}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
+// The recipe step itself is spoken through /api/tts (OpenAI or SLNG — see scripts/tts-proxy.js
+// for which one and why), a small dev/preview-server proxy that keeps the API key off the
+// client. Browser speech synthesis is the fallback if that request fails or is blocked.
+const ttsCache = new Map();
+const ttsPlayer = new Audio();
+async function speak(text, lang, notify = true) {
+  try {
+    const key = `${lang}:${text}`;
+    let url = ttsCache.get(key);
+    if (!url) {
+      const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, lang }) });
+      if (!res.ok) throw new Error(`TTS request failed (${res.status})`);
+      url = URL.createObjectURL(await res.blob());
+      ttsCache.set(key, url);
+    }
+    ttsPlayer.pause();
+    ttsPlayer.src = url;
+    await ttsPlayer.play();
+  } catch {
+    speakBrowser(text, lang, notify);
+  }
+}
+function maybeAutoSpeakStep() {
+  if (state.screen !== 2 || !state.recipe || state.completed || state.journey.phase === "quiz") return;
+  const key = `${state.recipe.id}:${state.step}:${state.language}`;
+  if (state.lastAutoSpokenKey === key) return;
+  state.lastAutoSpokenKey = key;
+  const i = Math.min(state.step, state.recipe.steps.length - 1);
+  speak(translatedStep(state.recipe, i).instruction, state.language, false);
+}
+const speakButton = (text, lang) => `<button class="speak-btn" data-action="speak" data-value="${escapeHtml(text)}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
+function highlightAlign(word, on) {
+  const card = word.closest(".instruction-card");
+  if (!card) return;
+  card.querySelectorAll(`.align-word[data-align="${word.dataset.align}"]`).forEach((el) => el.classList.toggle("active", on));
+}
+for (const [evt, on] of [["mouseover", true], ["mouseout", false], ["touchstart", true], ["touchend", false], ["touchcancel", false]]) {
+  app.addEventListener(evt, (event) => {
+    const word = event.target.closest(".align-word");
+    if (word) highlightAlign(word, on);
+  }, evt === "touchstart" ? { passive: true } : undefined);
+}
 setInterval(() => {
   if (!state.timerRunning) return;
   state.timer = Math.max(0, state.timer - 1);
@@ -439,7 +488,8 @@ app.addEventListener("click", (event) => {
       stopTimer();
       break;
     case "speak":
-      speak(value, target.dataset.lang || state.language);
+      target.disabled = true;
+      speak(value, target.dataset.lang || state.language).finally(() => { target.disabled = false; });
       return;
     default:
       return;

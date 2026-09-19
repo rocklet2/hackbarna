@@ -2287,3 +2287,105 @@ summary:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
 .quiz-input-row { display: flex; gap: 12px; }
 #quiz-answer { min-width: 0; width: 100%; border: 2px solid var(--line); border-radius: 10px; padding: 12px; background: white; }
 @media(max-width: 480px) { .quiz-input-row { flex-direction: column; } }
+
+/* ------------------------------------------------------------------------
+   Lesson screen: Preply brand (see BRAND.md — "the recipe app" pass, the
+   part welcome.html already did). Scoped to body.lesson-brand, set only
+   while screen 2 ("Your lesson") is showing, so setup and the menu keep
+   the original green/orange look untouched.
+------------------------------------------------------------------------ */
+@font-face { font-family: "Figtree"; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/figtree-400.ttf) format("truetype"); }
+@font-face { font-family: "Figtree"; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/figtree-500.ttf) format("truetype"); }
+@font-face { font-family: "Figtree"; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/figtree-600.ttf) format("truetype"); }
+@font-face { font-family: "Figtree"; font-style: normal; font-weight: 700; font-display: swap; src: url(/fonts/figtree-700.ttf) format("truetype"); }
+@font-face { font-family: "Figtree"; font-style: normal; font-weight: 800; font-display: swap; src: url(/fonts/figtree-800.ttf) format("truetype"); }
+
+body.lesson-brand {
+  /* Backstop: rules elsewhere that already read the shared tokens pick up brand colors for free. */
+  --green: #121117; --orange: #ff7aac; --lime: #3ddabe; --line: rgba(18, 17, 23, .18); --muted: rgba(18, 17, 23, .68); --paper: #ffffff;
+  --pb-ink: #121117; --pb-white: #ffffff; --pb-pink: #ff7aac; --pb-mint: #3ddabe;
+  min-height: 100vh;
+  background: var(--pb-ink);
+  font-family: "Figtree", system-ui, sans-serif;
+}
+body.lesson-brand .header, body.lesson-brand .footer { border-color: rgba(255, 255, 255, .16); }
+body.lesson-brand .brand { color: var(--pb-white); font-family: "Figtree", sans-serif; letter-spacing: -0.03em; }
+body.lesson-brand .brand > span { color: var(--pb-pink); }
+body.lesson-brand .nav-step { color: rgba(255, 255, 255, .55); }
+body.lesson-brand .nav-step > span { border-color: rgba(255, 255, 255, .3); color: rgba(255, 255, 255, .75); background: transparent; }
+body.lesson-brand .nav-step.active { color: var(--pb-white); }
+body.lesson-brand .nav-step.active > span { background: var(--pb-mint); color: var(--pb-ink); border-color: var(--pb-mint); }
+body.lesson-brand .nav-step.done > span { background: var(--pb-pink); border-color: var(--pb-pink); color: var(--pb-ink); }
+body.lesson-brand .nav-line { background: rgba(255, 255, 255, .2); }
+body.lesson-brand .preview-label { color: rgba(255, 255, 255, .55); }
+body.lesson-brand .footer { color: rgba(255, 255, 255, .55); }
+body.lesson-brand .footer span:first-child { color: var(--pb-white); }
+body.lesson-brand .footer i, body.lesson-brand .page-topline i { color: rgba(255, 255, 255, .35); }
+body.lesson-brand .page-topline span { color: rgba(255, 255, 255, .7); }
+
+body.lesson-brand h1, body.lesson-brand h2, body.lesson-brand h3 { font-family: "Figtree", sans-serif; font-weight: 800; letter-spacing: -0.03em; color: var(--pb-white); }
+body.lesson-brand .badge { border-color: rgba(255, 255, 255, .3); color: var(--pb-white); background: transparent; }
+
+body.lesson-brand .primary { background: var(--pb-ink); color: var(--pb-white); border: 2px solid var(--pb-ink); border-radius: 16px; box-shadow: 0 4px 0 var(--pb-white); }
+body.lesson-brand .primary:hover:not(:disabled) { background: #26242e; }
+body.lesson-brand .primary:not(:disabled):active { box-shadow: 0 2px 0 var(--pb-white); }
+body.lesson-brand .secondary { background: var(--pb-white); color: var(--pb-ink); border: 2px solid var(--pb-ink); border-radius: 16px; box-shadow: 0 3px 0 var(--pb-ink); }
+body.lesson-brand .secondary:hover:not(:disabled) { background: var(--pb-mint); }
+body.lesson-brand .text-button { color: var(--pb-white); }
+
+body.lesson-brand .lesson-sidebar > .eyebrow { color: rgba(255, 255, 255, .55); }
+body.lesson-brand .steps li:not(:last-child):after { background: rgba(255, 255, 255, .25); }
+body.lesson-brand .steps button > span { background: var(--pb-white); border: 2px solid var(--pb-ink); color: var(--pb-ink); }
+body.lesson-brand .steps strong { color: var(--pb-white); }
+body.lesson-brand .steps small { color: rgba(255, 255, 255, .5); }
+body.lesson-brand .steps .current button > span { background: var(--pb-mint); border-color: var(--pb-mint); color: var(--pb-ink); }
+body.lesson-brand .steps .current strong { color: var(--pb-mint); }
+body.lesson-brand .steps .finished button > span { background: var(--pb-pink); border-color: var(--pb-pink); }
+body.lesson-brand .ingredient-box { border-color: rgba(255, 255, 255, .16); }
+body.lesson-brand .ingredient-box h3, body.lesson-brand .ingredient { color: var(--pb-white); }
+
+body.lesson-brand .step-progress { color: rgba(255, 255, 255, .6); }
+body.lesson-brand .step-progress > span:first-child { color: var(--pb-white); }
+body.lesson-brand .step-progress i { color: rgba(255, 255, 255, .5); }
+body.lesson-brand .step-progress > div { background: rgba(255, 255, 255, .18); }
+body.lesson-brand .step-progress > div > i { background: var(--pb-mint); }
+
+body.lesson-brand .lesson-phases { color: rgba(255, 255, 255, .55); }
+body.lesson-brand .lesson-phases .active { background: var(--pb-mint); color: var(--pb-ink); }
+body.lesson-brand .lesson-phases .done { color: var(--pb-mint); }
+
+body.lesson-brand .instruction-card { background: var(--pb-white); border: 2px solid var(--pb-ink); border-radius: 20px; box-shadow: 0 6px 0 var(--pb-ink); padding: 26px; }
+body.lesson-brand .instruction-card h2 { font-family: "Figtree", sans-serif; color: var(--pb-ink); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
+body.lesson-brand .target-instruction { color: var(--pb-ink); font-weight: 500; }
+body.lesson-brand .english-translation { color: var(--pb-muted, rgba(18, 17, 23, .68)); }
+body.lesson-brand .badge.soft { background: var(--pb-mint); color: var(--pb-ink); border: 0; }
+body.lesson-brand .speak-btn { background: var(--pb-ink); color: var(--pb-white); border-color: var(--pb-ink); }
+body.lesson-brand .speak-btn:hover { background: var(--pb-mint); color: var(--pb-ink); }
+/* Word-alignment hover/hold highlight — see src/word-align.js */
+body.lesson-brand .align-word { border-radius: 4px; padding: 0 1px; transition: background .12s; cursor: default; }
+body.lesson-brand .align-word.active { background: var(--pb-mint); }
+
+body.lesson-brand .wait-discovery { background: var(--pb-pink); border: 2px solid var(--pb-ink); border-left: 2px solid var(--pb-ink); border-radius: 18px; color: var(--pb-ink); }
+body.lesson-brand .wait-discovery .eyebrow, body.lesson-brand .wait-discovery h3, body.lesson-brand .wait-discovery p { color: var(--pb-ink); }
+body.lesson-brand .wait-discovery a { color: var(--pb-ink); font-weight: 700; }
+
+body.lesson-brand .lesson-page .required-challenge, body.lesson-brand .exercise { background: var(--pb-white); border: 2px solid var(--pb-ink); box-shadow: 0 5px 0 var(--pb-ink); border-radius: 20px; }
+body.lesson-brand .required-challenge .eyebrow, body.lesson-brand .exercise .eyebrow { color: var(--pb-muted, rgba(18, 17, 23, .68)); }
+body.lesson-brand .lesson-page .challenge-passed { border-color: var(--pb-mint); }
+body.lesson-brand .challenge-heading, body.lesson-brand .challenge-status, body.lesson-brand .quiz-hint, body.lesson-brand .exercise-feedback { color: var(--pb-muted, rgba(18, 17, 23, .68)); }
+body.lesson-brand .required-challenge .quiz-sentence { color: var(--pb-ink); }
+body.lesson-brand .required-challenge .answer, body.lesson-brand .answer { background: var(--pb-white); border: 2px solid var(--pb-ink); border-bottom-width: 2px; box-shadow: 0 3px 0 var(--pb-ink); color: var(--pb-ink); border-radius: 14px; }
+body.lesson-brand .required-challenge .answer:hover:not(:disabled), body.lesson-brand .answer:hover { background: var(--pb-mint); }
+body.lesson-brand .required-challenge .answer.correct, body.lesson-brand .answer.correct { background: var(--pb-mint); border-color: var(--pb-ink); color: var(--pb-ink); }
+body.lesson-brand .required-challenge .answer.incorrect, body.lesson-brand .answer.incorrect { background: var(--pb-pink); border-color: var(--pb-ink); color: var(--pb-ink); }
+body.lesson-brand #quiz-answer { border: 2px solid var(--pb-ink); background: var(--pb-white); border-radius: 12px; color: var(--pb-ink); }
+
+body.lesson-brand .step-footer > span { color: rgba(255, 255, 255, .55); }
+
+body.lesson-brand .completion { color: var(--pb-white); }
+body.lesson-brand .completion .eyebrow { color: rgba(255, 255, 255, .55); }
+body.lesson-brand .completion-symbol { background: var(--pb-mint); color: var(--pb-ink); }
+body.lesson-brand .completion-symbol > span { color: var(--pb-pink); }
+body.lesson-brand .completion-note { color: rgba(255, 255, 255, .55); }
+body.lesson-brand .completion-stats span { color: rgba(255, 255, 255, .6); }
+body.lesson-brand .completion-words .badge { border-color: rgba(255, 255, 255, .3); color: var(--pb-white); }
