@@ -562,8 +562,8 @@ function renderStart() {
     <div class="sub">Pick a place, cook its food, and pick up the language while you do.</div>
     <button class="next" id="begin">${saved ? "Welcome back" : "Begin"}</button>
     <div class="sub small">${SR
-      ? "The coach listens while you cook, so you can answer out loud. You can turn the microphone off at any point, and tapping always works."
-      : "This browser has no speech recognition, so you will tap and type. Everything still works."}</div>
+      ? "Your coach listens as you cook, so speak your answers out loud. Need quiet? Turn the mic off any time and tap instead."
+      : "Voice is not available in this browser, so tap your answers instead. You still get every lesson, start to finish."}</div>
   </div>`);
   paintMicBar();
   startHellos();
