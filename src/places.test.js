@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { recipes } from "./data.js";
 import {
   placesFor, matchPlace, matchPlan, PLANS, placeById, planById,
-  placeQuestionFor, planQuestionFor,
+  placeQuestionFor,
 } from "./welcome/places.js";
 
 test("a place is only offered as ready when recipes exist for its cities", () => {
@@ -52,31 +52,25 @@ test("matchPlace returns null when no place was named", () => {
   assert.equal(matchPlace("", "ca"), null);
 });
 
-test("matchPlan tells cooking today from planning the week", () => {
+test("matchPlan recognizes cooking today", () => {
   assert.equal(matchPlan("today").id, "today");
   assert.equal(matchPlan("just tonight").id, "today");
-  assert.equal(matchPlan("this week").id, "week");
-  assert.equal(matchPlan("I want to meal prep").id, "week");
-  assert.equal(matchPlan("plan my week please").id, "week");
   assert.equal(matchPlan("nothing relevant"), null);
 });
 
-test("matchPlan also hears the answer in the target language", () => {
+test("matchPlan hears the answer in the target language", () => {
   assert.equal(matchPlan("avui").id, "today");
-  assert.equal(matchPlan("la setmana").id, "week");
   assert.equal(matchPlan("hoje").id, "today");
 });
 
-test("planning the week asks for more dishes than today", () => {
+test("today plan asks for one dish", () => {
   assert.equal(planById("today").dishes, 1);
-  assert.ok(planById("week").dishes > planById("today").dishes);
-  assert.equal(PLANS.length, 2);
+  assert.equal(PLANS.length, 1);
 });
 
-test("every question is asked in both languages", () => {
+test("place questions are asked in both languages", () => {
   for (const id of ["ca", "it", "pt"]) {
-    for (const q of [placeQuestionFor(id), planQuestionFor(id)]) {
-      assert.ok(q.target && q.en, `${id} question has both languages`);
-    }
+    const q = placeQuestionFor(id);
+    assert.ok(q.target && q.en, `${id} question has both languages`);
   }
 });

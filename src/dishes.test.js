@@ -59,9 +59,6 @@ test("only dishes from the chosen place are offered", () => {
 test("the plan decides how many dishes come back", () => {
   const dishes = dishesFor({ language: "ca", cities: CA_CITIES, level: 1 });
   assert.equal(pickForPlan(dishes, planById("today")).length, 1);
-  assert.equal(pickForPlan(dishes, planById("week")).length, 3);
-  // Never promise more dishes than exist.
-  assert.equal(pickForPlan(dishes.slice(0, 2), planById("week")).length, 2);
 });
 
 test("one dish can go straight to cooking, several cannot", () => {

@@ -12,7 +12,7 @@ import { SUPPORTED, COMING_SOON, matchLanguage, greetingFor, byId } from "./cata
 import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor } from "./levelcheck.js";
 import {
   placesFor, placeById, matchPlace, placeQuestionFor,
-  PLANS, planById, matchPlan, planQuestionFor,
+  PLANS, planById, matchPlan,
 } from "./places.js";
 import { dishesFor, pickForPlan, complexityLabel, nextOptions } from "./dishes.js";
 import { shopScript, gradeRepetition, feedbackFor } from "./shop.js";
@@ -256,58 +256,12 @@ function choosePlace(id) {
     return;
   }
   state.place = id;
-  saveProfile({ level: state.level, place: id, cities: place.cities });
-  startPlan();
-}
-
-/* ---------- step 4: what are you planning ---------- */
-function startPlan() {
-  state.step = "plan";
-  renderPlan();
-}
-
-function renderPlan() {
-  const lang = byId(state.language);
-  const q = planQuestionFor(state.language);
-  const card = (p) => `<button class="card" data-plan="${p.id}" aria-pressed="${state.plan === p.id}">
-      <span class="mark">${p.id === "today" ? "●" : "●●●"}</span>
-      <span class="name">${esc(p.name)}</span>
-      <span class="detail">${esc(p.detail)}</span></button>`;
-
-  app.innerHTML = chrome(`<div class="stage">
-    <h1 class="ask">
-      <span class="target">${esc(q.target)}</span>
-      <span class="en">${esc(q.en)}</span>
-    </h1>
-    <p class="hint">Tell me what you are actually trying to do.</p>
-    <div class="cards" style="grid-template-columns:1fr">${PLANS.map(card).join("")}</div>
-  </div>`);
-
-  app.querySelectorAll("[data-plan]").forEach((b) => {
-    b.onclick = () => choosePlan(b.dataset.plan);
-  });
-  paintMicBar();
-  mic.setLang(lang.speech);
-  mic.listenFor((text) => {
-    const plan = matchPlan(text);
-    if (plan) choosePlan(plan.id);
-  });
-  setTimeout(() => say(q.target, lang.voice), 250);
-}
-
-function choosePlan(id) {
-  const plan = planById(id);
-  if (!plan) return;
-  mic.listenFor(null);
-  state.plan = id;
-  saveProfile({
-    level: state.level, place: state.place,
-    cities: placeById(state.language, state.place)?.cities || [], plan: id,
-  });
+  state.plan = "today"; // Demo focuses on one day
+  saveProfile({ level: state.level, place: id, cities: place.cities, plan: "today" });
   startDishes();
 }
 
-/* ---------- step 5: choosing the dish ---------- */
+/* ---------- step 4: choosing the dish ---------- */
 function startDishes() {
   state.step = "dishes";
   const place = placeById(state.language, state.place);

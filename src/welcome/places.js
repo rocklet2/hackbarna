@@ -15,12 +15,6 @@ export const PLACE_QUESTION = {
   pt: { target: "Onde gostarias de cozinhar hoje?", en: "Where would you like to cook today?" },
 };
 
-export const PLAN_QUESTION = {
-  ca: { target: "Cuines avui, o prepares la setmana?", en: "Cooking today, or planning the week?" },
-  it: { target: "Cucini oggi, o prepari la settimana?", en: "Cooking today, or planning the week?" },
-  pt: { target: "Cozinhas hoje, ou preparas a semana?", en: "Cooking today, or planning the week?" },
-};
-
 const PLACES = {
   ca: [
     {
@@ -80,12 +74,6 @@ export const PLANS = [
     aliases: ["today", "tonight", "now", "just today", "one", "one dish", "one meal", "a meal",
       "dinner", "this evening", "tonite", "avui", "oggi", "hoje"],
   },
-  {
-    id: "week", name: "Plan my week", detail: "A few dishes and one shopping trip, with the language spread across the week.",
-    dishes: 3,
-    aliases: ["week", "this week", "the week", "meal prep", "mealprep", "prep", "plan", "planning",
-      "several", "a few", "few", "whole week", "setmana", "settimana", "semana"],
-  },
 ];
 
 const flatten = (s) =>
@@ -94,7 +82,6 @@ const flatten = (s) =>
 
 export const placesFor = (languageId) => PLACES[languageId] || PLACES.ca;
 export const placeQuestionFor = (languageId) => PLACE_QUESTION[languageId] || PLACE_QUESTION.ca;
-export const planQuestionFor = (languageId) => PLAN_QUESTION[languageId] || PLAN_QUESTION.ca;
 export const placeById = (languageId, id) => placesFor(languageId).find((p) => p.id === id) || null;
 export const planById = (id) => PLANS.find((p) => p.id === id) || null;
 
