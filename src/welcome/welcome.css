@@ -140,3 +140,5 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .recap .target { font-weight: 600; }
 .recap .en { color: var(--muted); font-size: 13px; }
 .recap .why { color: var(--orange); font-size: 12px; }
+
+.lesson-actions { display: flex; justify-content: space-between; align-items: center; }

@@ -164,11 +164,23 @@ test("the list lesson never re-teaches what the stall lesson just taught", () =>
   }
 });
 
+test("the list lesson is capped at four turns", () => {
+  const { turns } = ingredientLesson("ca", 0, byName("Panellets"));
+  assert.ok(turns.length <= 4);
+});
+
+test("the shopping CTA no longer promises planning", () => {
+  for (const n of [1, 3]) {
+    const shop = nextOptions(n).find((o) => o.id === "shop");
+    assert.doesNotMatch(shop.name, /plan/i);
+  }
+});
+
 test("the list lesson works in every language we teach", () => {
   for (const [lang, name] of [["ca", "Panellets"], ["it", "Bruschetta al pomodoro"]]) {
     const recipe = recipes.find((r) => r.language === lang && r.name === name);
     const { turns, items } = ingredientLesson(lang, 0, recipe);
     assert.ok(items.length > 0, `${lang} teaches something`);
-    assert.ok(turns.length > items.length, `${lang} closes with a market phrase`);
+    assert.ok(turns.length <= 4, `${lang} lesson stays short`);
   }
 });

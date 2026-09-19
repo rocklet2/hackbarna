@@ -377,11 +377,15 @@ function renderLesson() {
       <input id="shopInput" autocomplete="off" placeholder="Or type it" />
       <button type="submit">Send</button>
     </form>
-    <button class="say" id="hear">▸ Hear it again</button>
+    <div class="lesson-actions">
+      <button class="say" id="hear">▸ Hear it again</button>
+      <button class="say" id="skip">Skip ›</button>
+    </div>
   </div>`);
 
   el("thread").scrollTop = el("thread").scrollHeight;
   el("hear").onclick = () => say(script[state.line]?.target, lang.voice);
+  el("skip").onclick = skipLesson;
   el("typed").onsubmit = (e) => {
     e.preventDefault();
     const v = el("shopInput").value.trim();
@@ -392,6 +396,13 @@ function renderLesson() {
   paintMicBar();
   mic.setLang(lang.speech);
   mic.listenFor((text) => submitLesson(text), "answer");
+}
+
+/** Skip moves on from the current lesson: the stall to the list, the list to the end. */
+function skipLesson() {
+  mic.listenFor(null);
+  speechSynthesis?.cancel?.();
+  if (state.stage === "shop") startList(); else renderHandoff("shop");
 }
 
 function submitLesson(text) {

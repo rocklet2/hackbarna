@@ -105,8 +105,8 @@ const MAX_ITEMS = 4;
 /**
  * A spoken walk through the shopping list: one ingredient per turn, each in a
  * different frame, so the learner leaves with four ways to ask rather than one
- * sentence repeated. The closing line is whichever market phrase the stall
- * lesson did not already use, so the two lessons never teach the same thing twice.
+ * sentence repeated. Capped at four turns to keep the demo short; the stall
+ * lesson already taught the price and amount questions.
  */
 export function ingredientLesson(language, level, recipe) {
   const vocabulary = vocabularyFor(language, recipe);
@@ -122,20 +122,11 @@ export function ingredientLesson(language, level, recipe) {
   }
 
   const items = matched.slice(0, MAX_ITEMS);
-  const first = recipe?.words?.[0] || ["", ""];
-  const rows = phrases(language, first[0], first[1]) || [];
-  // Beginners were taught the price question and never asked for an amount;
-  // advanced learners asked for an amount and never asked the price.
-  const closer = level >= 2
-    ? { row: rows[2], why: "And the one you will ask at every stall after that." }
-    : { row: rows[3], why: "Every stall asks how much. This is the amount, whatever you are buying." };
-
   const turns = items.map((item) => ({
     target: item.target,
     en: item.en,
     why: `${FRAME_NOTES[item.frame]} Your list says ${item.ingredient}.`,
   }));
-  if (closer.row) turns.push({ target: closer.row[0], en: closer.row[1], why: closer.why });
 
   return { turns, items, unknown };
 }
