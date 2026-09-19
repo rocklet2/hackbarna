@@ -443,44 +443,46 @@ function renderWords() {
   const done = !current;
   const h = listHeadingFor(state.language);
 
-  const rowHtml = rows.map((r) => {
-    const idx = taught.indexOf(r);
-    const cls = !r.target ? "muted" : idx >= 0 && idx < state.wordLine ? "done" : r === current ? "current" : "";
-    return `<div class="line ${cls}">
-      <span class="target">${esc(r.target || r.ingredient)}</span>
-      ${r.target ? `<span class="en">${esc(r.en)}</span>` : ""}
-      <span class="why">${r.target ? esc(r.ingredient) : "No checked word for this yet"}</span></div>`;
-  }).join("");
+  const dots = `<div class="turnbar">${taught.map((_, i) =>
+    `<i class="${i < state.wordLine ? "done" : ""} ${i === state.wordLine ? "current" : ""}"></i>`).join("")}</div>`;
+  const ack = state.wordAck ? `<div class="bubble coach ack">${esc(state.wordAck)}</div>` : "";
 
-  const coach = done
-    ? `<div class="bubble coach ack">That is your list. Whenever you are ready, we cook.</div>`
-    : `${state.wordAck ? `<div class="bubble coach ack">${esc(state.wordAck)}</div>` : ""}
-       <div class="bubble coach">${state.wordLine === 0 && !state.wordAck ? `<div class="en" style="margin:0 0 6px">Here is what you need. I say each word, you say it back.</div>` : ""}
-         <div class="en" style="margin:0 0 2px">${esc(current.lead)}</div>
-         <div class="target">${esc(current.target)}</div>
-         <div class="en">${esc(current.en)}</div></div>`;
+  // One ingredient at a time while learning; the whole list once it is learned.
+  const body = done
+    ? `<div class="recap">${rows.map((r) => `<div class="line ${r.target ? "done" : "muted"}">
+        <span class="target">${esc(r.target || r.ingredient)}</span>
+        ${r.target ? `<span class="en">${esc(r.en)}</span>` : ""}
+        <span class="why">${r.target ? esc(r.ingredient) : "No checked word for this yet"}</span></div>`).join("")}</div>
+      <div class="bubble coach ack">That is your list. Whenever you are ready, we cook.</div>`
+    : `${dots}${ack}
+      <div class="wordcard">
+        <div class="lead">${esc(current.lead)}</div>
+        <div class="word">${esc(current.target)}</div>
+        <div class="gloss">${esc(current.en)}</div>
+        <div class="qty">${esc(current.ingredient)}</div>
+      </div>
+      <div class="sayrow"><p class="hint centred">${state.wordLine === 0 && !state.wordAck
+        ? "I say each word. You say it back, out loud." : "Say it out loud."}</p>
+        ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
+      <div class="lesson-actions">
+        <button class="say" id="hear">▸ Hear it again</button>
+        <button class="say" id="skipword">Skip ›</button>
+      </div>`;
 
   app.innerHTML = chrome(`<div class="stage">
     <h1 class="ask"><span class="target">${esc(h.target)}</span><span class="en">${esc(h.en)}</span></h1>
-    <div class="recap">${rowHtml}</div>
-    <div class="coachbox">${coach}</div>
-    ${done ? "" : `<div class="sayrow"><p class="hint centred">Say it back.</p>
-      ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
-    <form class="typed" id="typed">
-      <input id="shopInput" autocomplete="off" placeholder="Or type it" />
-      <button type="submit">Send</button>
-    </form>
-    <button class="say" id="hear">▸ Hear it again</button>`}
+    ${body}
     ${cta()}
   </div>`);
 
   el("again").onclick = restart;
   if (done) { mic.listenFor(null); return; }
   el("hear").onclick = () => say(current.target, lang.voice);
-  el("typed").onsubmit = (e) => {
-    e.preventDefault();
-    const v = el("shopInput").value.trim();
-    if (v) submitWord(v);
+  el("skipword").onclick = () => {
+    mic.listenFor(null);
+    state.wordLine += 1; state.tries = 0; state.wordAck = null;
+    renderWords();
+    setTimeout(() => sayWord(), 400);
   };
   const off = el("micoff");
   if (off) off.onclick = () => mic.toggle();

@@ -167,3 +167,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .recap .line .en { align-self: center; }
 .recap .line.done::after { top: 8px; right: 12px; }
 .recap .line.done .en { margin-right: 22px; }
+
+/* One word at a time, big enough to read from across a kitchen. */
+.wordcard { margin: 14px 0 6px; padding: 26px 20px; border: 1px solid var(--green); border-radius: 22px; background: var(--paper); text-align: center; box-shadow: inset 0 0 0 1px var(--green); }
+.wordcard .lead { color: var(--muted); font-size: 14px; }
+.wordcard .word { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; margin: 4px 0 2px; }
+.wordcard .gloss { font-size: 18px; color: var(--muted); }
+.wordcard .qty { margin-top: 12px; font-size: 13px; color: var(--orange); }
+.turnbar { margin-top: 14px; }
