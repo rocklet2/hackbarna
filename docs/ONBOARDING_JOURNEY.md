@@ -38,7 +38,12 @@ The moment the language is chosen, the coach greets them **in that language**, t
 
 > **"Hola!"**
 
-This is the first emotional beat and the first word learned.
+This is the first emotional beat. The line under it reads simply "Hello, in
+Catalan" and **does not call it their first word**: the greeting is shown before
+the learner has said anything about their level, so we cannot know, and *hola* is
+close enough to Spanish that most people already have it. Telling someone they
+have just learned a word they already knew is a small thing that makes the coach
+sound like it is not listening.
 
 **No name is asked for** (Romi, 2026-09-19). An earlier version asked *"Com et dius?"* so the greeting could say "Hola, Romina!", but that was a whole screen for one word of personalisation, and the budget is 90 seconds. The greeting stands on its own and nothing downstream uses a name.
 

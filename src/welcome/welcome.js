@@ -170,7 +170,7 @@ function renderLevel() {
   app.innerHTML = chrome(`<div class="stage">
     <div class="bubble coach hello" style="align-self:flex-start;margin-bottom:18px">
       <div class="target">${esc(hello)}</div>
-      <div class="en">That is hello in ${esc(lang.name)}. Your first word.</div>
+      <div class="en">Hello, in ${esc(lang.name)}.</div>
     </div>
     <h1 class="ask">
       <span class="target">${esc(q.target)}</span>
