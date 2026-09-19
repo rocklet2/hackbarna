@@ -15,14 +15,14 @@ import {
   PLANS, planById, matchPlan,
 } from "./places.js";
 import { dishesFor, pickForPlan, complexityLabel, nextOptions } from "./dishes.js";
-import { shopScript, ingredientLesson, listHeadingFor, cookCtaFor, gradeRepetition, feedbackFor } from "./shop.js";
+import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
 
 const app = document.querySelector("#app");
 const state = {
   step: "language", language: null,
   level: null, place: null, plan: null,
-  dishes: [], line: 0, thread: [], tries: 0,
+  dishes: [], line: 0, thread: [], tries: 0, wordLine: 0, wordAck: null,
 };
 
 /* ---------- remembering the learner ---------- */
@@ -403,36 +403,114 @@ function submitLesson(text) {
   }, 1100);
 }
 
-/* ---------- the end of onboarding ---------- */
+/* ---------- the end of onboarding: your list, said aloud ---------- */
+// The last screen is the recipe's ingredient list. The coach says each word, the
+// learner says it back, and the row ticks off. The way out ("A cuinar!") is always
+// on screen, so nobody is held here.
+
+function cta() {
+  const c = cookCtaFor(state.language);
+  return `<a class="cta" href="/"><span class="cta-target">${esc(c.target)}</span>
+    <span class="cta-en">${esc(c.en)}</span></a>
+    <button class="say" id="again">Start over</button>`;
+}
+
 function renderHandoff(via) {
   state.step = "done";
   mic.listenFor(null);
-  // Hand back what they just practised, so the screen is a page to shop from.
-  const items = via === "shop" ? ingredientLesson(state.language, state.level, state.dishes[0]).items : [];
-  const recap = items.length ? `<div class="recap">${items.map((i) => `<div class="line">
-      <span class="target">${esc(i.target)}</span>
-      <span class="en">${esc(i.en)}</span>
-      <span class="why">${esc(i.ingredient)}</span></div>`).join("")}</div>` : "";
+  if (via !== "shop") {
+    app.innerHTML = chrome(`<div class="stage"><h1 class="ask">Let's cook.</h1>${cta()}</div>`);
+    el("again").onclick = restart;
+    return;
+  }
+  state.wordLine = 0; state.tries = 0; state.wordAck = null;
+  const { taught } = ingredientWords(state.language, state.dishes[0]);
+  if (!taught.length) { renderHandoff("cook"); return; }
+  renderWords();
+  setTimeout(() => sayWord(), 500);
+}
+
+function sayWord() {
+  const { taught } = ingredientWords(state.language, state.dishes[0]);
+  const row = taught[state.wordLine];
+  if (row) say(row.target, byId(state.language).voice);
+}
+
+function renderWords() {
+  const lang = byId(state.language);
+  const { rows, taught } = ingredientWords(state.language, state.dishes[0]);
+  const current = taught[state.wordLine] || null;
+  const done = !current;
+  const h = listHeadingFor(state.language);
+
+  const rowHtml = rows.map((r) => {
+    const idx = taught.indexOf(r);
+    const cls = !r.target ? "muted" : idx >= 0 && idx < state.wordLine ? "done" : r === current ? "current" : "";
+    return `<div class="line ${cls}">
+      <span class="target">${esc(r.target || r.ingredient)}</span>
+      ${r.target ? `<span class="en">${esc(r.en)}</span>` : ""}
+      <span class="why">${r.target ? esc(r.ingredient) : "No checked word for this yet"}</span></div>`;
+  }).join("");
+
+  const coach = done
+    ? `<div class="bubble coach ack">That is your list. Whenever you are ready, we cook.</div>`
+    : `${state.wordAck ? `<div class="bubble coach ack">${esc(state.wordAck)}</div>` : ""}
+       <div class="bubble coach">${state.wordLine === 0 && !state.wordAck ? `<div class="en" style="margin:0 0 6px">Here is what you need. I say each word, you say it back.</div>` : ""}
+         <div class="en" style="margin:0 0 2px">${esc(current.lead)}</div>
+         <div class="target">${esc(current.target)}</div>
+         <div class="en">${esc(current.en)}</div></div>`;
+
   app.innerHTML = chrome(`<div class="stage">
-    <h1 class="ask">${via === "shop"
-      ? `<span class="target">${esc(listHeadingFor(state.language).target)}</span>
-         <span class="en">${esc(listHeadingFor(state.language).en)}</span>`
-      : "Let's cook."}</h1>
-    ${recap}
-    <a class="cta" href="/">
-      <span class="cta-target">${esc(cookCtaFor(state.language).target)}</span>
-      <span class="cta-en">${esc(cookCtaFor(state.language).en)}</span>
-    </a>
-    <button class="say" id="again">Start over</button>
+    <h1 class="ask"><span class="target">${esc(h.target)}</span><span class="en">${esc(h.en)}</span></h1>
+    <div class="recap">${rowHtml}</div>
+    <div class="coachbox">${coach}</div>
+    ${done ? "" : `<div class="sayrow"><p class="hint centred">Say it back.</p>
+      ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
+    <form class="typed" id="typed">
+      <input id="shopInput" autocomplete="off" placeholder="Or type it" />
+      <button type="submit">Send</button>
+    </form>
+    <button class="say" id="hear">▸ Hear it again</button>`}
+    ${cta()}
   </div>`);
+
   el("again").onclick = restart;
+  if (done) { mic.listenFor(null); return; }
+  el("hear").onclick = () => say(current.target, lang.voice);
+  el("typed").onsubmit = (e) => {
+    e.preventDefault();
+    const v = el("shopInput").value.trim();
+    if (v) submitWord(v);
+  };
+  const off = el("micoff");
+  if (off) off.onclick = () => mic.toggle();
+  paintMicBar();
+  mic.setLang(lang.speech);
+  mic.listenFor((text) => submitWord(text), "answer");
+}
+
+function submitWord(text) {
+  mic.listenFor(null);
+  const { taught } = ingredientWords(state.language, state.dishes[0]);
+  const row = taught[state.wordLine];
+  const { verdict } = gradeRepetition(text, row.target);
+  state.tries += 1;
+  // Never let someone get stuck on one word: after two goes we move on anyway.
+  const forced = state.tries >= 2;
+  const { text: reply, advance } = wordFeedback(forced && verdict === "again" ? "moveon" : verdict, row.target, state.wordLine);
+  state.wordAck = reply;
+
+  if (!advance && !forced) { renderWords(); setTimeout(() => say(row.target, byId(state.language).voice), 500); return; }
+  state.wordLine += 1; state.tries = 0;
+  renderWords();
+  setTimeout(() => sayWord(), 700);
 }
 
 
 function restart() {
   try { localStorage.removeItem(STORE); } catch {}
   Object.assign(state, { step: "language", language: null,
-    level: null, place: null, plan: null, dishes: [] });
+    level: null, place: null, plan: null, dishes: [], wordLine: 0, wordAck: null });
   renderLanguage();
 }
 

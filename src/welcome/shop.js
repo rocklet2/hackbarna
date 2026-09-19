@@ -11,7 +11,7 @@
 // cannot hear an accent and does not try to. That matches the project guardrail
 // of no pronunciation scoring: we promise word and phrase feedback only.
 
-import { phrases, askPhraseFor } from "../journey.js";
+import { phrases } from "../journey.js";
 import { languages } from "../data.js";
 
 /**
@@ -161,12 +161,12 @@ export function feedbackFor(verdict, target) {
   return { text: `Listen once more: “${target}”. Say it however it comes out.`, advance: false };
 }
 
-/* ---------- the list lesson: asking for what the recipe needs ---------- */
+/* ---------- the ingredient list: learning the words for what you need ---------- */
 //
-// NOTHING HERE INVENTS TARGET-LANGUAGE TEXT. The sentence frames are Andrei's
-// `askPhraseFor` templates and the nouns are the curated word lists, so a
-// speaker reviewing those files reviews this lesson too. An ingredient with no
-// curated word is named as missing rather than translated on the spot.
+// NOTHING HERE INVENTS TARGET-LANGUAGE TEXT. Every word comes from the curated
+// word lists, so a speaker reviewing those files reviews this lesson too. An
+// ingredient with no curated word is shown and marked as having none, rather
+// than translated on the spot.
 
 /** Recipe words first, then the language's own list, so a recipe need not name every word. */
 function vocabularyFor(language, recipe) {
@@ -174,43 +174,33 @@ function vocabularyFor(language, recipe) {
   return [...(recipe?.words || []), ...(lang?.words || [])];
 }
 
-/** What each frame is actually for. Indexed like `askPhraseFor`'s templates. */
-const FRAME_NOTES = [
-  "The plain one: do they have it.",
-  "The polite one, for when you have already decided.",
-  "For when you cannot see it on the stall.",
-  "For late in the market, when things are running out.",
-];
-
-const MAX_ITEMS = 4;
+const MAX_TAUGHT = 4;
+const LEADS = ["Let us start with", "Next,", "Then", "And last,"];
 
 /**
- * A spoken walk through the shopping list: one ingredient per turn, each in a
- * different frame, so the learner leaves with four ways to ask rather than one
- * sentence repeated. Capped at four turns to keep the demo short; the stall
- * lesson already taught the price and amount questions.
+ * Every ingredient on the recipe's list, in order, with its word where a checked
+ * one exists. Only the first four words are taught aloud, to keep the demo short;
+ * any others are still listed so the screen is a true shopping list.
  */
-export function ingredientLesson(language, level, recipe) {
+export function ingredientWords(language, recipe) {
   const vocabulary = vocabularyFor(language, recipe);
-  const matched = [];
-  const unknown = [];
+  let taught = 0;
+  const rows = (recipe?.ingredients || []).map((ingredient) => {
+    const match = vocabulary.find(([, en]) => ingredient.toLowerCase().includes(en.toLowerCase()));
+    if (!match) return { ingredient, target: null, en: null, taught: false };
+    const teach = taught < MAX_TAUGHT;
+    const row = { ingredient, target: match[0], en: match[1], taught: teach, lead: teach ? LEADS[taught] : null };
+    if (teach) taught += 1;
+    return row;
+  });
+  return { rows, taught: rows.filter((r) => r.taught), untranslated: rows.filter((r) => !r.target) };
+}
 
-  for (const ingredient of recipe?.ingredients || []) {
-    // Start at frame 1: frame 0 is "do you have X", which the stall lesson just taught.
-    const frame = (matched.length + 1) % FRAME_NOTES.length;
-    const ask = askPhraseFor(language, ingredient, vocabulary, frame);
-    if (ask) matched.push({ ingredient, frame, target: ask[0], en: ask[1] });
-    else unknown.push(ingredient);
-  }
-
-  const items = matched.slice(0, MAX_ITEMS);
-  const turns = items.map((item) => ({
-    target: item.target,
-    en: item.en,
-    why: `${FRAME_NOTES[item.frame]} Your list says ${item.ingredient}.`,
-  }));
-
-  return { turns, items, unknown };
+/** A teacher's reply to a single word. Never "wrong", and it does not repeat itself four times. */
+const GOOD = ["Yes, that is it.", "Good. That one will stick.", "Nice.", "That is it."];
+export function wordFeedback(verdict, target, index) {
+  if (verdict === "good") return { text: GOOD[index % GOOD.length], advance: true };
+  return feedbackFor(verdict, target);
 }
 
 /** Heading of the end screen, in the language being learned. Unreviewed until a speaker signs off. */

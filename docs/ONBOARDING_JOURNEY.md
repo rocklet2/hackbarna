@@ -101,7 +101,7 @@ A **small spoken lesson**, matched to level:
 - **Intermediate:** a short back and forth where the seller speaks first and the learner replies: greet and ask, ask for half a kilo, say that is all and ask the total, say goodbye.
 - **Advanced:** the same exchange, longer. The learner says they are learning the language, says what they are cooking tonight and asks what to buy, then takes the advice.
 
-Only the beginner lines come from Andrei's `phrases()`. The intermediate and advanced lines are new and **unreviewed** (`EXCHANGE` in `src/welcome/shop.js`). The lesson can be skipped, and it leads to a final screen listing the ingredient phrases with an "A cuinar!" button.
+Only the beginner lines come from Andrei's `phrases()`. The intermediate and advanced lines are new and **unreviewed** (`EXCHANGE` in `src/welcome/shop.js`). The lesson can be skipped, and it leads to a final screen, "La teva llista": the recipe's ingredient list, taught one word at a time (the coach says the word, the learner says it back, the row ticks off; four words at most, and an ingredient with no checked word is listed but not taught). The "A cuinar!" button is always on screen.
 
 **No multiple choice. No tapping an answer from four options.** The coach says a phrase, the learner says it back or adapts it, and the coach responds like a teacher would.
 
