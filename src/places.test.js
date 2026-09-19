@@ -23,7 +23,7 @@ test("a place is only offered as ready when recipes exist for its cities", () =>
 
 test("Catalan places are Catalan towns with their own dishes, and France is not offered", () => {
   const ids = placesFor("ca").map((p) => p.id);
-  assert.deepEqual(ids, ["barcelona", "girona", "valls", "tarragona", "lleida"]);
+  assert.deepEqual(ids, ["barcelona", "girona", "tarragona"]);
   assert.equal(placeById("ca", "pays-catalan"), null, "we have no recipes for the French side");
   for (const p of placesFor("ca")) assert.equal(p.country, "Spain");
 });
@@ -39,7 +39,7 @@ test("every Catalan town offers at least two dishes", () => {
 test("matchPlace hears a place in a spoken answer", () => {
   assert.equal(matchPlace("Girona", "ca").id, "girona");
   assert.equal(matchPlace("I'd like to cook in Barcelona", "ca").id, "barcelona");
-  assert.equal(matchPlace("calcots", "ca").id, "valls");
+  assert.equal(matchPlace("calcots", "ca").id, "tarragona");
   assert.equal(matchPlace("bologna", "it").id, "emilia-romagna");
   assert.equal(matchPlace("brazil", "pt").id, "brazil");
 });
