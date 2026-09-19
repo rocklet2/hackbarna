@@ -615,30 +615,45 @@
     }
   ],
   "photo_rubrics": {
-    "_note": "Appearance only. NEVER food safety. Output must include confidence; 'retake' is a valid verdict. TODO: criteria.",
+    "_note": "Appearance only. NEVER food safety. Output must include confidence; 'retake' is a valid verdict. Criteria drafted 2026-09-19 from the panellets steps, UNREVIEWED: a cook should check them.",
     "shaping": {
-      "criteria": [],
+      "criteria": [
+        "Pieces are small and roughly the same size",
+        "Rounded balls or ovals, not flattened into discs",
+        "Surface is fairly smooth, without deep cracks"
+      ],
       "verdicts": [
         "good",
         "fixable",
         "retake"
-      ]
+      ],
+      "label": "Shape"
     },
     "coating": {
-      "criteria": [],
+      "criteria": [
+        "Pine nuts cover most of the outside of each piece",
+        "Nuts look pressed in, not loose on the tray",
+        "Only small patches of bare dough show"
+      ],
       "verdicts": [
         "good",
         "fixable",
         "retake"
-      ]
+      ],
+      "label": "Pine nut coating"
     },
     "baking_color": {
-      "criteria": [],
+      "criteria": [
+        "Nuts and dough are a light golden colour",
+        "Colour is even across the tray",
+        "Dark brown or burnt edges count as fixable; wholly pale dough counts as fixable"
+      ],
       "verdicts": [
         "good",
         "fixable",
         "retake"
-      ]
+      ],
+      "label": "Baking colour"
     }
   },
   "questions": [
@@ -668,5 +683,8 @@
   ],
   "seeded_history": {
     "label": "Demo data, seeded"
-  }
+  },
+  "photo_check_recipes": [
+    "panellets"
+  ]
 }

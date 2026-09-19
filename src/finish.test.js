@@ -34,3 +34,32 @@ test('the tutor brief is honest about being one lesson and lists what is shaky',
 test('every demo language has a celebration line', () => {
   for (const id of ['ca', 'it', 'pt']) assert.ok(CELEBRATION[id]);
 });
+import { normalizeCheck, buildPrompt, MIN_CONFIDENCE } from './finish/photo-rubric.js';
+import catalonia from '../content/catalonia.json' with { type: 'json' };
+const KEYS = ['shaping', 'coating', 'baking_color'];
+const rub = catalonia.photo_rubrics;
+const ok = (v, c = 0.9, tip = 'Press the nuts in a little more firmly.') => ({ verdict: v, confidence: c, tip });
+test('every rubric stage used by the photo check has criteria to judge against', () => {
+  for (const k of KEYS) assert.ok(rub[k].criteria.length >= 2 && rub[k].label);
+  assert.match(buildPrompt(rub, KEYS, 'Panellets'), /never say anything about food safety/i);
+});
+test('low confidence turns any verdict into retake, and the overall verdict is the worst stage', () => {
+  const r = normalizeCheck({ is_real_photo_of_dish: true, shaping: ok('good'), coating: ok('good', MIN_CONFIDENCE - 0.1), baking_color: ok('fixable') }, rub, KEYS);
+  assert.equal(r.stages[1].verdict, 'retake');
+  assert.equal(r.overall, 'retake');
+  assert.equal(normalizeCheck({ is_real_photo_of_dish: true, shaping: ok('good'), coating: ok('good'), baking_color: ok('fixable') }, rub, KEYS).overall, 'fixable');
+});
+test('a photo that is not the dish gets no verdicts and no tips, whatever the stages say', () => {
+  const r = normalizeCheck({ is_real_photo_of_dish: false, shaping: ok('good'), coating: ok('good'), baking_color: ok('good') }, rub, KEYS);
+  assert.equal(r.overall, 'retake');
+  assert.ok(r.stages.every((s) => s.verdict === 'retake' && s.tip === ''));
+});
+test('malformed model output degrades to retake, never a made-up pass', () => {
+  assert.equal(normalizeCheck(null, rub, KEYS).overall, 'retake');
+  assert.equal(normalizeCheck({ is_real_photo_of_dish: true, shaping: { verdict: 'perfect', confidence: 1, tip: '' } }, rub, KEYS).stages[0].verdict, 'retake');
+});
+test('a tip that mentions food safety is dropped', () => {
+  const r = normalizeCheck({ is_real_photo_of_dish: true, shaping: ok('good', 0.9, 'These look undercooked and unsafe.'), coating: ok('good'), baking_color: ok('good') }, rub, KEYS);
+  assert.equal(r.stages[0].tip, '');
+  assert.ok(r.stages[1].tip);
+});

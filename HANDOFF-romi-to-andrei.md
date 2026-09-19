@@ -1,6 +1,9 @@
 # Handoff: 2026-09-19 (from Romi via Claude)
 
-## Added later the same day: the end-of-lesson experience
+## Photo check on the finish screen (added last)
+The dish photo is now judged against the rubric in `content/catalonia.json` (`photo_rubrics`). **I wrote the criteria, they were empty:** shape, pine nut coating, baking colour, for panellets only. **Watch out:** they are unreviewed, and I have only tried a fake image, so the real test is 10 real panellets photos (this is also the Galtea material: the first version passed a drawing of brown circles as "Good shape", fixed with the `is_real_photo_of_dish` gate). Needs `OPENAI_API_KEY`; without it the screen says it couldn't check. Endpoint is a Vite plugin (`scripts/photo-check.js`), so a static deploy of `dist/` will not have it.
+
+## Added earlier the same day: the end-of-lesson experience
 **The plain "you finished" card in `completion()` is replaced by three screens** (`src/finish/`): celebrate plus optional dish photo, what you learned (level estimate, phrases to say again, one sourced culture fact), and tomorrow (2-minute review, seeded streak strip, copyable tutor summary, next dish).
 
 **Changes in your files, please glance at them:** `src/main.js` (`completion()` delegates to the module; new actions `finish-next`, `finish-back`, `copy-brief`; the `change` listener now also handles the photo input; `openRecipe` and `restart-lesson` reset the finish state). `src/journey.js` and `src/lesson-challenge.js`: the journey now records `missedSteps` (a step answered wrong before it was passed), which is what feeds "say it again tomorrow". Old saved journeys load fine (missing field becomes empty). The old `.completion*` CSS in `style.css` is now unused; I left it alone.

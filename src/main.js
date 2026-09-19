@@ -10,7 +10,7 @@ import { videoMarkup, requestStepVideo } from "./step-video.js";
 import { alignedInstruction } from "./word-align.js";
 import { createAgent } from "./agent.js";
 import { finishSummary, tutorBrief } from "./finish/finish.js";
-import { finishMarkup, FINISH_BEATS, loadPhoto, savePhoto, readPhoto } from "./finish/finish-view.js";
+import { finishMarkup, FINISH_BEATS, loadPhoto, savePhoto, readPhoto, loadCheck, saveCheck, requestCheck, canCheckPhoto } from "./finish/finish-view.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -40,6 +40,7 @@ const state = {
   lastAutoSpokenKey: null,
   finishBeat: 0,
   finishPhoto: null,
+  finishCheck: null,
 };
 const saved = readJourneys(localStorage);
 const lessonStore = saved.lessons && typeof saved.lessons === 'object' ? saved.lessons : {};
@@ -65,6 +66,8 @@ function openRecipe(r) {
   state.completed = state.journey.completed;
   state.finishBeat = 0;
   state.finishPhoto = loadPhoto(state.lessonKey);
+  const savedCheck = loadCheck(state.lessonKey);
+  state.finishCheck = savedCheck && state.finishPhoto ? { status: "ok", result: savedCheck } : null;
   state.screen = 2;
   state.answer = null;
   state.collected = new Set();
@@ -289,6 +292,23 @@ function cookingLesson() {
     </div></main>`;
 }
 
+// Runs only for dishes that have a rubric. A newer photo wins if the learner swaps mid-check.
+async function runPhotoCheck() {
+  if (!state.finishPhoto || !canCheckPhoto(state.recipe.id)) return;
+  const photo = state.finishPhoto, key = state.lessonKey;
+  state.finishCheck = { status: "loading" };
+  render();
+  try {
+    const result = await requestCheck(state.recipe.id, photo);
+    if (state.finishPhoto !== photo) return;
+    state.finishCheck = { status: "ok", result };
+    saveCheck(key, result);
+  } catch {
+    if (state.finishPhoto !== photo) return;
+    state.finishCheck = { status: "error" };
+  }
+  render();
+}
 function finishSummaryNow() { return finishSummary(state.recipe, state.journey, state.level); }
 function completion(r) {
   const summary = finishSummaryNow();
@@ -297,7 +317,7 @@ function completion(r) {
   const moment = waitMomentFor(r, 0);
   const culture = moment?.source?.name ? { title: moment.title, text: moment.text, source: moment.source } : null;
   const h = { button, linkButton, icon, escapeHtml, speakButton, recipePath };
-  return finishMarkup({ recipe: r, lang: state.language, langName: language().name, beat: state.finishBeat, photo: state.finishPhoto, summary, culture, nextRecipe, tomorrow: { brief: tutorBrief(r, language().name, summary) }, h });
+  return finishMarkup({ recipe: r, lang: state.language, langName: language().name, beat: state.finishBeat, photo: state.finishPhoto, check: state.finishCheck, summary, culture, nextRecipe, tomorrow: { brief: tutorBrief(r, language().name, summary) }, h });
 }
 
 function render(focus = false) {
@@ -513,8 +533,11 @@ app.addEventListener("click", (event) => {
       navigator.clipboard.writeText(tutorBrief(state.recipe, language().name, finishSummaryNow()))
         .then(() => toast("Copied. Paste it to your tutor."), () => toast("Couldn't copy. Select the text and copy it."));
       return;
+    case "recheck-photo":
+      runPhotoCheck();
+      return;
     case "restart-lesson":
-      state.finishBeat=0;state.finishPhoto=null;
+      state.finishBeat=0;state.finishPhoto=null;state.finishCheck=null;saveCheck(state.lessonKey,null);
       state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};state.answer=null;focus=true;break;
     case "start-quiz":
       state.journey.phase = "quiz";
@@ -607,7 +630,10 @@ app.addEventListener("change", async (event) => {
     try {
       state.finishPhoto = await readPhoto(file);
       savePhoto(state.lessonKey, state.finishPhoto);
+      state.finishCheck = null;
+      saveCheck(state.lessonKey, null);
       render();
+      runPhotoCheck();
     } catch { toast("That file isn't a photo we can read."); }
     return;
   }

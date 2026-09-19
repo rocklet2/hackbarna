@@ -58,3 +58,11 @@ body.lesson-brand .finish-card h2 { font-size: 22px; margin: 0; }
 .finish-more { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
 .finish .speak-btn { flex: none; }
 .finish a.primary { align-self: flex-start; text-decoration: none; padding: 12px 20px; }
+.finish-check-list { gap: 12px; }
+.finish-check-row { display: flex; gap: 12px; align-items: flex-start; }
+.finish-check-row b { display: block; }
+.finish-check-row p { font-size: 14px; opacity: .8; }
+.finish-verdict { flex: none; min-width: 72px; text-align: center; font-size: 12px; font-weight: 800; padding: 4px 8px; border: 2px solid #121117; border-radius: 999px; }
+.finish-verdict.v-good { background: #3ddabe; }
+.finish-verdict.v-fixable { background: #ff7aac; }
+.finish-verdict.v-retake { background: #f4f1ea; }
