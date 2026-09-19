@@ -1,6 +1,6 @@
 import "./style.css";
 import { languages, levels, recommend, recipes } from "./data.js";
-import { STORAGE_KEY, cities, freshJourney, readJourneys, restoreJourney, dayOneReady, canStartDay, quizFor, quizScore } from "./journey.js";
+import { STORAGE_KEY, cities, freshJourney, readJourneys, restoreJourney, dayOneReady, canStartDay, quizFor, quizScore, phrases } from "./journey.js";
 import { dayBar, videoPlayer, journeyPage, pausePage } from "./journey-view.js";
 
 const app = document.querySelector("#app");
@@ -10,6 +10,11 @@ const state = {
   lessonKey: null,
   paused: false,
   screen: 0,
+  onboarded: false,
+  onboardStep: 0,
+  levelTestAnswers: [],
+  levelTestReveal: false,
+  useLevelPicker: false,
   language: "ca",
   level: 0,
   region: "Barcelona, ES",
@@ -37,7 +42,7 @@ function saveProgress() {
     state.journey.drafts = state.drafts;
     lessonStore[state.lessonKey] = state.journey;
   }
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ lessons: lessonStore, preferences: { language: state.language, region: state.region, level: state.level, diet: state.diet, quick: state.quick, city: state.city }, last: state.screen === 2 ? state.recipe?.id : null })); }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ lessons: lessonStore, preferences: { language: state.language, region: state.region, level: state.level, diet: state.diet, quick: state.quick, city: state.city, onboarded: state.onboarded }, last: state.screen === 2 ? state.recipe?.id : null })); }
   catch { storageFailed = true; }
 }
 function openRecipe(r) {
@@ -89,14 +94,40 @@ function header() {
   return `<header class="header"><button class="brand" data-action="home" aria-label="Taula home">${icon("bowl")}taula<span>✳</span></button><nav aria-label="Your cooking journey">${["Your taste", "The menu", "Your lesson"].map((s, i) => `<button class="nav-step ${state.screen === i ? "active" : ""} ${state.screen > i ? "done" : ""}" data-action="nav" data-value="${i}" ${i > state.screen ? "disabled" : ""}><span>${state.screen > i ? icon("check") : `0${i + 1}`}</span>${s}</button>`).join('<span class="nav-line"></span>')}</nav><span class="preview-label"><i></i> Concept preview</span></header>`;
 }
 
-function setup() {
-  return `<main class="setup page"><section class="setup-form"><div class="eyebrow">A LITTLE LANGUAGE. A LOT OF FLAVOR.</div><h1>A new language.<br>A seat at the <em>table.</em></h1><p class="intro">Get to know a place through its food.<br>Real recipes. Local stories. Words that stick.</p><div class="form-block"><div class="field-heading"><span>01</span><h2>What language are we cooking in?</h2></div><div class="language-options">${languages.map((l) => `<button data-action="language" data-value="${l.id}" class="language-card ${state.language === l.id ? "selected" : ""}" aria-pressed="${state.language === l.id}"><span class="language-top"><span class="flag ${l.id}">${l.flag}</span><span class="selection-dot">${state.language === l.id ? icon("check") : ""}</span></span><strong>${l.name}</strong><small>${l.hello}</small></button>`).join("")}</div></div><div class="form-block"><div class="field-heading"><span>02</span><h2>Where are you starting?</h2><span class="optional">Your language level</span></div><div class="level-options">${levels.map((l, i) => `<button class="level-card ${state.level === i ? "selected" : ""}" data-action="level" data-value="${i}" aria-pressed="${state.level === i}"><span class="level-bars">${[0, 1, 2, 3].map((n) => `<i class="${n <= i ? "filled" : ""}" style="height:${7 + n * 4}px"></i>`).join("")}</span><strong>${l.name}</strong></button>`).join("")}</div><p class="field-hint">${levels[state.level].detail} We’ll match the cooking to your pace.</p></div><div class="form-block region-block"><div class="field-heading"><span>03</span><h2>Pick a place to explore</h2></div><label class="select-wrap">${icon("pin")}<select id="region" aria-label="Region">${language()
-    .regions.map(
-      (r) => `<option ${state.region === r ? "selected" : ""}>${r}</option>`,
-    )
-    .join(
-      "",
-    )}</select><span>⌄</span></label></div><div class="form-block"><div class="field-heading"><span>04</span><h2>Make it your kind of meal</h2><span class="optional">Optional</span></div><div class="preferences">${[
+function onboardChrome(step, title, body, intro = "") {
+  const total = 4;
+  return `<main class="page setup onboard">${step > 0 ? button(`${icon("back")} Back`, "onboard-back", "text-button", "") : ""}<div class="onboard-progress" aria-label="Step ${step + 1} of ${total}">${Array.from({ length: total }, (_, i) => `<i class="${i < step ? "done" : ""} ${i === step ? "current" : ""}"></i>`).join("")}</div><div class="eyebrow">A LITTLE LANGUAGE. A LOT OF FLAVOR.</div><h1>${title}</h1>${intro ? `<p class="intro">${intro}</p>` : ""}${body}</main>`;
+}
+function levelTestItems() {
+  const w = language().words[0];
+  const rows = phrases(state.language, w[0]);
+  return [
+    { target: w[0], en: w[1], prompt: `Do you already know common kitchen words like “${w[0]}”?` },
+    { target: rows[1][0], en: rows[1][1], prompt: "Could you already follow a short spoken instruction like this?" },
+    { target: rows[4][0], en: rows[4][1], prompt: "Could you already have a little conversation like this?" },
+  ];
+}
+function onboardLanguage() {
+  const body = `<div class="language-options">${languages.map((l) => `<button data-action="language" data-value="${l.id}" class="language-card ${state.language === l.id ? "selected" : ""}" aria-pressed="${state.language === l.id}"><span class="language-top"><span class="flag ${l.id}">${l.flag}</span><span class="selection-dot">${state.language === l.id ? icon("check") : ""}</span></span><strong>${l.name}</strong><small>${l.hello}</small></button>`).join("")}</div>`;
+  return onboardChrome(0, "What language are we cooking in?", body, "Get to know a place through its food. Real recipes, local stories, words that stick.");
+}
+function onboardLevel() {
+  if (state.useLevelPicker) {
+    const body = `<div class="level-options">${levels.map((l, i) => `<button class="level-card ${state.level === i ? "selected" : ""}" data-action="level" data-value="${i}" aria-pressed="${state.level === i}"><span class="level-bars">${[0, 1, 2, 3].map((n) => `<i class="${n <= i ? "filled" : ""}" style="height:${7 + n * 4}px"></i>`).join("")}</span><strong>${l.name}</strong></button>`).join("")}</div><p class="field-hint">${levels[state.level].detail}</p>${button("Try the quick check instead", "toggle-level-test", "text-button")}`;
+    return onboardChrome(1, "Where are you starting?", body, "Pick whichever sounds right — you can always change it later.");
+  }
+  const items = levelTestItems();
+  const i = Math.min(state.levelTestAnswers.length, items.length - 1);
+  const item = items[i];
+  const body = `<div class="test-progress">${items.map((_, n) => `<i class="${n < state.levelTestAnswers.length ? "done" : ""} ${n === state.levelTestAnswers.length ? "current" : ""}"></i>`).join("")}<span>Question ${i + 1} of ${items.length}</span></div><div class="test-card"><p class="test-prompt">${item.prompt}</p><p class="test-phrase" lang="${state.language}">${item.target}</p>${state.levelTestReveal ? `<p class="test-meaning">${item.en}</p>` : button("Show meaning", "level-test-reveal", "text-button")}<div class="test-actions">${button("Not yet", "level-test", "secondary", 'data-value="no"')}${button("Yes, I’ve got this", "level-test", "primary", 'data-value="yes"')}</div></div>${button("I’d rather just pick my level", "toggle-level-test", "text-button")}`;
+  return onboardChrome(1, "Quick check: where are you starting?", body, "A little honesty helps us match the pace. There are no wrong answers.");
+}
+function onboardPlace() {
+  const body = `<div class="language-options">${language().regions.map((r) => `<button class="language-card ${state.region === r ? "selected" : ""}" data-action="region" data-value="${r}" aria-pressed="${state.region === r}"><span class="language-top"><span class="place-icon">${icon("pin")}</span><span class="selection-dot">${state.region === r ? icon("check") : ""}</span></span><strong>${r}</strong></button>`).join("")}</div>`;
+  return onboardChrome(2, "Pick a place to explore", body, `${language().name} recipes, wherever you are.`);
+}
+function onboardMeal() {
+  const body = `<div class="preferences">${[
     ["all", "Anything goes", "bowl"],
     ["vegetarian", "Vegetarian", "leaf"],
     ["vegan", "Plant-based", "leaf"],
@@ -108,7 +139,14 @@ function setup() {
     )
     .join(
       "",
-    )}<button class="chip ${state.quick ? "selected" : ""}" data-action="quick" aria-pressed="${state.quick}">${icon("clock")}Under 20 min</button></div></div><div class="form-block"><div class="field-heading"><span>05</span><h2>Where will you be shopping?</h2></div><label class="select-wrap">${icon("pin")}<select id="shopping-city" aria-label="Shopping city">${cities.map(c=>`<option ${c===state.city?"selected":""}>${c}</option>`).join("")}</select></label><p class="field-hint">Learn Italian in Barcelona, or Portuguese anywhere. Your kitchen, your choice.</p></div><div class="setup-bottom">${button(`Find my first recipe ${icon("arrow")}`, "recommend")}<span>No pressure. Just a little appetite.</span></div></section><aside class="setup-visual"><div class="photo-frame"><img class="hero-photo" src="/images/toast.jpg" alt="Rustic toast with colorful fresh toppings on a ceramic plate"/><span class="photo-grain"></span><span class="image-caption">A LITTLE INSPIRATION FOR YOUR TABLE</span><div class="postcard-stamp">FROM THE<br><b>kitchen</b><br>WITH LOVE</div><div class="floating-word"><span class="word-icon">${icon("book")}</span><div><small>YOUR FIRST WORD</small><strong>${language().words[0][0]} <span>/ ${language().words[0][1]}</span></strong></div><span class="hand-star">✳</span></div><div class="visual-title">A little taste.<br>A whole new <em>world.</em></div><div class="photo-footer"><span>${icon("pin")} Start somewhere delicious</span><span>01 / 03</span></div></div><div class="visual-note">${icon("heart")} The best way to learn? Make something.</div><div class="tiny-note">Food photographs are mood imagery, not exact recipe previews.</div></aside></main>`;
+    )}<button class="chip ${state.quick ? "selected" : ""}" data-action="quick" aria-pressed="${state.quick}">${icon("clock")}Under 20 min</button></div><div class="setup-bottom">${button(`Find my first recipe ${icon("arrow")}`, "recommend")}<span>No pressure. Just a little appetite.</span></div>`;
+  return onboardChrome(3, "Make it your kind of meal", body, "Optional — you can change this anytime.");
+}
+function setup() {
+  if (state.onboardStep === 1) return onboardLevel();
+  if (state.onboardStep === 2) return onboardPlace();
+  if (state.onboardStep === 3) return onboardMeal();
+  return onboardLanguage();
 }
 
 function menu() {
@@ -197,6 +235,12 @@ function stopTimer() {
   state.timerRunning = false;
   state.timer = 0;
 }
+function resetOnboarding() {
+  state.onboardStep = 0;
+  state.levelTestAnswers = [];
+  state.levelTestReveal = false;
+  state.useLevelPicker = state.onboarded === true;
+}
 function toast(message) {
   const el = document.querySelector("#toast");
   el.textContent = message;
@@ -224,21 +268,57 @@ app.addEventListener("click", (event) => {
   switch (action) {
     case "home":
       state.screen = 0;
+      resetOnboarding();
       stopTimer();
       focus = true;
       break;
     case "nav":
       if (Number(value) > state.screen) return;
       state.screen = Number(value);
+      if (state.screen === 0) resetOnboarding();
       stopTimer();
       focus = true;
       break;
     case "language":
       state.language = value;
       state.region = language().regions[0];
+      state.onboardStep = 1;
+      focus = true;
       break;
     case "level":
       state.level = Number(value);
+      if (state.screen === 0) { state.onboardStep = 2; focus = true; }
+      break;
+    case "toggle-level-test":
+      state.useLevelPicker = !state.useLevelPicker;
+      state.levelTestAnswers = [];
+      state.levelTestReveal = false;
+      focus = true;
+      break;
+    case "level-test-reveal":
+      state.levelTestReveal = true;
+      break;
+    case "level-test": {
+      state.levelTestAnswers.push(value === "yes");
+      state.levelTestReveal = false;
+      if (state.levelTestAnswers.length >= levelTestItems().length) {
+        state.level = state.levelTestAnswers.filter(Boolean).length;
+        state.onboardStep = 2;
+      }
+      focus = true;
+      break;
+    }
+    case "region":
+      state.region = value;
+      if (state.screen === 0) { state.onboardStep = 3; focus = true; }
+      break;
+    case "onboard-back":
+      if (state.onboardStep === 1 && !state.useLevelPicker && state.levelTestAnswers.length) {
+        state.levelTestAnswers.pop();
+      } else {
+        state.onboardStep = Math.max(0, state.onboardStep - 1);
+      }
+      focus = true;
       break;
     case "diet":
       state.diet = value;
@@ -247,6 +327,7 @@ app.addEventListener("click", (event) => {
       state.quick = !state.quick;
       break;
     case "recommend":
+      state.onboarded = true;
     case "menu":
       state.screen = 1;
       stopTimer();
@@ -366,7 +447,6 @@ app.addEventListener("input", (event) => {
     { state.drafts[state.step] = event.target.value; saveProgress(); }
 });
 app.addEventListener("change", (event) => {
-  if (event.target.id === "region") {state.region = event.target.value;saveProgress();}
   if (event.target.id === "shopping-city") {state.city=event.target.value;render();}
   if (event.target.matches('[data-quiz]')) {state.journey.quizAnswers[Number(event.target.dataset.quiz)]=Number(event.target.value);saveProgress();}
   if (event.target.matches('[data-shopping]')) {
@@ -402,7 +482,9 @@ if(prefs && typeof prefs==='object') {
   if(['all','vegetarian','vegan','gluten-free'].includes(prefs.diet))state.diet=prefs.diet;
   state.quick=prefs.quick===true;
   if(cities.includes(prefs.city))state.city=prefs.city;
+  state.onboarded=prefs.onboarded===true;
 }
 const last = recipes.find(r=>r.id===saved.last&&r.language===state.language);
 if(last)openRecipe(last);
+else if(state.onboarded) state.screen=1;
 render();
