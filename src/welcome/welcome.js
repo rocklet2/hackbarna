@@ -423,7 +423,7 @@ function renderLesson() {
 
 function skipLesson() {
   mic.listenFor(null);
-  renderHandoff("shop");
+  renderHandoff();
 }
 
 function submitLesson(text) {
@@ -444,7 +444,7 @@ function submitLesson(text) {
   state.line += 1; state.tries = 0;
   setTimeout(() => {
     if (state.line < script.length) { sayLessonLine(); return; }
-    renderHandoff("shop");
+    renderHandoff();
   }, 1100);
 }
 
@@ -461,20 +461,21 @@ function cta() {
     <button class="say" id="again">Start over</button>`;
 }
 
-function renderHandoff(via) {
+/** Straight into the recipe: there is no screen between the last lesson and cooking. */
+function goToRecipe() {
+  mic.listenFor(null);
+  window.location.href = state.dishes[0] ? recipeUrl(state.dishes[0]) : "/";
+}
+
+function renderHandoff() {
   state.step = "done";
   mic.listenFor(null);
-  if (via !== "shop") {
-    app.innerHTML = chrome(`<div class="stage"><h1 class="ask">Let's cook.</h1>${cta()}</div>`);
-    el("again").onclick = restart;
-    return;
-  }
-  // Advanced learners already know the basic ingredient vocabulary. They go
-  // directly from the market exchange to cooking instead of repeating words.
-  if (state.level >= 2) { renderHandoff("cook"); return; }
+  // Advanced learners already know the basic ingredient vocabulary, so they go
+  // directly from the market exchange to the recipe instead of repeating words.
+  if (state.level >= 2) { goToRecipe(); return; }
   state.wordLine = 0; state.tries = 0; state.wordAck = null;
   const { taught } = ingredientWords(state.language, state.dishes[0]);
-  if (!taught.length) { renderHandoff("cook"); return; }
+  if (!taught.length) { goToRecipe(); return; }
   renderWords();
   setTimeout(() => sayWord(), 500);
 }
