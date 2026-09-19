@@ -257,7 +257,7 @@ function cookingLesson() {
   const translated = translatedStep(r, i);
   const quiz = state.journey.phase === "quiz";
   const culture = cultureFact(r, i);
-  const story = `<section class="wait-discovery culture-fact" aria-label="Local culture note"><div class="eyebrow">${icon("sun")} ${state.level >= 3 ? culture.title.toUpperCase() : "LOCAL CULTURE"}</div><div class="phrase-row"><h3>${culture.title}</h3>${state.level >= 3 ? speakButton(culture.text, state.language) : ""}</div><p lang="${culture.lang}">${escapeHtml(culture.text)}</p>${culture.source ? `<a href="${culture.source.url}" target="_blank" rel="noreferrer">${culture.source.name} ↗</a>` : ""}</section>`;
+  const story = `<section class="wait-discovery culture-fact" aria-label="Local culture note"><div class="eyebrow">${icon("sun")} ${state.level >= 3 ? culture.title.toUpperCase() : "LOCAL CULTURE"}</div><div class="phrase-row"><h3>${culture.title}</h3>${state.level >= 3 ? speakButton(culture.text, state.language) : ""}</div><p lang="${culture.lang}">${escapeHtml(culture.text)}</p>${culture.source ? `<p class="source">Source: ${escapeHtml(culture.source.name)}</p>` : ""}</section>`;
   const align = alignedInstruction(r.id, i);
   const alignedMarkup = (chunks, side) => chunks.map(([ca, en], n) => `<span class="align-word" data-align="${n}">${escapeHtml(side === "ca" ? ca : en)}</span>`).join("");
   const targetHtml = align ? alignedMarkup(align, "ca") : escapeHtml(translated.instruction);

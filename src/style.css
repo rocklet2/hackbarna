@@ -2250,7 +2250,7 @@ summary:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
 .wait-discovery .eyebrow { display: flex; align-items: center; gap: 8px; font-size: 10px; }
 .wait-discovery h3 { margin: 12px 0 8px; font-size: 20px; }
 .wait-discovery p { margin: 8px 0; font-size: 15px; line-height: 1.65; }
-.wait-discovery a { display: inline-block; margin-top: 8px; font-size: 11px; color: #59694b; }
+.wait-discovery .source { margin: 8px 0 0; font-size: 11px; color: #59694b; }
 @media (max-width: 760px) {
   .lesson-page .target-instruction { font-size: 19px; }
   .lesson-page .lesson-sidebar { display: none; }
@@ -2367,7 +2367,7 @@ body.lesson-brand .align-word.active { background: var(--pb-mint); }
 
 body.lesson-brand .wait-discovery { background: var(--pb-pink); border: 2px solid var(--pb-ink); border-left: 2px solid var(--pb-ink); border-radius: 18px; color: var(--pb-ink); }
 body.lesson-brand .wait-discovery .eyebrow, body.lesson-brand .wait-discovery h3, body.lesson-brand .wait-discovery p { color: var(--pb-ink); }
-body.lesson-brand .wait-discovery a { color: var(--pb-ink); font-weight: 700; }
+body.lesson-brand .wait-discovery .source { color: var(--pb-ink); font-weight: 700; }
 
 body.lesson-brand .lesson-page .required-challenge, body.lesson-brand .exercise { background: var(--pb-white); border: 2px solid var(--pb-ink); box-shadow: 0 5px 0 var(--pb-ink); border-radius: 20px; }
 body.lesson-brand .required-challenge .eyebrow, body.lesson-brand .exercise .eyebrow { color: var(--pb-muted, rgba(18, 17, 23, .68)); }
