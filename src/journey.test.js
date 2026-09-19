@@ -1,22 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recipes } from './data.js';
-import { freshJourney, restoreJourney, dayOneReady, canStartDay, discoverStages, askPhraseFor, lessonSteps, quizScore, readJourneys } from './journey.js';
+import { freshJourney, restoreJourney, askPhraseFor, isWaitStep, waitMomentFor, readJourneys } from './journey.js';
 const recipe = recipes[0];
-test('day one needs the shopping list stage reached; future days stay locked',()=>{
-  const j=freshJourney();
-  assert.equal(dayOneReady(j),false);
-  assert.equal(canStartDay(j,1),false);
-  assert.equal(canStartDay(j,2),false);
-  j.discoverStage=discoverStages.length-1;
-  assert.equal(dayOneReady(j),true);
-  j.unlocked=1;
-  assert.equal(canStartDay(j,1),true);
-  assert.equal(canStartDay(j,2),false);
-});
-test('discover flow is recipe, culture, then the shopping list',()=>{
-  assert.deepEqual(discoverStages,['about','culture','list']);
-});
+const escalivada = recipes.find(r => r.id === 'escalivada');
 test('each ingredient offers a phrase for the word it contains, varied by position so they are not all the same template',()=>{
   assert.deepEqual(recipe.ingredients,['2 slices of rustic bread','1 ripe tomato','1 tbsp extra-virgin olive oil','A pinch of salt']);
   assert.deepEqual(askPhraseFor('ca','2 slices of rustic bread',recipe.words,0),['Teniu pa?','Do you have bread?']);
@@ -25,23 +12,23 @@ test('each ingredient offers a phrase for the word it contains, varied by positi
   assert.deepEqual(askPhraseFor('ca','A pinch of salt',recipe.words,3),['Encara us queda sal?','Do you still have salt left?']);
   assert.equal(askPhraseFor('ca','A random ingredient with no match',recipe.words,0),null);
 });
-test('the lesson opens with its name story, then culture, then a regional note, before cooking',()=>{
-  assert.ok(recipe.nameStory && recipe.regionalNote, 'flagship recipe should carry both story fields');
-  assert.deepEqual(lessonSteps(recipe).map(s=>s.kind),['name','culture','regional','cook','cook','cook','cook']);
-  const noStory = { ...recipe, nameStory: undefined, regionalNote: undefined };
-  assert.deepEqual(lessonSteps(noStory).map(s=>s.kind),['culture','cook','cook','cook','cook']);
+test('a step is a wait moment when there is genuine idle time',()=>{
+  assert.equal(isWaitStep('Lightly toast two slices until the edges are crisp.'),false);
+  assert.equal(isWaitStep('Roast for about 35 minutes, turning halfway, until softened.'),true);
+  assert.equal(isWaitStep('Rest the dough for 20 minutes.'),true);
 });
-test('completion requires a submitted quiz with at least three correct answers',()=>{
-  const j={...freshJourney(),unlocked:2,day:2,completed:true,quizSubmitted:true};
-  assert.equal(restoreJourney({...j,quizAnswers:{0:0,1:0,2:0,3:0}},recipe).completed,false);
-  assert.equal(restoreJourney({...j,quizAnswers:{0:0,1:1,2:2,3:0}},recipe).completed,true);
-  assert.equal(quizScore(recipe,{0:0,1:1,2:2,3:3}),4);
+test('wait moments cycle through whichever culture content a recipe has',()=>{
+  assert.ok(escalivada.story, 'escalivada should carry a culture story to show while waiting');
+  const first = waitMomentFor(escalivada, 0);
+  assert.equal(first.title, escalivada.story.title);
+  const noContent = { ...escalivada, story: undefined, nameStory: undefined, regionalNote: undefined };
+  assert.equal(waitMomentFor(noContent, 0), null);
 });
 test('saved progress survives serialization and malformed storage falls back safely',()=>{
-  const original={...freshJourney(),day:1,unlocked:1,discoverStage:2,checked:[0,2],step:2,drafts:{2:'My practice'}};
+  const original={...freshJourney(),checked:[0,2],step:2,drafts:{2:'My practice'}};
   const restored=restoreJourney(JSON.parse(JSON.stringify(original)),recipe);
   assert.deepEqual(restored,original);
   assert.deepEqual(readJourneys({getItem:()=>'{broken'}),{});
   assert.deepEqual(readJourneys({getItem:()=>{throw Error('blocked');}}),{});
-  assert.equal(restoreJourney({...original,day:99,step:99},recipe).day,1);
+  assert.equal(restoreJourney({...original,step:99},recipe).step,recipe.steps.length-1);
 });

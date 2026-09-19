@@ -356,40 +356,6 @@ h1 em {
   color: #8b907f;
   margin-top: 9px;
 }
-.select-wrap {
-  position: relative;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  gap: 10px;
-  height: 43px;
-}
-.select-wrap > .icon {
-  width: 17px;
-  color: #879276;
-}
-.select-wrap select {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  width: 100%;
-  height: 100%;
-  font-size: 12px;
-  color: #344331;
-  cursor: pointer;
-  outline-offset: 8px;
-}
-.select-wrap > span {
-  pointer-events: none;
-  color: #8d9382;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.select-wrap select {
-  min-width: 0;
-}
 .preferences {
   display: flex;
   gap: 7px;
@@ -2217,8 +2183,5 @@ h1 em {
   }
 }
 
-/* Three-day learning journeys */
-.day-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 30px;padding:0}.day-bar button{border:1px solid #dce1d1;background:#f1f3e8;border-radius:10px;padding:18px;display:flex;gap:14px;align-items:center;text-align:left}.day-bar button>span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e1e7d3;font-size:12px;flex-shrink:0}.day-bar button small{display:block;font-size:8px;letter-spacing:1.5px;color:#8d9879;margin-bottom:5px}.day-bar button strong{font-size:13px;font-weight:550}.day-bar button i{margin-left:auto;font-size:9px;font-style:normal;color:#98a186}.day-bar button.active{border-color:#6d865a;background:#eaf0dd}.day-bar button.active>span{background:var(--green);color:white}.journey-page{padding-top:26px}.discovery-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(270px,1fr);gap:30px}.journey-panel{padding:30px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}.section-kicker{font-size:9px;letter-spacing:1.6px;color:#869770;margin-bottom:15px;line-height:1.7}.journey-panel h2{font-family:'Manrope',sans-serif;font-size:29px;line-height:1.3;font-weight:550;letter-spacing:-1px;margin-bottom:15px}.journey-panel>p{font-size:13px;line-height:1.9;color:#7f8973;margin:12px 0 22px}.journey-panel>.story-card{margin:22px 0}.journey-panel>h3{font-size:15px;font-weight:550;margin-top:25px}.recipe-facts{display:flex;gap:30px;padding:20px 0;border-bottom:1px solid var(--line)}.recipe-facts strong{font-size:19px;font-weight:500;display:block}.recipe-facts small{display:block;font-size:9px;color:#9aa18c;margin-top:5px}.video-card{border-radius:11px;overflow:hidden;border:1px solid var(--line);background:var(--paper);margin-bottom:23px}.video-surface{position:relative;aspect-ratio:16/10;background:#213b2c;overflow:hidden}.video-surface video{width:100%;height:100%;object-fit:cover;display:block}.video-placeholder{position:absolute;inset:0 0 38px;background:#1b332dde;color:#f5f6e8;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:18px;text-align:center;pointer-events:none}.video-placeholder>span{display:grid;place-items:center;width:47px;height:47px;border:1px solid #ffffff70;border-radius:50%;font-size:30px;margin-bottom:13px;padding-left:3px}.video-placeholder strong{font-size:13px;font-weight:500}.video-placeholder small{font-size:9px;margin-top:7px;color:#bdcbb0}.video-caption{padding:16px;display:flex;flex-wrap:wrap;align-items:center;gap:13px}.video-caption strong{font-size:11px;font-weight:550;display:block}.video-caption small{font-size:8px;line-height:1.6;color:#a0a68f;display:block;margin-top:5px}.video-upload{border:1px solid #d9dfca;border-radius:5px;padding:7px 9px;font-size:9px;color:#6e7e5b;position:relative;overflow:hidden;cursor:pointer}.video-upload input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.video-upload:focus-within{outline:2px solid var(--orange);outline-offset:3px}.journey-note{text-align:center;color:#a3ad83;font-size:35px;margin:30px}.journey-note p{font-size:11px;color:#97a084;line-height:1.8;margin-top:10px}.day-end{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:23px 0}.day-end strong{font-size:11px;font-weight:500;display:block}.day-end small{display:block;margin-top:6px;font-size:9px;color:#98a085}.day-end .primary{font-size:11px;padding:12px 16px}.fine-print{font-size:9px!important;line-height:1.7!important;color:#9ba48d!important;margin-top:18px!important}.shopping-checks{margin:20px 0}.shopping-item{padding:14px 0;border-bottom:1px solid #e4e8d9}.shopping-item:last-child{border-bottom:0}.shopping-item label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:#63744f}.shopping-checks input{accent-color:var(--green);width:15px;height:15px;flex-shrink:0}.shopping-item small{margin-left:auto;font-size:9px;color:#9ba887;white-space:nowrap}.shopping-checks input:checked+span{text-decoration:line-through;opacity:.6}.ask-phrase{margin:10px 0 0 25px;font-size:11px}.ask-phrase>span{display:block;font-size:9px;letter-spacing:.5px;color:#9ba887;margin-bottom:4px}.ask-phrase strong{display:block;font-family:Georgia,serif;font-size:16px;font-weight:400;color:#45603c}.ask-phrase small{display:block;color:#98a286;margin-top:3px}.pause-page{text-align:center;max-width:800px;padding-top:65px;min-height:80vh}.pause-icon{width:80px;height:80px;border-radius:50%;background:#e4ebcf;display:grid;place-items:center;margin:0 auto 25px;font-size:37px;color:#66814b}.pause-page>.eyebrow{justify-content:center;margin-bottom:20px}.pause-page>p{font-size:14px;line-height:1.9;color:#869274;margin:23px auto;max-width:480px}.return-card{border:1px solid #dce3ce;border-radius:11px;padding:26px;background:#eff2e4;margin:30px auto;max-width:440px}.return-card small{font-size:9px;color:#97a281;display:block;line-height:1.7}.return-card h2{font-size:21px;margin:12px 0;font-weight:500}.return-card>span{font-size:12px;display:block;margin-bottom:15px;color:#7f9068}.pause-actions{display:flex;gap:12px;justify-content:center}.cooking-day-intro{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}.cooking-day-intro>span{font-size:8px;letter-spacing:1.4px;color:#8b9979}.lesson-right .video-card{margin-top:0}.lesson-right .video-placeholder strong{font-size:10px}.lesson-right .video-placeholder>span{width:32px;height:32px;font-size:24px;margin-bottom:8px}.lesson-right .video-placeholder small{font-size:8px}.quiz-panel fieldset{border:0;padding:0;margin:30px 0}.quiz-panel legend{font-size:14px;font-weight:500;line-height:1.6;margin-bottom:14px}.quiz-panel legend>span{color:#a1ac8d;font-size:10px;margin-right:7px}.quiz-option{display:flex;gap:10px;align-items:center;padding:13px;border:1px solid #e0e5d4;border-radius:7px;margin:8px 0;font-size:12px;cursor:pointer}.quiz-option:has(input:checked){background:#eef3e2;border-color:#91a875}.quiz-option input{accent-color:var(--green)}.quiz-option.quiz-correct{border-color:#85a166;background:#e7efdc}.quiz-explanation{font-size:11px;color:#83956b;line-height:1.8;margin-top:12px}.quiz-result{padding:20px;border-radius:8px;background:#f4ebd9;margin:25px 0;display:flex;gap:20px;align-items:center}.quiz-result strong{font-size:24px;font-family:Georgia,serif;white-space:nowrap}.quiz-result span{font-size:12px;color:#9d906e}.quiz-panel>.text-button{margin-left:15px}.recipe-grid{row-gap:28px}.recipe-card:last-child:nth-child(odd){grid-column:auto}.journey-page .story-card{margin-bottom:20px}.discover-panel{max-width:640px;margin:0 auto}
-@media(max-width:1000px){.discovery-layout{grid-template-columns:minmax(0,1.4fr) minmax(250px,1fr);gap:22px}.journey-panel{padding:23px}.day-bar button{padding:15px 12px;gap:9px}.day-bar button strong{font-size:11px}.day-end{align-items:flex-start;flex-direction:column}.lesson-right .video-card{grid-column:1/-1}.lesson-right .video-surface{aspect-ratio:21/9}.lesson-right .video-placeholder strong{font-size:15px}}
-@media(max-width:700px){.discovery-layout{grid-template-columns:1fr}.discovery-layout>aside{display:grid;grid-template-columns:1fr;gap:15px}.day-bar{gap:7px}.day-bar button{padding:12px 9px;flex-direction:column;align-items:flex-start}.day-bar button>span{width:26px;height:26px;font-size:10px}.day-bar button small{font-size:7px;letter-spacing:1px}.day-bar button strong{font-size:10px;line-height:1.5}.day-bar button i{display:none}.journey-panel h2{font-size:26px}.day-end{flex-direction:row;align-items:center}.day-end .primary{font-size:10px;padding:11px 13px}.day-end small{font-size:8px;line-height:1.5}.journey-page .lesson-heading>.badge{font-size:8px;max-width:110px;line-height:1.5}.journey-note{display:none}.pause-page h1{font-size:37px}.pause-actions{flex-direction:column;align-items:center}.quiz-panel legend{font-size:13px}.cooking-day-intro>span{max-width:170px;line-height:1.7}.cooking-day-intro .text-button{font-size:9px}.recipe-card:last-child:nth-child(odd){display:flex}.recipe-card:last-child:nth-child(odd) .recipe-photo{height:200px;min-height:0}.recipe-facts{gap:25px}}
-@media(max-width:480px){.journey-panel{padding:18px}}
+.recipe-grid{row-gap:28px}.recipe-card:last-child:nth-child(odd){grid-column:auto}
+@media(max-width:700px){.recipe-card:last-child:nth-child(odd){display:flex}.recipe-card:last-child:nth-child(odd) .recipe-photo{height:200px;min-height:0}}
