@@ -7,9 +7,19 @@ Romi and Andrei both use this repo via their own Claude Code sessions. Everythin
 - **Andrei**: co-founder. Role split to be confirmed (update this line).
 
 ## Project context
-- **Event:** hackathon in Barcelona, sponsored by Norsken.
-- **Challenge:** the Preply challenge.
-- **Details:** TBD. Romi will brief the project; then fill in this section (problem, idea, deadline, judging criteria, stack).
+- **Event:** HackBarna / AI Summit Barcelona, 19-20 Sep 2026, sponsored by Norsken.
+- **Challenge:** Preply, "Best use of AI for Learning".
+- **Product:** [APP NAME], a cooking coach that teaches a language while you cook. Pick a country, get step-by-step dishes with voice, photo checks and feedback in that country's language.
+- **Full brief:** `docs/PROJECT_BRIEF.md` (idea, sponsor tech, risks, build order, demo flow, open questions). Read it before building anything.
+
+### Non-negotiable guardrails
+- **Photo checks never judge food safety.** Doneness of meat and fish means a thermometer. "Not sure, retake" is a valid answer.
+- **No pronunciation scoring claims.** We promise correct word and phrase feedback only.
+- **Every target-language string is hand-checked** by a speaker before it goes in the demo. Demo only languages we can verify (Romi covers English, Spanish, Portuguese).
+- **Seeded progress data is labeled as seeded** in the UI and the pitch.
+- **Country is configuration**, not code: dishes, language and vocabulary live in data files.
+- **Sponsor tech list is UNVERIFIED** until confirmed with organizers. Run the first-hour tests in the brief before building around SLNG, Fal or vision.
+- **Build order in the brief is the priority order.** Finish a working demo path before any stretch feature.
 
 ---
 
