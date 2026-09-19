@@ -7,7 +7,7 @@ Entry page `welcome.html`, code in `src/welcome/`. Your wizard at `/` still work
 1. **Language** — the coach asks out loud, the learner answers by voice. Ten language cards as fallback; only the three we have content for are selectable, the rest say plainly they are not ready.
 2. **2a Name and greeting** — asks "Com et dius?" in the chosen language, so the question is itself the first exchange, then greets by name ("Hola, Romina!").
 3. **2b Quick check** — three spoken exchanges, easiest first, as a conversation. First visit only, persisted to `localStorage`. Produces a starting estimate, never a score or CEFR.
-4. **Place** — "Where would you like to cook today?" as somewhere you travel: Catalonia or Pays Catalan, Lombardy/Lazio/Emilia-Romagna, Portugal or Brazil. Each maps to the cities your recipes are tagged with.
+4. **Place** — "Where would you like to cook today?" as somewhere you travel: five Catalan towns, Lombardy/Lazio/Emilia-Romagna, Portugal or Brazil. Each maps to the cities your recipes are tagged with.
 5. **Dish** — ranked by complexity (step count leads) so a beginner gets pa amb tomàquet and an advanced learner gets panellets.
 6. **Shop and connect** — a spoken lesson before the market, pitched at level. **It imports your `phrases()` from `src/journey.js` rather than copying it**, so shop language has one source.
 
