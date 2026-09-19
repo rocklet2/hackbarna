@@ -13,9 +13,7 @@ export const SUPPORTED = [
     endonym: "Català",
     mark: "▰",
     aliases: ["catalan", "catala", "català", "catalonian", "catalonia"],
-    // UNREVIEWED
-    askName: { target: "Com et dius?", en: "What should I call you?" },
-    greeting: (name) => `Hola, ${name}!`,
+    greeting: (name) => (name ? `Hola, ${name}!` : "Hola!"),
     voice: "ca",
     speech: "ca-ES",
   },
@@ -25,9 +23,7 @@ export const SUPPORTED = [
     endonym: "Italiano",
     mark: "▥",
     aliases: ["italian", "italiano", "italy"],
-    // UNREVIEWED
-    askName: { target: "Come ti chiami?", en: "What should I call you?" },
-    greeting: (name) => `Ciao, ${name}!`,
+    greeting: (name) => (name ? `Ciao, ${name}!` : "Ciao!"),
     voice: "it",
     speech: "it-IT",
   },
@@ -37,9 +33,7 @@ export const SUPPORTED = [
     endonym: "Português",
     mark: "◧",
     aliases: ["portuguese", "portugues", "português", "portugal", "brazilian"],
-    // UNREVIEWED
-    askName: { target: "Como te chamas?", en: "What should I call you?" },
-    greeting: (name) => `Olá, ${name}!`,
+    greeting: (name) => (name ? `Olá, ${name}!` : "Olá!"),
     voice: "pt",
     speech: "pt-PT",
   },
@@ -97,58 +91,13 @@ export function matchLanguage(transcript) {
   return best ? best.lang : null;
 }
 
-/** Lead-ins people say before their name, in the languages we ask in. */
-const NAME_LEADINS = [
-  "my name is", "my name's", "the name is", "i am called", "i'm called", "i am", "i'm",
-  "call me", "you can call me", "it is", "it's", "this is", "im",
-  "em dic", "el meu nom es", "em die", // ca (UNREVIEWED)
-  "mi chiamo", "il mio nome e", // it (UNREVIEWED)
-  "chamo me", "o meu nome e", "me chamo", // pt (UNREVIEWED)
-  "me llamo", // es, people switch
-];
-
-const capitalise = (w) => (w ? w[0].toUpperCase() + w.slice(1) : w);
-
 /**
- * Pull a usable name out of what they said. Speech-to-text hands back
- * lowercase text with no punctuation, so "hi i'm romina" must become "Romina".
- * Keeps the original accents and casing of the name itself.
- * Returns null when it does not look like a name, so we can ask again.
+ * The greeting. The learner is never asked for a name, so `name` is normally
+ * empty and this is the bare greeting; it still personalises if a name ever
+ * arrives from somewhere else.
  */
-export function extractName(transcript) {
-  let raw = String(transcript || "").trim().replace(/[.!,?;:]+$/, "");
-  if (!raw) return null;
-
-  // Strip the longest matching lead-in, comparing on a flattened copy but
-  // slicing the original so accents survive.
-  const flat = flatten(raw);
-  let best = "";
-  for (const lead of NAME_LEADINS) {
-    const l = flatten(lead);
-    if (flat.startsWith(l + " ") && l.length > best.length) best = l;
-  }
-  if (best) {
-    // Walk the original string past the same number of words as the lead-in.
-    const skip = best.split(" ").length;
-    raw = raw.split(/\s+/).slice(skip).join(" ").replace(/^[,\s]+/, "");
-  }
-
-  const words = raw.split(/\s+/).filter(Boolean);
-  if (!words.length) return null;
-  if (words.length > 3) return null; // a sentence, not a name
-  const name = words.slice(0, 3).join(" ");
-  if (name.length > 40) return null;
-  if (!/\p{L}/u.test(name)) return null; // no letters at all
-
-  // Speech-to-text tends to return all lowercase. Leave mixed case alone,
-  // since someone typing "McDonald" means it.
-  return name === name.toLowerCase()
-    ? name.split(" ").map(capitalise).join(" ")
-    : name;
-}
-
-/** The greeting for step 2a. Falls back to the plain name if the id is unknown. */
 export function greetingFor(languageId, name) {
   const lang = byId(languageId);
-  return lang && lang.greeting ? lang.greeting(name) : `${name}!`;
+  if (lang && lang.greeting) return lang.greeting(name);
+  return name ? `${name}!` : "";
 }

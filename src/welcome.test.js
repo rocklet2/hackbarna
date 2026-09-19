@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { matchLanguage, extractName, greetingFor, isSupported, SUPPORTED, COMING_SOON } from "./welcome/catalogue.js";
+import { matchLanguage, greetingFor, isSupported, SUPPORTED, COMING_SOON } from "./welcome/catalogue.js";
 
 test("matchLanguage hears a language name in a spoken answer", () => {
   assert.equal(matchLanguage("catalan").id, "ca");
@@ -22,31 +22,11 @@ test("matchLanguage returns null when no language was said", () => {
   assert.equal(matchLanguage(null), null);
 });
 
-test("extractName strips the lead-in speech-to-text gives us", () => {
-  assert.equal(extractName("Romina"), "Romina");
-  assert.equal(extractName("my name is romina"), "Romina");
-  assert.equal(extractName("i'm romina"), "Romina");
-  assert.equal(extractName("call me romina"), "Romina");
-  assert.equal(extractName("em dic romina"), "Romina");
-});
-
-test("extractName keeps accents and existing capitals", () => {
-  assert.equal(extractName("José"), "José");
-  assert.equal(extractName("my name is josé"), "José");
-  assert.equal(extractName("McDonald"), "McDonald", "mixed case is left alone");
-});
-
-test("extractName rejects things that are not names", () => {
-  assert.equal(extractName(""), null);
-  assert.equal(extractName("   "), null);
-  assert.equal(extractName("actually I would rather not say my name today"), null);
-  assert.equal(extractName("?!"), null);
-});
-
-test("greetingFor uses the chosen language", () => {
-  assert.equal(greetingFor("ca", "Romina"), "Hola, Romina!");
-  assert.equal(greetingFor("it", "Romina"), "Ciao, Romina!");
-  assert.equal(greetingFor("pt", "Romina"), "Olá, Romina!");
+test("greetingFor greets in the chosen language without needing a name", () => {
+  // Nobody is asked for a name any more, so the bare greeting is the normal case.
+  assert.equal(greetingFor("ca"), "Hola!");
+  assert.equal(greetingFor("it"), "Ciao!");
+  assert.equal(greetingFor("pt"), "Olá!");
 });
 
 test("every catalogue entry is complete and unambiguous", () => {
@@ -58,7 +38,7 @@ test("every catalogue entry is complete and unambiguous", () => {
     ids.add(lang.id);
   }
   for (const lang of SUPPORTED) {
-    assert.ok(lang.askName.target && lang.askName.en, `${lang.id} asks for a name`);
-    assert.match(lang.greeting("Romina"), /Romina/, `${lang.id} greets by name`);
+    assert.ok(lang.greeting(), `${lang.id} has a greeting that stands alone`);
+    assert.ok(lang.speech, `${lang.id} has a speech-recognition locale`);
   }
 });

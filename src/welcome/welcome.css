@@ -102,3 +102,23 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); ou
 .bubble .why { font-size: 13px; color: var(--muted); margin-top: 6px; border-top: 1px solid var(--line); padding-top: 6px; }
 .bubble.sys { align-self: center; background: transparent; color: var(--muted); font-size: 13px; text-align: center; max-width: 94%; }
 .mic.alt { background: var(--paper); color: var(--green); border: 1px solid var(--green); }
+
+/* The always-on listening bar. A microphone nobody had to ask for has to be
+   visible on every screen, and switchable off in one tap. */
+.micbar {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--paper); font-size: 13px; color: var(--muted); min-height: 34px;
+}
+.micbar .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none; }
+.micbar.on .dot { background: var(--orange); animation: breathe 1.8s ease-in-out infinite; }
+.micbar.on.hearing .dot { background: var(--green); animation: none; transform: scale(1.25); }
+.micbar .what { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.micbar.on.hearing .what { color: var(--ink); }
+.micbar .micoff { background: transparent; border: 0; color: var(--green); text-decoration: underline; font-size: 13px; padding: 2px 0; flex: none; }
+@keyframes breathe { 50% { opacity: .35; } }
+.hint.centred { text-align: center; }
+.greet .sub.small { font-size: 13px; max-width: 34ch; margin-top: 14px; }
+.micbar.gone { display: none; }
+.bubble.hello { background: var(--lime); border-color: var(--lime); }
+.bubble.hello .target { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
