@@ -14,7 +14,6 @@ app.innerHTML = `
     </div>
     <div class="dish"><h1>Panellets</h1><span id="stepLabel">Ready when you are</span></div>
     <div class="bar"><i id="bar"></i></div>
-    <div class="notice">Prototype · Catalan text pending native review</div>
   </header>
   <main class="log" id="log" aria-live="polite"></main>
   <footer class="composer">
