@@ -9,6 +9,6 @@ Each person updates only their own section.
 - **Blocked:** nothing
 
 ## Andrei
-- **Finished:** (Andrei to fill in)
-- **Next:**
-- **Blocked:**
+- **Finished:** Taula frontend mockup: setup, progressive recipe menu, step-by-step lesson and completion. Catalan/Italian/Portuguese, region and preference filters, local photos/fonts, no DB or APIs. Build and four recommendation tests pass; beginner lesson flow checked in-browser.
+- **Next:** review the visual direction and sample content with Romi; native-speaker review before a public demo. Prototype files: src/, public/, index.html, package files, README.md.
+- **Blocked:** GitHub HTTPS authentication prevents pull/push in this environment.
