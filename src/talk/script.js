@@ -4,7 +4,7 @@
 //
 // Turn kinds: "ready" (any reply moves on), "word" (needs one of `accepts`),
 // "photo" (optional photo, any reply moves on), "end" (summary).
-import catalonia from "../../content/catalonia.json";
+import catalonia from "../../content/catalonia.json" with { type: "json" };
 
 export const GLOSSARY = catalonia.glossary;
 export const TURNS = catalonia.recipes.find((r) => r.id === catalonia.demo_dish).conversation;
