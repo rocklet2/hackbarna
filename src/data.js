@@ -16,6 +16,9 @@ const catalanRecipes = catalonia.recipes.map((r) => ({
   words: r.words.map((w) => [w.ca, w.en]),
 }));
 
+// Shared source link for the generic Catalan story fallback (kept in the JSON, not duplicated here).
+const vegetablesSource = catalonia.recipes.find((r) => r.id === "escalivada").story.source;
+
 export const languages = [
   catalanLanguage,
   {
