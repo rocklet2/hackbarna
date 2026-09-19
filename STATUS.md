@@ -3,7 +3,7 @@
 Each person updates only their own section.
 
 ## Romi
-- **Finished:** the whole onboarding journey, steps 1 to 6, as a separate module (`welcome.html`, `src/welcome/`). None of Andrei's files touched. Spoken language question with a ten-language catalogue, name asked in the target language then a greeting by name, a three-turn conversational level check, place as travel, planning (today or the week), dish ranked by complexity, and a spoken shop-and-connect lesson that reuses Andrei's `phrases()`. 55 tests pass. SLNG key verified: Fish TTS returns Catalan audio in ~0.5s.
+- **Finished:** the whole onboarding journey, steps 1 to 5, as a separate module (`welcome.html`, `src/welcome/`). None of Andrei's files touched. Spoken language question with a ten-language catalogue, name asked in the target language then a greeting by name, a three-turn conversational level check, place as travel, dish ranked by complexity, and a spoken shop-and-connect lesson that reuses Andrei's `phrases()`. Removed step 4 (plan question "Cuines avui, o prepares la setmana?") — demo now focuses on one day only. 46 tests pass. SLNG key verified: Fish TTS returns Catalan audio in ~0.5s.
 - **Next:** settle the front door with Andrei (`/` vs `/welcome.html`) and which dish ranker wins. See `docs/ONBOARDING_JOURNEY.md` section 8. Catalan review still blocks a real demo.
 - **Blocked:** nothing in code. Two decisions need Andrei, listed in the handoff.
 
