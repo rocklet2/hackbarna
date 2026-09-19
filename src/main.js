@@ -9,6 +9,8 @@ import { stepDirections } from "./lesson-copy.js";
 import { videoMarkup, requestStepVideo } from "./step-video.js";
 import { alignedInstruction } from "./word-align.js";
 import { createAgent } from "./agent.js";
+import { finishSummary, tutorBrief } from "./finish/finish.js";
+import { finishMarkup, FINISH_BEATS, loadPhoto, savePhoto, readPhoto } from "./finish/finish-view.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -36,6 +38,8 @@ const state = {
   drafts: {},
   collected: new Set(),
   lastAutoSpokenKey: null,
+  finishBeat: 0,
+  finishPhoto: null,
 };
 const saved = readJourneys(localStorage);
 const lessonStore = saved.lessons && typeof saved.lessons === 'object' ? saved.lessons : {};
@@ -59,6 +63,8 @@ function openRecipe(r) {
   state.checked = state.journey.checked;
   state.drafts = state.journey.drafts;
   state.completed = state.journey.completed;
+  state.finishBeat = 0;
+  state.finishPhoto = loadPhoto(state.lessonKey);
   state.screen = 2;
   state.answer = null;
   state.collected = new Set();
@@ -283,8 +289,15 @@ function cookingLesson() {
     </div></main>`;
 }
 
+function finishSummaryNow() { return finishSummary(state.recipe, state.journey, state.level); }
 function completion(r) {
-  return `<main class="page completion"><div class="completion-symbol">${icon("bowl")}<span>✳</span></div><div class="eyebrow">A LITTLE PROUD? YOU SHOULD BE.</div><h1>You brought something<br>new to the <em>table.</em></h1><p class="intro">${r.name}, a few words in ${language().name},<br>and one delicious little adventure.</p><div class="completion-stats"><div><strong>${r.steps.length}</strong><span>steps cooked</span></div><div><strong>${r.words.length}</strong><span>words introduced</span></div></div><p class="completion-note">Lesson complete · saved on this device · no certified level assessment.</p><div class="completion-actions">${button(`${uiText("explore") || "Explore another recipe"} ${icon("arrow")}`, "menu")}${button(uiText("restart") || "Restart this lesson", "restart-lesson", "secondary")}</div><div class="completion-words">${r.words.map(([w, en]) => badge(`${w} <span>· ${en}</span>`)).join("")}</div></main>`;
+  const summary = finishSummaryNow();
+  const done = (x) => lessonStore[`${x.id}:${state.level}:two-part-v1`]?.completed;
+  const nextRecipe = recommend(state).find((x) => x.id !== r.id && !done(x)) || null;
+  const moment = waitMomentFor(r, 0);
+  const culture = moment?.source?.name ? { title: moment.title, text: moment.text, source: moment.source } : null;
+  const h = { button, linkButton, icon, escapeHtml, speakButton, recipePath };
+  return finishMarkup({ recipe: r, lang: state.language, langName: language().name, beat: state.finishBeat, photo: state.finishPhoto, summary, culture, nextRecipe, tomorrow: { brief: tutorBrief(r, language().name, summary) }, h });
 }
 
 function render(focus = false) {
@@ -488,7 +501,20 @@ app.addEventListener("click", (event) => {
       focus = true;
       break;
     }
+    case "finish-next":
+      state.finishBeat = Math.min(FINISH_BEATS - 1, state.finishBeat + 1);
+      focus = true;
+      break;
+    case "finish-back":
+      state.finishBeat = Math.max(0, state.finishBeat - 1);
+      focus = true;
+      break;
+    case "copy-brief":
+      navigator.clipboard.writeText(tutorBrief(state.recipe, language().name, finishSummaryNow()))
+        .then(() => toast("Copied. Paste it to your tutor."), () => toast("Couldn't copy. Select the text and copy it."));
+      return;
     case "restart-lesson":
+      state.finishBeat=0;state.finishPhoto=null;
       state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};state.answer=null;focus=true;break;
     case "start-quiz":
       state.journey.phase = "quiz";
@@ -501,6 +527,7 @@ app.addEventListener("click", (event) => {
       if (state.step === state.recipe.steps.length - 1) {
         state.completed = true;
         state.journey.completed = true;
+        state.finishBeat = 0;
       }
       else state.step++;
       state.journey.phase = "guide";
@@ -573,7 +600,17 @@ app.addEventListener("input", (event) => {
   if (event.target.matches("textarea"))
     { state.drafts[state.step] = event.target.value; saveProgress(); }
 });
-app.addEventListener("change", (event) => {
+app.addEventListener("change", async (event) => {
+  if (event.target.matches("[data-finish-photo]")) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      state.finishPhoto = await readPhoto(file);
+      savePhoto(state.lessonKey, state.finishPhoto);
+      render();
+    } catch { toast("That file isn't a photo we can read."); }
+    return;
+  }
   if (event.target.matches("[data-ingredient]")) {
     const i = Number(event.target.dataset.ingredient);
     state.checked = event.target.checked

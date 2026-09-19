@@ -15,6 +15,11 @@ export function stepPassed(journey, index) {
 export function submitAnswer(journey, recipe, index, answer, level = 0) {
   const correct = normalizeAnswer(answer) === normalizeAnswer(challengeFor(recipe, index, level).answer);
   if (correct && !stepPassed(journey, index)) journey.passedSteps.push(index);
+  // A miss before the pass is what the finish screen calls "say it again tomorrow".
+  if (!correct && !stepPassed(journey, index)) {
+    journey.missedSteps ??= [];
+    if (!journey.missedSteps.includes(index)) journey.missedSteps.push(index);
+  }
   return correct;
 }
 

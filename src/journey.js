@@ -1,6 +1,6 @@
 export const STORAGE_KEY = 'taula-journeys-v4';
 export function freshJourney() {
-  return { step: 0, checked: [], drafts: {}, completed: false, passedSteps: [], phase: "guide" };
+  return { step: 0, checked: [], drafts: {}, completed: false, passedSteps: [], missedSteps: [], phase: "guide" };
 }
 export function readJourneys(storage) {
   try {
@@ -14,6 +14,7 @@ export function restoreJourney(value, recipe) {
   j.completed = value.completed === true;
   j.phase = value.phase === "quiz" ? "quiz" : "guide";
   j.passedSteps = Array.isArray(value.passedSteps) ? [...new Set(value.passedSteps.filter(n => Number.isInteger(n) && n >= 0 && n < recipe.steps.length))] : [];
+  j.missedSteps = Array.isArray(value.missedSteps) ? [...new Set(value.missedSteps.filter(n => Number.isInteger(n) && n >= 0 && n < recipe.steps.length))] : [];
   j.step = Number.isInteger(value.step) ? Math.max(0,Math.min(recipe.steps.length-1,value.step)) : 0;
   j.checked = Array.isArray(value.checked) ? [...new Set(value.checked.filter(n=>Number.isInteger(n)&&n>=0&&n<recipe.ingredients.length))] : [];
   if(value.drafts && typeof value.drafts==='object') for(const [key,text] of Object.entries(value.drafts)) if(/^\d+$/.test(key)&&typeof text==='string') j.drafts[key]=text.slice(0,5000);
