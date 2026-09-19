@@ -469,6 +469,9 @@ function renderHandoff(via) {
     el("again").onclick = restart;
     return;
   }
+  // Advanced learners already know the basic ingredient vocabulary. They go
+  // directly from the market exchange to cooking instead of repeating words.
+  if (state.level >= 2) { renderHandoff("cook"); return; }
   state.wordLine = 0; state.tries = 0; state.wordAck = null;
   const { taught } = ingredientWords(state.language, state.dishes[0]);
   if (!taught.length) { renderHandoff("cook"); return; }

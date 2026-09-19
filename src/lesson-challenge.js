@@ -32,7 +32,8 @@ export function challengeFor(recipe, index, level = 0) {
   if (level >= 3) {
     const sentence = target.instruction.split(/(?<=[.!?])\s+/)[0];
     const answer = sentence.split(/\s+/)[0];
-    return { kind: 'write', prompt: 'Complete the instruction from this step.', sentence: sentence.replace(answer, '_____'), answer, hint: stepDirections(recipe, index)[0], success: sentence };
+    const prompts = { ca: 'Completa la instrucció d’aquest pas.', it: 'Completa l’istruzione di questo passaggio.', pt: 'Completa a instrução deste passo.' };
+    return { kind: 'write', prompt: prompts[recipe.language] || 'Complete the instruction from this step.', sentence: sentence.replace(answer, '_____'), answer, hint: sentence, success: sentence };
   }
   const sentence = level >= 2;
   const options = recipe.steps.map((_, n) => ({ value: String(n), label: sentence ? translatedStep(recipe, n).instruction.split(/(?<=[.!?])\s+/)[0] : translatedStep(recipe, n).title }));

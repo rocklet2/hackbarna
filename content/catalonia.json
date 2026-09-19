@@ -133,7 +133,7 @@
       "id": "escalivada",
       "name": "Escalivada",
       "description": "Roasted vegetables, slow moments, and a few new phrases.",
-      "minLevel": 1,
+      "minLevel": 0,
       "minutes": 45,
       "tags": [
         "vegan",

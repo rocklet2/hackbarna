@@ -13,29 +13,6 @@
 // UNREVIEWED, same as the text it annotates — a Catalan speaker should check the groupings, not
 // just the words.
 export const wordAlign = {
-  'tomato-bread': [
-    [
-      ["Posa ", "Put "], ["el pa, ", "the bread, "], ["el tomàquet, ", "tomato, "],
-      ["l’oli d’oliva ", "olive oil "], ["i ", "and "], ["la sal ", "salt "],
-      ["al taulell.", "on the counter."],
-    ],
-    [
-      ["Torra lleugerament dues llesques", "Lightly toast two slices "],
-      [": les vores cruixents ", "until the edges are crisp. "],
-      ["i el centre una mica tou.", "Leave a little softness in the middle."],
-    ],
-    [
-      ["Talla ", "Cut "], ["el tomàquet ", "the tomato "], ["per la meitat. ", "in half. "],
-      ["Frega ", "Rub "], ["la part tallada ", "the cut side "],
-      ["sobre el pa calent ", "over the warm bread, "],
-      ["perquè la polpa hi penetri.", "letting the pulp sink into the surface."],
-    ],
-    [
-      ["Afegeix un raig d’oli ", "Drizzle with olive oil, "],
-      ["i un pessic de sal. ", "add a pinch of salt, "],
-      ["Serveix de seguida.", "and serve straight away."],
-    ],
-  ],
   escalivada: [
     [["Prepara ", "Gather "], ["i ", "and "], ["renta ", "wash "], ["les verdures.", "your vegetables."]],
     [

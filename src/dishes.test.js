@@ -75,7 +75,7 @@ test("the market lesson changes with every level", () => {
 });
 
 test("advanced tells the seller you are learning and what you are cooking", () => {
-  const recipe = byName("Pa amb tomàquet");
+  const recipe = byName("Panellets");
   const advanced = shopScript("ca", 2, recipe);
   assert.match(advanced[0].en, /learning Catalan/i);
   assert.ok(advanced.some((l) => l.target.includes(recipe.name.toLowerCase())), "names tonight's dish");
@@ -141,10 +141,10 @@ test("feedback never says wrong, and only blocks on a real miss", () => {
 });
 
 test("the ingredient list teaches the dish's own ingredients as words", () => {
-  const recipe = byName("Pa amb tomàquet");
+  const recipe = byName("Mongetes amb all");
   const { rows, taught } = ingredientWords("ca", recipe);
   assert.equal(rows.length, recipe.ingredients.length, "every ingredient is listed");
-  assert.deepEqual(taught.map((r) => r.target), ["pa", "tomàquet", "oli", "sal"]);
+  assert.deepEqual(taught.map((r) => r.target), ["mongetes", "all", "oli", "julivert"]);
   for (const r of taught) assert.ok(r.en && r.lead && recipe.ingredients.includes(r.ingredient));
 });
 
@@ -156,7 +156,7 @@ test("an ingredient with no checked word is shown, never invented", () => {
 });
 
 test("the ingredient lesson teaches at most four words", () => {
-  for (const name of ["Panellets", "Calçots amb romesco", "Pa amb tomàquet"]) {
+  for (const name of ["Panellets", "Calçots amb romesco", "Mongetes amb all"]) {
     assert.ok(ingredientWords("ca", byName(name)).taught.length <= 4, name);
   }
 });

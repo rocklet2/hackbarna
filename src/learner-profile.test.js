@@ -12,5 +12,5 @@ test('welcome levels map by meaning, rather than sharing incompatible numeric ID
   assert.equal(welcomeLessonLevel({getItem:()=>{throw Error('blocked');}}, 'ca', 2), 2);
 });
 test('welcome links directly to the selected recipe', () => {
-  assert.equal(recipeUrl(recipes[0]), '/recipes/ca/pa-amb-tomaquet');
+  assert.equal(recipeUrl(recipes[0]), '/recipes/ca/escalivada');
 });

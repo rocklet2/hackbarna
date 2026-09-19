@@ -9,7 +9,7 @@ import catalonia from "../content/catalonia.json" with { type: "json" };
 
 const catalanLanguage = { ...catalonia.language, words: catalonia.language.words.map((w) => [w.ca, w.en]) };
 // The lesson UI expects steps and words as tuples.
-const catalanRecipes = catalonia.recipes.map((r) => ({
+const catalanRecipes = catalonia.recipes.filter((r) => r.id !== "tomato-bread").map((r) => ({
   ...r,
   language: "ca",
   steps: r.steps.map((st) => [st.title, st.guidance, st.phrase, st.gloss]),

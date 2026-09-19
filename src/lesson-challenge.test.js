@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { recipes } from './data.js';
 import { freshJourney, restoreJourney } from './journey.js';
 import { challengeWord, stepPassed, submitAnswer } from './lesson-challenge.js';
-const recipe = recipes[0];
+const recipe = recipes.find((r) => r.id === 'mongetes');
 test('every recipe step has a known answer and distinct distractors', () => {
   for (const r of recipes) for (let i = 0; i < r.steps.length; i++) {
     const word = challengeWord(r, i);
@@ -11,22 +11,22 @@ test('every recipe step has a known answer and distinct distractors', () => {
     assert.ok(r.words.some(([candidate]) => candidate !== word[0]));
     assert.equal(r.words.filter(([candidate]) => candidate === word[0]).length, 1);
   }
-  assert.deepEqual(challengeWord(recipe, 0), ['pa', 'bread']);
+  assert.deepEqual(challengeWord(recipe, 0), ['mongetes', 'beans']);
 });
 test('only a correct answer unlocks a step, without unlocking subsequent steps', () => {
   const journey = freshJourney();
   assert.equal(stepPassed(journey, 0), false);
   assert.equal(submitAnswer(journey, recipe, 0, 'wrong'), false);
   assert.equal(stepPassed(journey, 0), false);
-  assert.equal(submitAnswer(journey, recipe, 0, 'pa'), true);
+  assert.equal(submitAnswer(journey, recipe, 0, 'mongetes'), true);
   assert.equal(stepPassed(journey, 0), true);
   assert.equal(stepPassed(journey, 1), false);
-  submitAnswer(journey, recipe, 0, 'pa');
+  submitAnswer(journey, recipe, 0, 'mongetes');
   assert.deepEqual(journey.passedSteps, [0]);
 });
 test('passed steps survive resume and back navigation; restart and old saves require answers', () => {
   const journey = freshJourney();
-  submitAnswer(journey, recipe, 0, 'pa');
+  submitAnswer(journey, recipe, 0, 'mongetes');
   journey.step = 1;
   const restored = restoreJourney(JSON.parse(JSON.stringify(journey)), recipe);
   assert.equal(stepPassed(restored, 0), true);

@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recipes } from './data.js';
 import { freshJourney, restoreJourney, askPhraseFor, isWaitStep, waitMomentFor, readJourneys } from './journey.js';
-const recipe = recipes[0];
+const recipe = recipes.find(r => r.id === 'mongetes');
 const escalivada = recipes.find(r => r.id === 'escalivada');
 test('each ingredient offers a phrase for the word it contains, varied by position so they are not all the same template',()=>{
-  assert.deepEqual(recipe.ingredients,['2 slices of rustic bread','1 ripe tomato','1 tbsp extra-virgin olive oil','A pinch of salt']);
-  assert.deepEqual(askPhraseFor('ca','2 slices of rustic bread',recipe.words,0),['Teniu pa?','Do you have bread?']);
-  assert.deepEqual(askPhraseFor('ca','1 ripe tomato',recipe.words,1),['Voldria tomàquet, si us plau.','I’d like tomato, please.']);
-  assert.deepEqual(askPhraseFor('ca','1 tbsp extra-virgin olive oil',recipe.words,2),['Busco oli.','I’m looking for oil.']);
-  assert.deepEqual(askPhraseFor('ca','A pinch of salt',recipe.words,3),['Encara us queda sal?','Do you still have salt left?']);
+  assert.deepEqual(recipe.ingredients,['400 g cooked white beans, drained','2 garlic cloves','1 tbsp olive oil','Parsley','Salt']);
+  assert.deepEqual(askPhraseFor('ca','400 g cooked white beans, drained',recipe.words,0),['Teniu mongetes?','Do you have beans?']);
+  assert.deepEqual(askPhraseFor('ca','2 garlic cloves',recipe.words,1),['Voldria all, si us plau.','I’d like garlic, please.']);
+  assert.deepEqual(askPhraseFor('ca','1 tbsp olive oil',recipe.words,2),['Busco oli.','I’m looking for oil.']);
+  assert.deepEqual(askPhraseFor('ca','Parsley',recipe.words,3),['Encara us queda julivert?','Do you still have parsley left?']);
   assert.equal(askPhraseFor('ca','A random ingredient with no match',recipe.words,0),null);
 });
 test('a step is a wait moment when there is genuine idle time',()=>{

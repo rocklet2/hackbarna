@@ -6,10 +6,10 @@ const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;',
 export function videoMarkup(recipe, index) {
   const key = keyFor(recipe, index);
   const clip = clips.get(key);
+  const buttonLabel = clip?.pending ? 'Creating step video' : clip?.error ? 'Try creating step video again' : 'Play step video';
   return `<div class="step-video" data-video-key="${key}" aria-busy="${clip?.pending || false}">
     <video playsinline ${clip?.url ? `controls src="${clip.url}"` : ''} poster="/images/${recipe.image}.jpg" aria-label="Animated guide: ${escape(translatedStep(recipe, index).title)}"></video>
-    ${clip?.url ? '' : `<div class="video-shade"></div><div class="video-invite"><span class="video-kicker">WATCH THIS STEP</span><button class="video-generate" data-action="generate-video" ${clip?.pending ? 'disabled' : ''}><span aria-hidden="true">${clip?.pending ? '◌' : '▶'}</span>${clip?.pending ? 'Creating your guide…' : clip?.error ? 'Try again' : 'Generate step video'}</button><p role="status">${clip?.error ? escape(clip.error) : clip?.pending ? 'Your short guide will be ready in a few seconds.' : 'A short animated guide, made when you need it.'}</p></div>`}
-    <span class="video-caption">${clip?.url ? 'Animated step guide · no audio' : 'Recipe inspiration'}</span>
+    ${clip?.url ? '' : `<div class="video-shade"></div><div class="video-invite"><button class="video-generate" data-action="generate-video" aria-label="${buttonLabel}" ${clip?.pending ? 'disabled' : ''}><span aria-hidden="true">${clip?.pending ? '◌' : '▶'}</span></button><span class="sr-only" role="status">${clip?.error ? escape(clip.error) : clip?.pending ? 'Creating your step video.' : 'Play this step video.'}</span></div>`}
   </div>`;
 }
 function refresh(recipe, index) {
