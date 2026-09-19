@@ -40,6 +40,14 @@ export const LEVEL_QUESTION = {
 export const levelQuestionFor = (languageId) => LEVEL_QUESTION[languageId] || LEVEL_QUESTION.ca;
 export const levelById = (id) => LEVELS.find((l) => l.id === id) || null;
 
+/** The level card's own name, in the language being learned. UNREVIEWED. */
+const LEVEL_LABEL = {
+  ca: ["Principiant", "Intermedi", "Avançat"],
+  it: ["Principiante", "Intermedio", "Avanzato"],
+  pt: ["Iniciante", "Intermediário", "Avançado"],
+};
+export const levelLabelFor = (languageId, levelId) => (LEVEL_LABEL[languageId] || LEVEL_LABEL.ca)[levelId] || "";
+
 const flatten = (s) =>
   String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/['’‘`´]/g, "").replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();

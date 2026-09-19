@@ -145,4 +145,40 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .stage .cta + .say { align-self: center; margin-top: 14px; }
 
 .mic:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ---------------------------------------------------------------------
+   The SLNG voice agent's tiny character (src/welcome/agent.js). Fixed to
+   the viewport, not the 480px card, so it sits at the bottom-right of the
+   whole screen through every step of the onboarding.
+--------------------------------------------------------------------- */
+.agent-orb {
+  position: fixed; right: 16px; bottom: 16px; z-index: 40;
+  width: 56px; height: 56px; border-radius: 50%; padding: 0;
+  border: 2px solid var(--white); background: var(--ink); color: var(--white);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .35);
+  display: grid; place-items: center;
+  transition: background .2s, color .2s;
+}
+.agent-orb:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
+.agent-orb[data-status="connecting"] { opacity: .65; }
+.agent-orb[data-status="connected"] { background: var(--mint); color: var(--ink); }
+.agent-orb[data-status="speaking"] { background: var(--pink); color: var(--ink); animation: agentPulse .6s ease-in-out infinite alternate; }
+.agent-orb[data-status="error"] { background: var(--white); color: var(--ink); border-color: var(--pink); }
+@keyframes agentPulse { from { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 0 0 rgba(255, 122, 172, .55); } to { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 0 8px rgba(255, 122, 172, 0); } }
+
+.agent-face { position: relative; width: 26px; height: 22px; }
+.agent-eye { position: absolute; top: 2px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.agent-eye:first-child { left: 1px; }
+.agent-eye:last-child { right: 1px; }
+.agent-mouth { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 12px; height: 3px; border-radius: 3px; background: currentColor; transition: width .12s, height .12s, border-radius .12s; }
+.agent-orb[data-status="speaking"] .agent-mouth { width: 9px; height: 9px; border-radius: 50%; }
+.agent-orb[data-status="connecting"] .agent-mouth { width: 12px; border-radius: 3px; animation: agentThinking 1s steps(3) infinite; }
+@keyframes agentThinking { to { width: 4px; } }
+
+.agent-status {
+  position: fixed; right: 16px; bottom: 78px; z-index: 40; max-width: 220px;
+  font-size: 11px; line-height: 1.4; text-align: right; color: var(--white);
+  background: rgba(18, 17, 23, .82); padding: 6px 10px; border-radius: 10px;
+}
+.agent-status:empty { display: none; }
 .mic-row.sticky { position: sticky; bottom: 0; margin: 14px -18px 0; padding: 12px 18px calc(env(safe-area-inset-bottom) + 6px); background: var(--bg); }

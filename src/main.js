@@ -283,19 +283,9 @@ function toast(message) {
   el.classList.add("visible");
   setTimeout(() => el.classList.remove("visible"), 4000);
 }
-const speechLocales = { ca: "ca-ES", it: "it-IT", pt: "pt-PT" };
-function speakBrowser(text, lang, notify) {
-  if (!("speechSynthesis" in window)) { if (notify) toast("Audio isn't supported in this browser."); return; }
-  try {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = speechLocales[lang] || lang;
-    window.speechSynthesis.speak(utterance);
-  } catch { if (notify) toast("Couldn't play audio just now."); }
-}
-// The recipe step itself is spoken through /api/tts (OpenAI or SLNG — see scripts/tts-proxy.js
-// for which one and why), a small dev/preview-server proxy that keeps the API key off the
-// client. Browser speech synthesis is the fallback if that request fails or is blocked.
+// The recipe step is spoken through /api/tts (OpenAI — see scripts/tts-proxy.js), a small
+// dev/preview-server proxy that keeps the API key off the client. No browser speech-synthesis
+// fallback: if the request fails, the step just stays silent and, for a manual tap, says so.
 const ttsCache = new Map();
 const ttsPlayer = new Audio();
 async function speak(text, lang, notify = true) {
@@ -312,7 +302,7 @@ async function speak(text, lang, notify = true) {
     ttsPlayer.src = url;
     await ttsPlayer.play();
   } catch {
-    speakBrowser(text, lang, notify);
+    if (notify) toast("Couldn't play audio just now.");
   }
 }
 function maybeAutoSpeakStep() {

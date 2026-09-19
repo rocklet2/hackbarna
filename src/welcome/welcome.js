@@ -10,11 +10,12 @@ import { recipeUrl } from "../learner-profile.js";
 // keeps working while this is built. Entry page is welcome.html.
 import "./welcome.css";
 import { SUPPORTED, COMING_SOON, matchLanguage, greetingFor, byId } from "./catalogue.js";
-import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor } from "./levelcheck.js";
+import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor, levelLabelFor } from "./levelcheck.js";
 import { placesFor, placeById, matchPlace, placeQuestionFor, tonightFor } from "./places.js";
 import { dishesFor, complexityLabel } from "./dishes.js";
 import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { createMic, speechSupported } from "./mic.js";
+import { createAgent } from "./agent.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -40,31 +41,6 @@ function loadProfile() {
   } catch { return null; }
 }
 
-/* ---------- speech out ---------- */
-let voices = [];
-const loadVoices = () => { voices = speechSynthesis?.getVoices?.() || []; };
-if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-
-/** Never read a language with a voice that does not speak it: better silent than wrong. */
-function voiceFor(langPrefix) {
-  return voices.find((v) => v.lang?.toLowerCase().startsWith(langPrefix)) || null;
-}
-function say(text, langPrefix = "en", onDone) {
-  if (!("speechSynthesis" in window)) { onDone?.(); return false; }
-  const voice = voiceFor(langPrefix);
-  if (!voice) { onDone?.(); return false; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.voice = voice; u.lang = voice.lang; u.rate = 0.92;
-  // An open microphone hears the coach and answers its own question, so go deaf
-  // for as long as it is speaking, plus a beat for the speaker to settle.
-  mic.setDeaf(true);
-  const wake = () => { setTimeout(() => mic.setDeaf(false), 350); onDone?.(); };
-  u.onend = wake; u.onerror = wake;
-  speechSynthesis.speak(u);
-  return true;
-}
-
 /* ---------- the listening agent ---------- */
 const SR = speechSupported;
 let micState = { on: false, hearing: false, text: "", error: null };
@@ -76,6 +52,43 @@ function paintMicBar() {
   if (!btn) return;
   btn.textContent = micState.error === "blocked" ? "Mic blocked" : micState.on ? "Mic on · turn off" : "Mic off · turn on";
   btn.disabled = micState.error === "blocked";
+}
+
+/* ---------- the voice agent: a tiny character, bottom-right ---------- */
+// OpenAI's Realtime API over WebRTC (see src/welcome/agent.js) — a real conversational agent,
+// not just TTS: welcome.js tells it what's happening via agent.prompt() and it speaks on its
+// own initiative. What it hears the learner say comes back through mic.feed(), so every
+// screen's existing mic.listenFor(matchLanguage/matchPlace/...) keeps deciding what a spoken
+// answer means — the agent doesn't need to know our screens, it only needs to carry the audio.
+// (An earlier SLNG/LiveKit integration lived here; it never got a working connection.)
+let agentState = { status: "idle", speaking: false, error: null };
+const agent = createAgent({
+  onState: (st) => { agentState = st; paintAgent(); mic.setDeaf(st.speaking); },
+  onUserTranscript: (text) => mic.feed(text),
+});
+
+function paintAgent() {
+  const orb = el("agentOrb");
+  if (!orb) return;
+  orb.dataset.status = agentState.speaking ? "speaking" : agentState.status;
+  orb.setAttribute("aria-label", agentState.status === "connected"
+    ? "Voice guide connected — tap to turn off"
+    : agentState.status === "connecting" ? "Connecting the voice guide…"
+    : agentState.status === "error" ? "Voice guide unavailable — tap to retry"
+    : "Tap to turn on the voice guide");
+  const status = el("agentStatus");
+  if (status) status.textContent = agentState.status === "error" ? agentState.error : "";
+}
+
+/** Mounted once, outside #app, so re-rendering a screen never tears down the agent's audio. */
+function mountAgentWidget() {
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `<div id="agentStatus" class="agent-status" role="status" aria-live="polite"></div>
+    <button type="button" id="agentOrb" class="agent-orb" data-status="idle" aria-label="Tap to turn on the voice guide">
+      <span class="agent-face"><span class="agent-eye"></span><span class="agent-eye"></span><span class="agent-mouth"></span></span>
+    </button>`;
+  document.body.append(...wrap.children);
+  el("agentOrb").onclick = () => { if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect(); else agent.connect(); };
 }
 
 /* ---------- small helpers ---------- */
@@ -117,7 +130,7 @@ function renderLanguage(message = "") {
     const lang = matchLanguage(text);
     if (lang) chooseLanguage(lang.id);
   });
-  setTimeout(() => say(QUESTION, "en"), 250);
+  agent.prompt("The learner just reached the language screen and hasn't chosen a language yet, so speak in English. In one short, warm sentence, ask which language they'd like to cook in — Catalan, Italian, or Portuguese.");
 }
 
 function chooseLanguage(id) {
@@ -137,6 +150,26 @@ function chooseLanguage(id) {
   startCheck();
 }
 
+/**
+ * Every agent.prompt() after a language is chosen goes through here so each instruction
+ * re-anchors the language the agent should be speaking (see the "language you speak in" note
+ * in scripts/openai-realtime-proxy.js's INSTRUCTIONS) — cheap insurance against it drifting
+ * to a different language over a long session, and avoids racing two response.create calls
+ * back to back the way a one-off "you've switched languages" message would.
+ *
+ * At Beginner level it also asks for a quick English gloss after anything said in the target
+ * language, so early word associations have something to latch onto — Intermediate and
+ * Advanced stay fully in the target language, same as before.
+ */
+function agentSay(instruction) {
+  const lang = state.language ? byId(state.language) : null;
+  if (!lang) { agent.prompt(instruction); return; }
+  const beginnerNote = state.level === 0
+    ? ` Since they're a beginner, briefly add the English meaning right after anything you say in ${lang.name}, to help the words stick.`
+    : "";
+  agent.prompt(`(Keep speaking in ${lang.name}.${beginnerNote}) ${instruction}`);
+}
+
 /* ---------- step 2: pick a starting point ---------- */
 /** The greeting now lives on the first screen. The spoken assessment was cut; see levelcheck.js. */
 function startCheck() {
@@ -144,7 +177,7 @@ function startCheck() {
   const lang = byId(state.language);
   renderLevel();
   const q = levelQuestionFor(state.language);
-  setTimeout(() => say(q.target, lang.voice), 250);
+  agentSay(`Say exactly, in ${lang.name}: "${q.target}"`);
 }
 
 function renderLevel() {
@@ -158,7 +191,8 @@ function renderLevel() {
     </h1>
     <div class="cards" style="grid-template-columns:1fr">
       ${LEVELS.map((l) => `<button class="card" data-level="${l.id}">
-        <span class="name">${esc(l.name)}</span>
+        <span class="name">${esc(levelLabelFor(state.language, l.id))}</span>
+        <span class="endonym">${esc(l.name)}</span>
         <span class="detail">${esc(l.detail)}</span></button>`).join("")}
     </div>
   </div>`);
@@ -219,7 +253,7 @@ function renderPlace(message = "") {
     const place = matchPlace(text, state.language);
     if (place) choosePlace(place.id);
   });
-  setTimeout(() => say(q.target, lang.voice), 250);
+  agentSay(`Say exactly, in ${lang.name}: "${q.target}"`);
 }
 
 function choosePlace(id) {
@@ -316,9 +350,9 @@ function sayLessonLine() {
   if (line.seller) state.thread.push({ who: "seller", target: line.seller.target, en: line.seller.en });
   state.thread.push({ who: "coach", target: line.target, en: line.en, why: line.why, reply: !!line.seller });
   renderLesson();
-  const voice = byId(state.language).voice;
-  if (line.seller) say(line.seller.target, voice, () => setTimeout(() => say(line.target, voice), 300));
-  else say(line.target, voice);
+  const langName = byId(state.language).name;
+  if (line.seller) agentSay(`Say exactly, first in ${langName}: "${line.seller.target}" — then, after a brief pause, also in ${langName}: "${line.target}"`);
+  else agentSay(`Say exactly, in ${langName}: "${line.target}"`);
 }
 
 function renderLesson() {
@@ -354,7 +388,7 @@ function renderLesson() {
   </div>`);
 
   el("thread").scrollTop = el("thread").scrollHeight;
-  el("hear").onclick = () => say(script[state.line]?.target, lang.voice);
+  el("hear").onclick = () => agentSay(`Say exactly, in ${lang.name}: "${script[state.line]?.target}"`);
   el("skip").onclick = skipLesson;
   el("typed").onsubmit = (e) => {
     e.preventDefault();
@@ -370,7 +404,6 @@ function renderLesson() {
 
 function skipLesson() {
   mic.listenFor(null);
-  speechSynthesis?.cancel?.();
   renderHandoff("shop");
 }
 
@@ -388,7 +421,7 @@ function submitLesson(text) {
   state.thread.push({ who: "ack", text: reply });
   renderLesson();
 
-  if (!advance && !forced) { setTimeout(() => say(line.target, byId(state.language).voice), 600); return; }
+  if (!advance && !forced) { setTimeout(() => agentSay(`Say exactly, in ${byId(state.language).name}: "${line.target}"`), 600); return; }
   state.line += 1; state.tries = 0;
   setTimeout(() => {
     if (state.line < script.length) { sayLessonLine(); return; }
@@ -427,7 +460,7 @@ function renderHandoff(via) {
 function sayWord() {
   const { taught } = ingredientWords(state.language, state.dishes[0]);
   const row = taught[state.wordLine];
-  if (row) say(row.target, byId(state.language).voice);
+  if (row) agentSay(`Say exactly, in ${byId(state.language).name}: "${row.target}"`);
 }
 
 function renderWords() {
@@ -471,7 +504,7 @@ function renderWords() {
 
   el("again").onclick = restart;
   if (done) { mic.listenFor(null); return; }
-  el("hear").onclick = () => say(current.target, lang.voice);
+  el("hear").onclick = () => agentSay(`Say exactly, in ${lang.name}: "${current.target}"`);
   el("skipword").onclick = () => {
     mic.listenFor(null);
     state.wordLine += 1; state.tries = 0; state.wordAck = null;
@@ -496,7 +529,7 @@ function submitWord(text) {
   const { text: reply, advance } = wordFeedback(forced && verdict === "again" ? "moveon" : verdict, row.target, state.wordLine);
   state.wordAck = reply;
 
-  if (!advance && !forced) { renderWords(); setTimeout(() => say(row.target, byId(state.language).voice), 500); return; }
+  if (!advance && !forced) { renderWords(); setTimeout(() => agentSay(`Say exactly, in ${byId(state.language).name}: "${row.target}"`), 500); return; }
   state.wordLine += 1; state.tries = 0;
   renderWords();
   setTimeout(() => sayWord(), 700);
@@ -525,7 +558,7 @@ function renderWelcomeBack(profile) {
   // Place and plan are per-session questions, so a returning learner still answers those.
   el("go").onclick = () => { state.level = profile.level; startPlace(); };
   el("again").onclick = restart;
-  setTimeout(() => say(greetingFor(profile.language), lang.voice), 300);
+  agentSay(`Say exactly, in ${lang.name}: "${greetingFor(profile.language)}"`);
 }
 
 /**
@@ -570,6 +603,7 @@ function renderStart() {
   el("begin").onclick = () => {
     stopHellos();
     mic.start();                    // must happen inside the gesture
+    agent.connect();                // same gesture opens the realtime agent's mic track too
     if (saved) { state.language = saved.language; renderWelcomeBack(saved); }
     else renderLanguage();
   };
@@ -579,4 +613,5 @@ function renderStart() {
 // so the always-on path can be exercised where a microphone is unavailable.
 window.__hear = (text) => mic.feed(text);
 
+mountAgentWidget();
 renderStart();
