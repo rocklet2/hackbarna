@@ -36,9 +36,9 @@ export const LEVELS = [
 
 /** Asked bilingually, matching the other screens. UNREVIEWED. */
 export const LEVEL_QUESTION = {
-  ca: { target: "Quant català saps?", en: "How much Catalan do you have?" },
-  it: { target: "Quanto italiano sai?", en: "How much Italian do you have?" },
-  pt: { target: "Quanto português sabes?", en: "How much Portuguese do you have?" },
+  ca: { target: "Quant català saps?", en: "How much Catalan do you know?" },
+  it: { target: "Quanto italiano sai?", en: "How much Italian do you know?" },
+  pt: { target: "Quanto português sabes?", en: "How much Portuguese do you know?" },
 };
 
 export const levelQuestionFor = (languageId) => LEVEL_QUESTION[languageId] || LEVEL_QUESTION.ca;

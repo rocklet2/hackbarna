@@ -84,7 +84,7 @@ function paintMicBar() {
 const el = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const chrome = (inner) => `<div class="app"><div><div class="brand">taula<b>*</b></div>
-  <div class="notice">Prototype · target-language text pending native review</div></div>${inner}</div>`;
+  </div>${inner}</div>`;
 
 /* ---------- step 1: which language ---------- */
 const QUESTION = "Which language would you like to cook in?";
@@ -155,7 +155,6 @@ function renderLevel() {
       <span class="target">${esc(q.target)}</span>
       <span class="en">${esc(q.en)}</span>
     </h1>
-    <p class="hint">No test. Say it or pick it, and change it whenever you like.</p>
     <div class="cards" style="grid-template-columns:1fr">
       ${LEVELS.map((l) => `<button class="card" data-level="${l.id}">
         <span class="name">${esc(l.name)}</span>
