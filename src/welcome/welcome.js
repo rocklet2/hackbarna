@@ -1,3 +1,4 @@
+import { recipeUrl } from "../learner-profile.js";
 // Onboarding steps 1 to 6. See docs/ONBOARDING_JOURNEY.md.
 //
 // The coach listens continuously: no screen has a "tap to talk" button. One tap
@@ -410,7 +411,8 @@ function submitLesson(text) {
 
 function cta() {
   const c = cookCtaFor(state.language);
-  return `<a class="cta" href="/"><span class="cta-target">${esc(c.target)}</span>
+  const href = state.dishes[0] ? recipeUrl(state.dishes[0]) : "/";
+  return `<a class="cta" href="${href}"><span class="cta-target">${esc(c.target)}</span>
     <span class="cta-en">${esc(c.en)}</span></a>
     <button class="say" id="again">Start over</button>`;
 }
