@@ -7,6 +7,11 @@
 - **Step checks rebuilt** in `src/lesson-challenge.js` (`challengeFor` has the same signature, `submitAnswer` now grades fuzzily, new `isCorrect`, `stepWords`, `stepVerb`). Beginner: recall a word from this step, three options. Intermediate: the step's sentence with the key word missing. Advanced: the verb goes too, asked in the target language only. The agent asks the question, a correct answer auto-advances, two misses give a clue, a third gives the answer.
 - Smaller: "or choose" divider gone from the language screen, the market lesson opens with a spoken introduction, "A cuinar!" only appears once the ingredient list is finished.
 
+## Latest (2026-09-20): voice agent tested live, three fixes
+- Tested by feeding spoken audio into real sessions: transcription, the language lock, exact phrases, food safety and the app-side cut all behave. Details in STATUS.md.
+- Fixed in `src/spoken-match.js` and `src/lesson-challenge.js`: hyphenated verbs heard joined up, and self-correction (last option named wins). New echo guard in `src/welcome/welcome.js` so the guide's own voice cannot choose an option while it speaks.
+- **Your `ae62b86` turn settings:** I left them at the defaults you set. One thing I measured: at 500 ms silence a phrase with a pause splits into two utterances ("no, another language" came in as "No."). If you want that fixed, `silence_duration_ms: 700` did it in testing. Your call.
+
 ## Latest (2026-09-20): interruptions only for real answers
 - Reverses part of "talk over the guide": the server's `interrupt_response` is now OFF. The guide keeps talking through noise. It stops only when the app recognises a real answer and calls `agent.clearQueue()`. Anything that should cut the guide off must call `clearQueue()`. The `nudge()` helper in `src/welcome/welcome.js` now stays quiet while the guide is speaking.
 - First-visit intro (`startIntro`) plays fully; only `matchSkip` or the button ends it. Timings: about 28 to 31 s of speech, safety cap 120 s.
