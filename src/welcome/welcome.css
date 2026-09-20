@@ -110,6 +110,15 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .turnbar i.current { background: var(--white); box-shadow: inset 0 0 0 2px var(--ink); }
 
 .thread { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding: 4px 2px 8px; }
+/* The market conversation grows with every turn. Without a capped frame here, .thread's own
+   overflow-y:auto (and the scroll-to-latest in welcome.js) never gets a bounded height to
+   scroll within, so the whole page grows instead — and on mobile Safari the page's own
+   background can lag behind that growth, leaving a plain gap past the frame. .stage and
+   .thread both need min-height:0 too: flex children default to min-height:auto, which blocks
+   them from shrinking to the space .app actually has once it stops growing. */
+.app[data-step="shop"] { height: 100dvh; overflow: hidden; }
+.app[data-step="shop"] .stage { min-height: 0; }
+.app[data-step="shop"] .thread { min-height: 0; }
 .bubble { max-width: 88%; padding: 12px 14px; border-radius: 18px; line-height: 1.35; animation: rise .22s ease-out; border: 2px solid var(--ink); }
 .bubble.coach { background: var(--white); border-bottom-left-radius: 6px; align-self: flex-start; }
 .bubble.me { background: var(--ink); color: var(--white); border-bottom-right-radius: 6px; align-self: flex-end; }

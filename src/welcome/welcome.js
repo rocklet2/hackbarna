@@ -120,7 +120,7 @@ const el = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // Each screen is one brand colour block (see BRAND.md); the other colour is its accent.
 const TONES = { start: "pink", language: "mint", level: "pink", place: "mint", dishes: "pink", shop: "mint", done: "pink" };
-const chrome = (inner, tone = TONES[state.step] || "pink") => `<div class="app" data-tone="${tone}" data-level="${state.level ?? ""}"><div><div class="brand">taula<b>*</b></div>
+const chrome = (inner, tone = TONES[state.step] || "pink") => `<div class="app" data-tone="${tone}" data-step="${esc(state.step)}" data-level="${state.level ?? ""}"><div><div class="brand">taula<b>*</b></div>
   </div>${inner}</div>`;
 
 /* ---------- step 1: which language ---------- */
