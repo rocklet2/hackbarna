@@ -31,3 +31,12 @@ test('the level can be said in English or in the language being learned', () => 
   assert.equal(matchLevel('I am a beginner').id, 0);
   assert.equal(matchLevel('tomatoes'), null);
 });
+
+test('a Catalan word heard with Spanish or English spelling still counts', () => {
+  for (const [heard, wanted] of [['zucre', 'sucre'], ['kuina', 'cuina'], ['rosteich', 'rosteix'], ['mongetas', 'mongetes']]) {
+    assert.equal(sameWord(heard, wanted), true, `${heard} for ${wanted}`);
+  }
+  // Forgiving spelling must not turn a different short word into the right one.
+  assert.equal(sameWord('sal', 'sol'), false);
+  assert.equal(sameWord('oli', 'all'), false);
+});

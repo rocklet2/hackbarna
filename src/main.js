@@ -535,7 +535,11 @@ async function maybeAskQuiz() {
   state.lastQuizAskedKey = key;
   const ok = await agent.connect(agentOptions());
   if (!ok) return; // the question is on screen either way
-  agent.prompt(challengeFor(state.recipe, state.step, state.level).ask);
+  const challenge = challengeFor(state.recipe, state.step, state.level);
+  // Tell the transcriber what a short answer is likely to sound like.
+  const expected = [challenge.answer, ...(challenge.options || []).map((o) => o.value), ...state.recipe.words.map(([w]) => w)];
+  agent.updateSession({ transcriptionLanguage: state.language, transcriptionPrompt: `${langName(state.language)} cooking words: ${[...new Set(expected)].join(", ")}.` });
+  agent.prompt(challenge.ask);
 }
 const speakButton = (text, lang) => `<button class="speak-btn" data-action="speak" data-value="${escapeHtml(text)}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
 function highlightAlign(word, on) {

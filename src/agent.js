@@ -18,6 +18,7 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
   let queue = [];
   let responding = false;
   let stuckTimer = null;
+  let unmuteTimer = null;
   let pendingSession = null; // a session.update asked for before the channel opened
   const state = { status: "idle", speaking: false, error: null }; // idle | connecting | connected | error
   const emit = () => onState?.({ ...state });
@@ -72,9 +73,15 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
       }
     } else if (event.type === "output_audio_buffer.started") {
       state.speaking = true;
+      // The guide's own voice must never be transcribed as the learner's answer.
+      clearTimeout(unmuteTimer);
+      micStream?.getAudioTracks().forEach((t) => { t.enabled = false; });
       emit();
     } else if (event.type === "output_audio_buffer.stopped" || event.type === "output_audio_buffer.cleared") {
       state.speaking = false;
+      // A short tail so the end of the guide's sentence has left the room before we listen again.
+      clearTimeout(unmuteTimer);
+      unmuteTimer = setTimeout(() => micStream?.getAudioTracks().forEach((t) => { t.enabled = true; }), 350);
       emit();
     } else if (event.type === "error") {
       // A rejected response.create leaves nothing in flight; carry on with the queue.
@@ -190,13 +197,15 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
    * Tighten the live session, e.g. the language lock once the learner has chosen.
    * `transcriptionLanguage` is an ISO code ("ca") so short spoken answers transcribe well.
    */
-  function updateSession({ instructions, transcriptionLanguage } = {}) {
+  function updateSession({ instructions, transcriptionLanguage, transcriptionPrompt } = {}) {
     const session = { type: "realtime" };
     if (instructions) session.instructions = instructions;
     // null means "detect it again" (the learner started over and may answer in English).
-    if (transcriptionLanguage !== undefined) {
+    if (transcriptionLanguage !== undefined || transcriptionPrompt !== undefined) {
       const transcription = { model: "gpt-4o-mini-transcribe" };
       if (transcriptionLanguage) transcription.language = transcriptionLanguage;
+      // Words we expect to hear: short answers like "sucre" transcribe far better when primed.
+      if (transcriptionPrompt) transcription.prompt = transcriptionPrompt;
       session.audio = { input: { transcription } };
     }
     const event = { type: "session.update", session };

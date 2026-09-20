@@ -22,11 +22,27 @@ function distance(a, b) {
   return row[b.length];
 }
 
+/**
+ * A rough sound-alike spelling. Speech-to-text writes Catalan the way it hears it, often with
+ * Spanish or English spelling ("zucre", "kuina", "rosteich"), so both words are reduced to the
+ * same rough key before comparing. Not pronunciation scoring: it only forgives spelling.
+ */
+export function soundKey(word) {
+  return String(word)
+    .replace(/ig$/, "ich").replace(/tx|ch/g, "c").replace(/ll/g, "l").replace(/ny/g, "n").replace(/qu/g, "k")
+    .replace(/c(?=[ei])/g, "s").replace(/ç|z/g, "s").replace(/c/g, "k").replace(/x/g, "s")
+    .replace(/v/g, "b").replace(/h/g, "").replace(/w/g, "u").replace(/y/g, "i")
+    .replace(/(.)\1+/g, "$1");
+}
+
 /** Short words must be exact; longer words may be one letter off, long ones two. */
 export function sameWord(heard, wanted) {
   if (heard === wanted) return true;
   const allowed = wanted.length <= 3 ? 0 : wanted.length <= 7 ? 1 : 2;
-  return Math.abs(heard.length - wanted.length) <= allowed && distance(heard, wanted) <= allowed;
+  if (Math.abs(heard.length - wanted.length) <= allowed && distance(heard, wanted) <= allowed) return true;
+  const a = soundKey(heard), b = soundKey(wanted);
+  const alike = wanted.length <= 3 ? 0 : wanted.length <= 7 ? 1 : 2;
+  return a === b || (Math.abs(a.length - b.length) <= alike && distance(a, b) <= alike);
 }
 
 /** True when every word of `wanted` was heard somewhere in `said`. */
