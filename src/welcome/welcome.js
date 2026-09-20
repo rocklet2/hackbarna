@@ -14,6 +14,7 @@ import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor, levelLabe
 import { placesFor, placeById, matchPlace, placeQuestionFor, dishQuestionFor } from "./places.js";
 import { dishesFor, complexityLabel, matchDish } from "./dishes.js";
 import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, marketHeadingFor, gradeRepetition, feedbackFor } from "./shop.js";
+import { continueQuestionFor, answersFor, ANSWERS_EN, matchYesNo } from "./returning.js";
 import { createMic, speechSupported } from "./mic.js";
 import { createAgent } from "../agent.js";
 import { instructionsFor } from "../agent-instructions.js";
@@ -614,22 +615,60 @@ function submitWord(text) {
 }
 
 
-/** A returning learner is not asked again: the check is a first-visit thing. */
+/**
+ * A returning learner keeps their level, but never their language by default: we ask whether
+ * they want to carry on in it today. A "no" goes to the full language list, exactly as on a
+ * first visit. Said and shown in that language, with the English under it, like every screen.
+ */
 function renderWelcomeBack(profile) {
   state.step = "start";
   const lang = byId(profile.language);
+  state.language = profile.language;
   state.level = profile.level;
   lockAgent();
-  mic.listenFor(null);
-  app.innerHTML = chrome(`<div class="greet">
-    <div class="hello">${esc(greetingFor(profile.language))}</div>
-    <div class="sub">Starting point: ${esc(LEVEL_NAMES[profile.level])} in ${esc(lang.name)}.
-      We only ask those questions once.</div>
-    <button class="btn btn-primary" id="go">Continue</button>
+  const q = continueQuestionFor(profile.language);
+  const a = answersFor(profile.language);
+
+  app.innerHTML = chrome(`<div class="stage">
+    <div class="hello back">${esc(greetingFor(profile.language))}</div>
+    <h1 class="ask">
+      <span class="target">${esc(q.target)}</span>
+      <span class="en">${esc(q.en)}</span>
+    </h1>
+    <div class="cards" style="grid-template-columns:1fr">
+      <button class="card" data-answer="yes"><span class="name">${esc(a.yes)}</span>
+        <span class="endonym">${esc(ANSWERS_EN.yes)}</span></button>
+      <button class="card" data-answer="no"><span class="name">${esc(a.no)}</span>
+        <span class="endonym">${esc(ANSWERS_EN.no)}</span></button>
+    </div>
   </div>`);
-  // Place and plan are per-session questions, so a returning learner still answers those.
-  el("go").onclick = () => { state.level = profile.level; startPlace(); };
-  agentSay(`Say exactly, in ${lang.name}: "${greetingFor(profile.language)}"`);
+
+  const answer = (value) => (value === "yes" ? keepLanguage(profile) : chooseAnotherLanguage());
+  app.querySelectorAll("[data-answer]").forEach((b) => { b.onclick = () => answer(b.dataset.answer); });
+  mic.setLang(lang.speech);
+  mic.listenFor((text) => {
+    const heard = matchYesNo(text);
+    if (heard) answer(heard);
+    else nudge(`The learner said "${text}", which was neither yes nor no. Do not repeat it back or say "good" — you did not catch an answer. Briefly ask again whether they want to keep cooking in ${lang.name} today.`);
+  });
+  agentSay(`Say exactly, in ${lang.name}: "${q.target}"`);
+}
+
+/** Same language as last time: the level is already known, so the next question is the place. */
+function keepLanguage(profile) {
+  mic.listenFor(null);
+  agent.clearQueue();
+  state.level = profile.level;
+  startPlace();
+}
+
+/** A different language today: forget the old one, unlock the agent, and ask from the top. */
+function chooseAnotherLanguage() {
+  mic.listenFor(null);
+  agent.clearQueue();
+  Object.assign(state, { language: null, level: null, place: null, plan: null, dishes: [] });
+  agent.updateSession({ instructions: instructionsFor("onboarding"), transcriptionLanguage: null });
+  renderLanguage();
 }
 
 /**

@@ -209,3 +209,6 @@ body.cta-dock .agent-dock { bottom: calc(env(safe-area-inset-bottom) + 43px); }
 .app[data-level="2"] .hint,
 .app[data-level="2"] .card .detail,
 .app[data-level="2"] .cta-en { display: none; }
+
+/* The returning learner's greeting, above the "carry on?" question. */
+.hello.back { font-size: 34px; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 10px; }

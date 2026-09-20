@@ -40,3 +40,17 @@ test('a Catalan word heard with Spanish or English spelling still counts', () =>
   assert.equal(sameWord('sal', 'sol'), false);
   assert.equal(sameWord('oli', 'all'), false);
 });
+
+test('a returning learner is asked, and either answer is heard in both languages', async () => {
+  const { matchYesNo, continueQuestionFor, answersFor } = await import('./welcome/returning.js');
+  for (const said of ['yes', 'sure', 'sí, claro', 'sim', 'va bene']) assert.equal(matchYesNo(said), 'yes', said);
+  for (const said of ['no', 'no, another language', 'cambiemos de idioma', 'não', 'canviem']) assert.equal(matchYesNo(said), 'no', said);
+  assert.equal(matchYesNo('tomatoes'), null);
+  // Every taught language can ask the question and label both answers.
+  for (const id of ['ca', 'es', 'it', 'pt']) {
+    const q = continueQuestionFor(id);
+    assert.ok(q.target && q.en, `${id} asks in both languages`);
+    const a = answersFor(id);
+    assert.ok(a.yes && a.no, `${id} labels both answers`);
+  }
+});

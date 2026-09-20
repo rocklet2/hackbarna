@@ -7,6 +7,9 @@
 - **Step checks rebuilt** in `src/lesson-challenge.js` (`challengeFor` has the same signature, `submitAnswer` now grades fuzzily, new `isCorrect`, `stepWords`, `stepVerb`). Beginner: recall a word from this step, three options. Intermediate: the step's sentence with the key word missing. Advanced: the verb goes too, asked in the target language only. The agent asks the question, a correct answer auto-advances, two misses give a clue, a third gives the answer.
 - Smaller: "or choose" divider gone from the language screen, the market lesson opens with a spoken introduction, "A cuinar!" only appears once the ingredient list is finished.
 
+## Latest (2026-09-20): returning learners are asked about their language
+- New `src/welcome/returning.js`: the "carry on in X today?" question, both answers per language, and `matchYesNo` (hears yes/no in English or the taught language). A "no" resets language and level and re-asks from the language list, so `/welcome.html?reset` is no longer the only way to switch.
+
 ## Latest (2026-09-20): UI pass
 - One button system in `src/welcome/welcome.css`: `.btn`, `.btn-primary`, `.btn-ghost`. Use those for any new onboarding button rather than a new shape.
 - The agent face moved into a `.agent-dock` wrapper (both `mountAgentWidget()`s build it). It is fixed, centred, and matches the 480px card, so it stays inside the app on desktop. Bottom rows reserve 72px on the right (`.lesson-actions`, `.ctarow`, `.step-footer`) so nothing sits under it.
