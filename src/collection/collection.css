@@ -1,0 +1,40 @@
+/* Collection screen, streak strip and the finish-screen add card. Reuses .finish blocks and cards. */
+.coll-top { display: flex; }
+.coll-streak-head { display: flex; align-items: baseline; gap: 10px; }
+.coll-streak-head strong { font-size: 64px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+.coll-streak-head span { font-size: 18px; font-weight: 700; }
+.coll-week { display: flex; gap: 8px; justify-content: space-between; }
+.coll-week span { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.coll-week i { width: 100%; max-width: 34px; aspect-ratio: 1; border-radius: 50%; border: 2px solid #121117; display: grid; place-items: center; background: #fff; }
+.coll-week .cooked i { background: #3ddabe; }
+.coll-week .today i { box-shadow: 0 0 0 3px #ff7aac; }
+.coll-week i .icon { width: 55%; height: 55%; }
+.coll-week small { font-size: 11px; font-weight: 700; opacity: .7; }
+.coll-seeded { font-size: 11px; opacity: .7; font-weight: 600; }
+.coll-badges { list-style: none; display: flex; gap: 10px; padding: 0; margin: 0; }
+.coll-badges li { flex: 1; text-align: center; border: 2px dashed #121117; border-radius: 14px; padding: 10px 6px; opacity: .55; display: flex; flex-direction: column; gap: 2px; }
+.coll-badges li.earned { border-style: solid; background: #ff7aac; opacity: 1; }
+.coll-badges b { font-size: 26px; font-weight: 800; }
+.coll-badges span { font-size: 12px; font-weight: 700; }
+.coll-bar { height: 14px; border: 2px solid #121117; border-radius: 999px; overflow: hidden; background: #f4f1ea; }
+.coll-bar i { display: block; height: 100%; background: #3ddabe; }
+.coll-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.coll-card { background: #fff; border: 2px solid #121117; border-radius: 16px; box-shadow: 0 4px 0 #121117; overflow: hidden; display: flex; flex-direction: column; color: #121117; }
+.coll-card img, .coll-noimg { width: 100%; aspect-ratio: 1; object-fit: cover; display: grid; place-items: center; }
+.coll-noimg { background: #ff7aac; font-size: 44px; font-weight: 800; }
+.coll-slot { box-shadow: none; border-style: dashed; background: rgba(255, 255, 255, .55); }
+.coll-slot .coll-noimg { background: #f4f1ea; opacity: .8; }
+.coll-card > div:last-child { padding: 10px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.coll-card b { font-weight: 800; }
+.coll-card span { font-size: 12px; opacity: .75; }
+.coll-card .finish-verdict { min-width: 0; opacity: 1; }
+.coll-card .secondary { padding: 6px 12px; font-size: 13px; }
+.coll-remind label { display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.coll-remind input { font: inherit; padding: 6px 10px; border: 2px solid #121117; border-radius: 10px; }
+.coll-added { background: #fff; }
+.coll-teaser { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #121117; color: #fff; border-radius: 16px; padding: 14px 18px; margin: 0 0 20px; }
+.coll-teaser div { display: flex; flex-direction: column; gap: 2px; }
+.coll-teaser strong { color: #3ddabe; }
+.coll-teaser span { font-size: 14px; opacity: .85; }
+.coll-teaser.at-risk strong { color: #ff7aac; }
+.coll-teaser .secondary { background: #fff; color: #121117; border: 0; border-radius: 12px; padding: 8px 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }

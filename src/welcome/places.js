@@ -16,14 +16,14 @@ export const PLACE_QUESTION = {
   es: { target: "¿Dónde te gustaría cocinar hoy?", en: "Where would you like to cook today?" },
 };
 
-/** The dish screen heading, in the language being learned. */
-const TONIGHT = {
-  ca: (place) => ({ target: `Aquesta nit, a ${place.endonym}`, en: `Tonight, in ${place.name}` }),
-  it: (place) => ({ target: `Stasera, in ${place.endonym}`, en: `Tonight, in ${place.name}` }),
-  pt: (place) => ({ target: `Esta noite · ${place.endonym}`, en: `Tonight, in ${place.name}` }),
-  es: (place) => ({ target: `Esta noche, en ${place.endonym}`, en: `Tonight, in ${place.name}` }),
+/** The dish screen's leading question, asked in the language being learned. UNREVIEWED. */
+const DISH_QUESTION = {
+  ca: { target: "Què t'agradaria cuinar avui?", en: "What would you like to cook today?" },
+  it: { target: "Cosa ti piacerebbe cucinare oggi?", en: "What would you like to cook today?" },
+  pt: { target: "O que gostarias de cozinhar hoje?", en: "What would you like to cook today?" },
+  es: { target: "¿Qué te gustaría cocinar hoy?", en: "What would you like to cook today?" },
 };
-export const tonightFor = (languageId, place) => (TONIGHT[languageId] || TONIGHT.ca)(place);
+export const dishQuestionFor = (languageId) => DISH_QUESTION[languageId] || DISH_QUESTION.ca;
 
 const PLACES = {
   ca: [
@@ -80,24 +80,36 @@ const PLACES = {
       aliases: ["brazil", "brasil", "rio", "rio de janeiro"],
     },
   ],
+  // Spanish is spoken across continents, so the place question crosses them too. Each country
+  // has its own dishes (src/more-recipes.js), its own words (jitomate, palta, choclo, morrón)
+  // and its own way of speaking, which the voice guide follows (src/agent-instructions.js).
   es: [
     {
-      id: "madrid", name: "Madrid", country: "Spain", endonym: "Madrid",
-      detail: "Tapas bars and home cooking. Potato omelette, patatas bravas and Russian salad.",
-      cities: ["Madrid, ES"], ready: true,
-      aliases: ["madrid", "spain", "espana", "españa"],
+      id: "spain", name: "Spain", country: "Spain", endonym: "España",
+      detail: "Madrid tapas, Andalusian cold soups and Valencian rice. Potato omelette, gazpacho, paella.",
+      cities: ["Madrid, ES", "Sevilla, ES", "Valencia, ES"], ready: true,
+      aliases: ["spain", "espana", "españa", "madrid", "andalusia", "andalucia", "sevilla",
+        "seville", "valencia", "spanish", "castilian", "castellano"],
     },
     {
-      id: "andalucia", name: "Andalusia", country: "Spain", endonym: "Andalucía",
-      detail: "Hot summers and cold soups. Gazpacho, salmorejo and spinach with chickpeas.",
-      cities: ["Sevilla, ES"], ready: true,
-      aliases: ["andalusia", "andalucia", "sevilla", "seville", "cordoba", "south"],
+      id: "mexico", name: "Mexico", country: "Mexico", endonym: "México",
+      detail: "Corn, beans and chilli. Guacamole, esquites and tortilla soup.",
+      cities: ["Ciudad de México, MX"], ready: true,
+      aliases: ["mexico", "méxico", "mexican", "mexicano", "mexicana", "cdmx",
+        "ciudad de mexico", "mexico city", "df"],
     },
     {
-      id: "valencia", name: "Valencia", country: "Spain", endonym: "Valencia",
-      detail: "Rice country by the orchards and the sea. Paella made with vegetables.",
-      cities: ["Valencia, ES"], ready: true,
-      aliases: ["valencia", "paella", "east"],
+      id: "peru", name: "Peru", country: "Peru", endonym: "Perú",
+      detail: "Potatoes, corn and ají. Quinoa salad, papa a la huancaína and causa.",
+      cities: ["Lima, PE"], ready: true,
+      aliases: ["peru", "perú", "peruvian", "peruano", "peruana", "lima", "andes", "andean"],
+    },
+    {
+      id: "argentina", name: "Argentina", country: "Argentina", endonym: "Argentina",
+      detail: "The table as a gathering. Chimichurri, provoleta and vegetable empanadas.",
+      cities: ["Buenos Aires, AR"], ready: true,
+      aliases: ["argentina", "argentinian", "argentine", "argentino", "argentina",
+        "buenos aires", "rioplatense", "porteno", "porteño"],
     },
   ],
 };

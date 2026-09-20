@@ -8,6 +8,8 @@
 // SDP offer here as plain text; this endpoint forwards it to OpenAI's /v1/realtime/calls (signed
 // with the real API key, plus the session config — model, voice, instructions, transcription) and
 // relays back the raw SDP answer. No ephemeral key ever has to reach the browser with this flow.
+import { instructionsFor, languageName } from "../src/agent-instructions.js";
+
 const REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
 
 const ONBOARDING_INSTRUCTIONS = `You are the voice guide for Taula, a language-learning cooking app. Speak in short, warm sentences — one or two at most per turn, like a friendly cooking companion, not a chatbot. The learner is choosing a language, a starting level, a place, and a dish to cook while picking up the language; they can also see cards on screen and tap instead of speaking, so don't over-explain or list every option robotically.
@@ -53,17 +55,33 @@ const SHOW_IMAGE_TOOL = {
 };
 const CONTEXT_TOOLS = { lesson: [SHOW_IMAGE_TOOL] };
 
-function sessionConfig(context) {
+// The instructions (including the language lock) live in src/agent-instructions.js, shared with
+// the browser so it can tighten them with a session.update once a language and level are chosen.
+// The lesson page knows both up front and passes them here as ?language=ca&level=0.
+//
+// create_response: false means the agent never answers the learner on its own. The app hears
+// the transcript, decides what the answer means (moving screens, grading a quiz) and then tells
+// the agent what to say. This stops the agent talking over screen changes, or judging a quiz
+// answer differently from the app.
+function sessionConfig(params) {
+  const context = params.get("context") === "lesson" ? "lesson" : "onboarding";
+  const language = languageName(params.get("language")) ? params.get("language") : null;
+  const rawLevel = Number(params.get("level"));
+  const level = language && [0, 1, 2].includes(rawLevel) && params.has("level") ? rawLevel : null;
+  const region = params.get("region"); // a city like "Lima, PE"; picks the way we speak
+  const transcription = { model: "gpt-4o-mini-transcribe" };
+  // Knowing the language makes single spoken words (quiz answers) transcribe far better.
+  if (language && level !== null) transcription.language = language;
   return {
     type: "realtime",
     model: "gpt-realtime",
-    instructions: CONTEXTS[context] || ONBOARDING_INSTRUCTIONS,
+    instructions: instructionsFor(context, { language, level, region }),
     output_modalities: ["audio"],
     tools: CONTEXT_TOOLS[context] || [],
     audio: {
       input: {
-        transcription: { model: "gpt-4o-mini-transcribe" },
-        turn_detection: { type: "server_vad" },
+        transcription,
+        turn_detection: { type: "server_vad", create_response: false },
       },
       output: { voice: "marin" },
     },
@@ -96,7 +114,7 @@ export function openaiRealtimeProxyPlugin() {
 
       const form = new FormData();
       form.set("sdp", offerSdp);
-      form.set("session", JSON.stringify(sessionConfig(url.searchParams.get("context"))));
+      form.set("session", JSON.stringify(sessionConfig(url.searchParams)));
 
       const upstream = await fetch(REALTIME_CALLS_URL, {
         method: "POST",

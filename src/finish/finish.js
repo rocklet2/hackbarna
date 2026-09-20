@@ -53,6 +53,3 @@ export function tutorBrief(recipe, languageName, summary) {
   lines.push(`Would like to practise: saying the phrases above out loud in a conversation`);
   return lines.join("\n");
 }
-
-// Demo progress. Labeled as seeded in the UI: a single lesson cannot show a streak.
-export const SEEDED_STREAK = { label: "Demo data, seeded", earlier: 3 };

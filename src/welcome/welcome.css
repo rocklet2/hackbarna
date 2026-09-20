@@ -22,7 +22,8 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .app {
   width: 100%; max-width: 480px; min-height: 100dvh; background: var(--bg);
   display: flex; flex-direction: column;
-  padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 18px);
+  /* 96px at the bottom keeps every control clear of the fixed voice orb (56px, 16px from the edge). */
+  padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 96px);
 }
 .app[data-tone="mint"] { --bg: var(--mint); --accent: var(--pink); }
 .app[data-tone="pink"] { --bg: var(--pink); --accent: var(--mint); }
@@ -66,9 +67,6 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 }
 .mic.alt { background: var(--white); color: var(--ink); box-shadow: 0 4px 0 var(--ink); }
 
-.typed { display: flex; gap: 8px; margin-top: 12px; }
-.typed input { flex: 1; min-height: 48px; border: 2px solid var(--ink); border-radius: 16px; padding: 0 16px; font-size: 16px; background: var(--white); font-family: inherit; }
-.typed button { min-height: 48px; padding: 0 18px; border-radius: 16px; border: 2px solid var(--ink); background: var(--ink); color: var(--white); font-weight: 700; }
 
 .say, .micoff { background: transparent; border: 0; color: var(--ink); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; padding: 6px 0; align-self: flex-start; }
 .micoff { font-size: 13px; align-self: auto; }
@@ -181,4 +179,13 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
   background: rgba(18, 17, 23, .82); padding: 6px 10px; border-radius: 10px;
 }
 .agent-status:empty { display: none; }
-.mic-row.sticky { position: sticky; bottom: 0; margin: 14px -18px 0; padding: 12px 18px calc(env(safe-area-inset-bottom) + 6px); background: var(--bg); }
+
+/* Advanced learners get no English once their level is set (the agent follows the same rule,
+   see src/agent-instructions.js). Beginners and intermediates keep the English lines. */
+.app[data-level="2"] .ask .en,
+.app[data-level="2"] .bubble .en,
+.app[data-level="2"] .bubble .why,
+.app[data-level="2"] .bubble.ack,
+.app[data-level="2"] .hint,
+.app[data-level="2"] .card .detail,
+.app[data-level="2"] .cta-en { display: none; }

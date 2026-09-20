@@ -10,7 +10,9 @@ import { setActiveStep, attachStepVideo, stopStepVideo, showAgentImage, dismissA
 import { alignedInstruction } from "./word-align.js";
 import { createAgent } from "./agent.js";
 import { finishSummary, tutorBrief } from "./finish/finish.js";
-import { finishMarkup, FINISH_BEATS, loadPhoto, savePhoto, readPhoto } from "./finish/finish-view.js";
+import { normalizeEntries as loadEntriesFrom, dayKey, addDays, addEntry, streakInfo, setProgress, seedEntries, collectGate, reminderIcs } from "./collection/collection.js";
+import { loadEntries, saveEntries, makeThumb, downloadText, collectionMarkup, teaser } from "./collection/collection-view.js";
+import { finishMarkup, FINISH_BEATS, loadPhoto, savePhoto, readPhoto, loadCheck, saveCheck, requestCheck, canCheckPhoto } from "./finish/finish-view.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -38,8 +40,14 @@ const state = {
   drafts: {},
   collected: new Set(),
   lastAutoSpokenKey: null,
+  quizTries: 0,
+  lastQuizAskedKey: null,
+  heard: null,
   finishBeat: 0,
   finishPhoto: null,
+  finishCheck: null,
+  collection: loadEntries(),
+  remindTime: "18:00",
 };
 const saved = readJourneys(localStorage);
 const lessonStore = saved.lessons && typeof saved.lessons === 'object' ? saved.lessons : {};
@@ -58,13 +66,19 @@ function openRecipe(r) {
   state.recipe = r;
   state.level = welcomeLessonLevel(localStorage, r.language, state.level);
   state.lessonKey = `${r.id}:${state.level}:two-part-v1`;
-  state.journey = restoreJourney(lessonStore[state.lessonKey], r);
+  // Coming from onboarding means starting the dish, not resuming a half-finished earlier visit
+  // (which could land the learner mid-quiz). The marker is dropped so a later reload resumes normally.
+  const fresh = new URLSearchParams(window.location.search).has("fresh");
+  state.journey = restoreJourney(fresh ? null : lessonStore[state.lessonKey], r);
+  if (fresh) history.replaceState(null, "", window.location.pathname);
   state.step = state.journey.step;
   state.checked = state.journey.checked;
   state.drafts = state.journey.drafts;
   state.completed = state.journey.completed;
   state.finishBeat = 0;
   state.finishPhoto = loadPhoto(state.lessonKey);
+  const savedCheck = loadCheck(state.lessonKey);
+  state.finishCheck = savedCheck && state.finishPhoto ? { status: "ok", result: savedCheck } : null;
   state.screen = 2;
   state.answer = null;
   state.collected = new Set();
@@ -177,7 +191,7 @@ function setup() {
 function menu() {
   const matches = recommend(state);
   const first = matches[0];
-  return `<main class="page menu-page"><div class="page-topline">${button(`${icon("back")} Your taste`, "home", "text-button")}<span>${language().name} <i>·</i> ${state.region} <i>·</i> ${levels[state.level].name}</span></div><section class="menu-heading"><div><div class="eyebrow">YOUR NEXT LITTLE ADVENTURE</div><h1>What’s cooking <em>today?</em></h1><p class="intro">A little ${language().name}. A taste of ${state.region.split(",")[0]}. Something good you made yourself.</p></div><div class="personal-note">${icon("spark")}<div><strong>A menu that grows with you</strong><span>${levels[state.level].goal}</span></div></div></section><div class="menu-toolbar"><div>${badge(`${icon("pin")} ${state.region}`)}${badge(`${icon("leaf")} ${state.diet === "all" ? "All preferences" : state.diet === "vegan" ? "Plant-based" : state.diet}`)}${state.quick ? badge("Under 20 minutes") : ""}</div>${button("Edit preferences", "home", "text-button")}</div>${
+  return `<main class="page menu-page"><div class="page-topline">${button(`${icon("back")} Your taste`, "home", "text-button")}<span>${language().name} <i>·</i> ${state.region} <i>·</i> ${levels[state.level].name}</span></div>${teaser({ info: collectionInfo(), count: new Set(state.collection.map((e) => e.recipeId)).size }, collectHelpers())}<section class="menu-heading"><div><div class="eyebrow">YOUR NEXT LITTLE ADVENTURE</div><h1>What’s cooking <em>today?</em></h1><p class="intro">A little ${language().name}. A taste of ${state.region.split(",")[0]}. Something good you made yourself.</p></div><div class="personal-note">${icon("spark")}<div><strong>A menu that grows with you</strong><span>${levels[state.level].goal}</span></div></div></section><div class="menu-toolbar"><div>${badge(`${icon("pin")} ${state.region}`)}${badge(`${icon("leaf")} ${state.diet === "all" ? "All preferences" : state.diet === "vegan" ? "Plant-based" : state.diet}`)}${state.quick ? badge("Under 20 minutes") : ""}</div>${button("Edit preferences", "home", "text-button")}</div>${
     first
       ? `<section class="recipe-grid">${matches
           .map(
@@ -238,28 +252,70 @@ function cultureFact(recipe, index) {
   if (state.level === 2) return { title: "A local note", text: `In ${place}, ${first[0]} and ${second[0]} are useful words to notice. ${base}`, lang: "en", source };
   return { title: "A little local note", text: `In ${place}, ${first[0]} means ${first[1]}. ${base}`, lang: "en", source };
 }
+/**
+ * One spoken check per step. The agent asks the question (see maybeAskQuiz), the learner says
+ * the answer, and a correct one moves to the next step on its own. Tapping an option or typing
+ * still works: voice can be unavailable, and the room can be loud.
+ */
 function exercise(r, cookIndex) {
   const challenge = challengeFor(r, cookIndex, state.level);
   const passed = stepPassed(state.journey, cookIndex);
+  const tries = state.quizTries;
   const selected = passed ? challenge.answer : state.answer;
-  const feedback = passed ? `${uiText("correct") || "Correct!"} ${challenge.success}` : state.answer !== null ? (uiText("retry") || "Not quite. Check the guide and try again.") : challenge.kind === "write" ? (state.level >= 3 ? "Completa la instrucció per continuar." : "Type the missing word to continue.") : (state.level >= 3 ? "Tria una resposta per continuar." : "Choose an answer to continue.");
-  const content = challenge.kind === "write"
-    ? `<p class="quiz-sentence" lang="${state.language}">${escapeHtml(challenge.sentence)}</p><form id="quiz-form"><label for="quiz-answer">${uiText("missing") || "Missing word"}</label><div class="quiz-input-row"><input id="quiz-answer" name="answer" autocomplete="off" autocapitalize="none" spellcheck="false" lang="${state.language}" value="${escapeHtml(selected || '')}" ${passed ? "disabled" : ""} aria-describedby="challenge-feedback" required/><button class="primary" type="submit" ${passed ? "disabled" : ""}>${uiText("check") || "Check answer"}</button></div></form>`
-    : `<div class="answer-options ${challenge.kind === 'meaning' ? 'sentence-options' : ''}">${challenge.options.map(({value, label}, n) => `<button class="answer ${selected === value ? (passed ? "correct" : "incorrect") : ""}" data-action="answer" data-value="${escapeHtml(value)}" aria-pressed="${selected === value}" aria-describedby="challenge-feedback" ${passed ? "disabled" : ""}><span class="answer-number" aria-hidden="true">${n + 1}</span><span lang="${state.language}">${escapeHtml(label)}</span>${selected === value ? icon(passed ? "check" : "reset") : ""}</button>`).join("")}</div>`;
-  return `<section class="exercise required-challenge ${passed ? "challenge-passed" : ""}" aria-labelledby="challenge-title"><div class="challenge-heading"><span class="eyebrow">${icon("spark")} ${levels[state.level].name.toUpperCase()} · ${language().name.toUpperCase()}</span><span class="challenge-status">${passed ? `${icon("check")} ${uiText("complete") || "Complete"}` : uiText("turn") || "Your turn"}</span></div><h3 id="challenge-title">${challenge.prompt}</h3><p class="quiz-hint" lang="${state.level >= 3 ? state.language : "en"}">${escapeHtml(challenge.hint)}</p>${content}<p id="challenge-feedback" class="exercise-feedback" role="status" aria-live="polite">${escapeHtml(feedback)}</p></section>`;
+  const feedback = passed ? `${uiText("correct") || "Correct!"} ${challenge.success}`
+    : state.answer === null ? (uiText("turn") || "Say your answer out loud, or answer on screen.")
+    : tries >= 3 ? `${uiText("retry") || "Not quite."} ${challenge.answer}`
+    : `${uiText("retry") || "Not quite."}${challenge.clue && tries >= 1 ? ` ${challenge.clue}` : ""}`;
+  const sentence = challenge.kind === "cloze"
+    ? `<p class="quiz-sentence" lang="${state.language}">${escapeHtml(challenge.sentence)}</p>` : "";
+  const content = challenge.options
+    ? `<div class="answer-options">${challenge.options.map(({ value, label }, n) => `<button class="answer ${selected === value ? (passed ? "correct" : "incorrect") : ""}" data-action="answer" data-value="${escapeHtml(value)}" aria-pressed="${selected === value}" aria-describedby="challenge-feedback" ${passed ? "disabled" : ""}><span class="answer-number" aria-hidden="true">${n + 1}</span><span lang="${state.language}">${escapeHtml(label)}</span>${selected === value ? icon(passed ? "check" : "reset") : ""}</button>`).join("")}</div>`
+    : `<form id="quiz-form"><label for="quiz-answer">${uiText("missing") || (challenge.gaps > 1 ? "Missing words" : "Missing word")}</label><div class="quiz-input-row"><input id="quiz-answer" name="answer" autocomplete="off" autocapitalize="none" spellcheck="false" lang="${state.language}" value="${escapeHtml(passed ? challenge.answer : "")}" ${passed ? "disabled" : ""} aria-describedby="challenge-feedback" required/><button class="primary" type="submit" ${passed ? "disabled" : ""}>${uiText("check") || "Check answer"}</button></div></form>`;
+  const heard = state.heard && !passed ? `<p class="quiz-heard">Heard: “${escapeHtml(state.heard)}”</p>` : "";
+  return `<section class="exercise required-challenge ${passed ? "challenge-passed" : ""}" aria-labelledby="challenge-title"><div class="challenge-heading"><span class="eyebrow">${icon("spark")} ${levels[state.level].name.toUpperCase()} · ${language().name.toUpperCase()}</span><span class="challenge-status">${passed ? `${icon("check")} ${uiText("complete") || "Complete"}` : uiText("turn") || "Say it out loud"}</span></div><h3 id="challenge-title" lang="${state.level >= 3 ? state.language : "en"}">${escapeHtml(challenge.prompt)}</h3>${sentence}${challenge.hint ? `<p class="quiz-hint" lang="en">${escapeHtml(challenge.hint)}</p>` : ""}${content}${heard}<p id="challenge-feedback" class="exercise-feedback" role="status" aria-live="polite">${escapeHtml(feedback)}</p></section>`;
 }
-function answerQuiz(value) {
+function answerQuiz(value, spoken = false) {
   if (state.journey.phase !== "quiz" || stepPassed(state.journey, state.step)) return;
+  const challenge = challengeFor(state.recipe, state.step, state.level);
   state.answer = value;
+  state.heard = spoken ? value : null;
   const correct = submitAnswer(state.journey, state.recipe, state.step, value, state.level);
+  state.quizTries = correct ? 0 : state.quizTries + 1;
   saveProgress();
   app.querySelector(".required-challenge").outerHTML = exercise(state.recipe, state.step);
   const next = app.querySelector('[data-action="next"]');
   next.disabled = !correct;
-  if (correct) { next.removeAttribute("aria-describedby"); next.focus({ preventScroll: true }); }
-  else { (app.querySelector('#quiz-answer') || [...app.querySelectorAll('[data-action="answer"]')].find(el => el.dataset.value === value))?.focus({ preventScroll: true }); }
+  if (correct) {
+    next.removeAttribute("aria-describedby");
+    if (agent.isConnected()) agent.prompt("The learner answered correctly. Praise them in no more than four words, then stop.");
+    // Getting it right is the answer: the lesson moves on by itself.
+    const at = state.step;
+    setTimeout(() => { if (state.screen === 2 && state.step === at && state.journey.phase === "quiz") goNext(); }, 1800);
+    return;
+  }
+  // Two gentle retries, then the agent says the answer so nobody is stuck on one word.
+  if (agent.isConnected()) agent.prompt(state.quizTries >= 3
+    ? `They have missed this a few times. Tell them the answer is "${challenge.answer}" and ask them to say it back.`
+    : state.quizTries >= 2 && challenge.clue
+      ? `That was not right. Give them this clue and ask them to try again: ${challenge.clue}`
+      : `That was not right. Warmly ask them to try once more. Do not say the answer.`);
+  (app.querySelector("#quiz-answer") || [...app.querySelectorAll('[data-action="answer"]')].find((el) => el.dataset.value === value))?.focus({ preventScroll: true });
 }
-
+/** Leaving a step: forward to the next one, or finish the lesson. */
+function goNext() {
+  if (state.journey.phase !== "quiz" || !stepPassed(state.journey, state.step)) return;
+  if (state.step === state.recipe.steps.length - 1) {
+    state.completed = true;
+    state.journey.completed = true;
+    state.finishBeat = 0;
+  } else state.step += 1;
+  state.journey.phase = "guide";
+  state.answer = null;
+  state.heard = null;
+  state.quizTries = 0;
+  stopTimer();
+  render(true);
+}
 function lesson() {
   const r = state.recipe;
   if (state.completed) return completion(r);
@@ -289,6 +345,51 @@ function cookingLesson() {
     </div></main>`;
 }
 
+// Runs only for dishes that have a rubric. A newer photo wins if the learner swaps mid-check.
+async function runPhotoCheck() {
+  if (!state.finishPhoto || !canCheckPhoto(state.recipe.id)) return;
+  const photo = state.finishPhoto, key = state.lessonKey;
+  state.finishCheck = { status: "loading" };
+  render();
+  try {
+    const result = await requestCheck(state.recipe.id, photo);
+    if (state.finishPhoto !== photo) return;
+    state.finishCheck = { status: "ok", result };
+    saveCheck(key, result);
+  } catch {
+    if (state.finishPhoto !== photo) return;
+    state.finishCheck = { status: "error" };
+  }
+  render();
+}
+const collectHelpers = () => ({ button, linkButton, icon, escapeHtml, speakButton, recipePath });
+const todayKey = () => dayKey();
+function collectionInfo() { return streakInfo(state.collection, todayKey()); }
+function collectionScreen() {
+  const langRecipes = recipes.filter((r) => r.language === state.language);
+  const mine = state.collection.filter((e) => e.language === state.language || e.language === "");
+  return collectionMarkup({ entries: mine, info: collectionInfo(), progress: setProgress(mine, langRecipes), languageName: language().name, remindTime: state.remindTime, h: collectHelpers() });
+}
+const collectGateNow = () => collectGate({ photo: state.finishPhoto, check: state.finishCheck, checkable: canCheckPhoto(state.recipe.id), added: state.collection.some((e) => e.id === `${state.recipe.id}:${todayKey()}`) });
+async function addToCollection() {
+  const r = state.recipe;
+  if (collectGateNow() !== "ready") return;
+  let photo = null;
+  try { photo = await makeThumb(state.finishPhoto); } catch { /* the dish still counts */ }
+  const v = state.finishCheck?.result?.overall;
+  state.collection = addEntry(state.collection, { recipeId: r.id, name: r.name, language: r.language, day: todayKey(), photo, verdict: v === "good" || v === "fixable" ? v : null });
+  const saved = saveEntries(state.collection);
+  if (!saved.ok) toast("Storage is full, so this streak only lasts for this visit.");
+  else if (saved.stripped) toast("Older photos were dropped to make room. Your streak is safe.");
+  render();
+}
+function downloadReminder() {
+  const [hh, mm] = (app.querySelector("#remind-time")?.value || state.remindTime).split(":").map(Number);
+  state.remindTime = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  const [y, m, d] = addDays(todayKey(), 1).split("-").map(Number);
+  downloadText("taula-reminder.ics", reminderIcs({ start: new Date(y, m - 1, d, hh, mm), title: `Cook something in ${language().name}`, description: "A two-minute review, then a dish for your collection.", url: `${window.location.origin}/collection` }));
+  toast("Calendar file downloaded. Open it to add the daily reminder.");
+}
 function finishSummaryNow() { return finishSummary(state.recipe, state.journey, state.level); }
 function completion(r) {
   const summary = finishSummaryNow();
@@ -297,13 +398,13 @@ function completion(r) {
   const moment = waitMomentFor(r, 0);
   const culture = moment?.source?.name ? { title: moment.title, text: moment.text, source: moment.source } : null;
   const h = { button, linkButton, icon, escapeHtml, speakButton, recipePath };
-  return finishMarkup({ recipe: r, lang: state.language, langName: language().name, beat: state.finishBeat, photo: state.finishPhoto, summary, culture, nextRecipe, tomorrow: { brief: tutorBrief(r, language().name, summary) }, h });
+  return finishMarkup({ recipe: r, lang: state.language, langName: language().name, beat: state.finishBeat, photo: state.finishPhoto, check: state.finishCheck, collect: { gate: collectGateNow(), added: collectGateNow() === "added", info: collectionInfo(), count: new Set(state.collection.map((e) => e.recipeId)).size }, summary, culture, nextRecipe, tomorrow: { brief: tutorBrief(r, language().name, summary) }, h });
 }
 
 function render(focus = false) {
-  document.body.classList.toggle("lesson-brand", state.screen === 2);
-  const isLesson = state.screen === 2;
-  app.innerHTML = `${isLesson ? "" : header()}${isLesson ? lesson() : state.screen === 0 ? setup() : menu()}${isLesson ? "" : '<footer class="footer"><span>taula <i>·</i> A taste for language.</span><span>Made for curious people with an appetite.</span><span>Local prototype · content review pending</span></footer>'}<div id="toast" role="status"></div>`;
+  const isLesson = state.screen === 2 || state.screen === 3;
+  document.body.classList.toggle("lesson-brand", isLesson);
+  app.innerHTML = `${isLesson ? "" : header()}${state.screen === 3 ? collectionScreen() : isLesson ? lesson() : state.screen === 0 ? setup() : menu()}${isLesson ? "" : '<footer class="footer"><span>taula <i>·</i> A taste for language.</span><span>Made for curious people with an appetite.</span><span>Local prototype · content review pending</span></footer>'}<div id="toast" role="status"></div>`;
   saveProgress();
   if(storageFailed && app.querySelector(".footer")) app.querySelector(".footer").insertAdjacentHTML("beforeend", "<strong>Browser storage unavailable; progress lasts only this visit.</strong>");
   const draft = app.querySelector("textarea");
@@ -321,6 +422,7 @@ function render(focus = false) {
   } else {
     stopStepVideo();
   }
+  maybeAskQuiz();
 }
 
 function timerText() {
@@ -369,7 +471,18 @@ const agent = createAgent({
       agent.respondToolCall(callId, { shown: false, error: "Could not create that image right now." });
     }
   },
+  // A spoken quiz answer is graded here, exactly like a tapped one. Anything else the learner
+  // says is a question for the agent, which does not reply on its own (create_response: false).
+  onUserTranscript: (text) => {
+    if (state.screen === 2 && state.journey.phase === "quiz" && !stepPassed(state.journey, state.step)) answerQuiz(text, true);
+    else agent.prompt(`The learner said: "${text}". Reply briefly, following your language rules.`);
+  },
 });
+/** The lesson's four levels, as the agent's three (see src/agent-instructions.js). */
+const agentLevel = () => (state.level >= 3 ? 2 : state.level >= 2 ? 1 : 0);
+// The recipe's own place, so the guide speaks the Spanish of the country the dish comes from.
+const agentRegion = () => state.recipe?.regions?.[0] || state.region;
+const agentOptions = () => ({ context: "lesson", language: state.language, level: agentLevel(), region: agentRegion() });
 const langName = (id) => languages.find((l) => l.id === id)?.name || id;
 
 function paintAgent() {
@@ -395,12 +508,12 @@ function mountAgentWidget() {
   document.body.append(...wrap.children);
   document.getElementById("agentOrb").onclick = () => {
     if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect();
-    else agent.connect({ context: "lesson" });
+    else agent.connect(agentOptions());
   };
 }
 
 async function speak(text, lang, notify = true) {
-  const ok = await agent.connect({ context: "lesson" });
+  const ok = await agent.connect(agentOptions());
   if (!ok) { if (notify) toast("Couldn't reach the voice agent."); return; }
   agent.prompt(`Say exactly, in ${langName(lang)}: "${text}"`);
 }
@@ -413,7 +526,18 @@ function maybeAutoSpeakStep() {
   const culture = state.level >= 3 ? ` ${cultureFact(state.recipe, i).text}` : "";
   speak(`${translatedStep(state.recipe, i).instruction}${culture}`, state.language, false);
 }
-const speakButton =(text, lang) => `<button class="speak-btn" data-action="speak" data-value="${escapeHtml(text)}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
+/** The agent asks this step's question once, when the check appears. */
+async function maybeAskQuiz() {
+  if (state.screen !== 2 || !state.recipe || state.completed) return;
+  if (state.journey.phase !== "quiz" || stepPassed(state.journey, state.step)) return;
+  const key = `${state.recipe.id}:${state.step}:${state.level}`;
+  if (state.lastQuizAskedKey === key) return;
+  state.lastQuizAskedKey = key;
+  const ok = await agent.connect(agentOptions());
+  if (!ok) return; // the question is on screen either way
+  agent.prompt(challengeFor(state.recipe, state.step, state.level).ask);
+}
+const speakButton = (text, lang) => `<button class="speak-btn" data-action="speak" data-value="${escapeHtml(text)}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
 function highlightAlign(word, on) {
   const card = word.closest(".instruction-card");
   if (!card) return;
@@ -539,28 +663,43 @@ app.addEventListener("click", (event) => {
       navigator.clipboard.writeText(tutorBrief(state.recipe, language().name, finishSummaryNow()))
         .then(() => toast("Copied. Paste it to your tutor."), () => toast("Couldn't copy. Select the text and copy it."));
       return;
+    case "add-to-collection":
+      addToCollection();
+      return;
+    case "open-collection":
+      state.screen = 3;
+      navigateTo("/collection");
+      stopTimer();
+      focus = true;
+      break;
+    case "collection-cook": {
+      const found = recipes.find((r) => r.id === value);
+      if (!found) return;
+      openRecipe(found);
+      navigateTo(recipePath(found));
+      stopTimer();
+      focus = true;
+      break;
+    }
+    case "remind":
+      downloadReminder();
+      return;
+    case "recheck-photo":
+      runPhotoCheck();
+      return;
     case "restart-lesson":
-      state.finishBeat=0;state.finishPhoto=null;
+      state.finishBeat=0;state.finishPhoto=null;state.finishCheck=null;saveCheck(state.lessonKey,null);
       state.journey=freshJourney();state.completed=false;state.step=0;state.checked=[];state.drafts={};state.answer=null;focus=true;break;
     case "start-quiz":
       state.journey.phase = "quiz";
       state.answer = null;
+      state.heard = null;
+      state.quizTries = 0;
       focus = true;
       break;
     case "next":
-      if (state.journey.phase !== "quiz") return;
-      if (!stepPassed(state.journey, state.step)) return;
-      if (state.step === state.recipe.steps.length - 1) {
-        state.completed = true;
-        state.journey.completed = true;
-        state.finishBeat = 0;
-      }
-      else state.step++;
-      state.journey.phase = "guide";
-      state.answer = null;
-      stopTimer();
-      focus = true;
-      break;
+      goNext();
+      return;
     case "previous":
       if (state.journey.phase === "quiz") state.journey.phase = "guide";
       else { state.step = Math.max(0, state.step - 1); state.journey.phase = "quiz"; }
@@ -633,7 +772,10 @@ app.addEventListener("change", async (event) => {
     try {
       state.finishPhoto = await readPhoto(file);
       savePhoto(state.lessonKey, state.finishPhoto);
+      state.finishCheck = null;
+      saveCheck(state.lessonKey, null);
       render();
+      runPhotoCheck();
     } catch { toast("That file isn't a photo we can read."); }
     return;
   }
@@ -651,6 +793,7 @@ app.addEventListener("change", async (event) => {
   }
 });
 window.addEventListener("popstate", () => {
+  if (window.location.pathname === "/collection") { state.screen = 3; stopTimer(); render(true); return; }
   const found = routeToRecipe(window.location.pathname);
   if (found) {
     if (languages.some((l) => l.id === found.language)) state.language = found.language;
@@ -671,8 +814,18 @@ if(prefs && typeof prefs==='object') {
   state.quick=prefs.quick===true;
   state.onboarded=prefs.onboarded===true;
 }
+// ?seed=demo adds three earlier days of demo history, flagged as seeded. ?seed=clear removes it.
+{
+  const seed = new URLSearchParams(window.location.search).get("seed");
+  if (seed === "demo" && !state.collection.some((e) => e.seeded)) {
+    state.collection = [...state.collection, ...seedEntries(recipes.filter((r) => r.language === state.language), todayKey())].map((e) => ({ ...e }));
+    state.collection = loadEntriesFrom(state.collection);
+    saveEntries(state.collection);
+  } else if (seed === "clear") { state.collection = state.collection.filter((e) => !e.seeded); saveEntries(state.collection); }
+}
 const routedRecipe = routeToRecipe(window.location.pathname);
-if (routedRecipe) {
+if (window.location.pathname === "/collection") state.screen = 3;
+else if (routedRecipe) {
   if (languages.some((l) => l.id === routedRecipe.language)) state.language = routedRecipe.language;
   openRecipe(routedRecipe);
 } else {
@@ -681,6 +834,6 @@ if (routedRecipe) {
   else if(state.onboarded) state.screen=1;
 }
 if (state.screen === 2 && state.recipe) history.replaceState(null, "", recipePath(state.recipe));
-else if (window.location.pathname !== "/") history.replaceState(null, "", "/");
+else if (window.location.pathname !== "/" && state.screen !== 3) history.replaceState(null, "", "/");
 mountAgentWidget();
 render();

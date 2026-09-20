@@ -91,9 +91,10 @@ Recipes are matched to level **by complexity, not just by minutes**:
 - **Intermediate:** in between, aimed at the middle of whatever the catalogue offers.
 - **Advanced:** more steps, real technique, richer vocabulary. *(panellets: 6 steps; crema catalana: custard and caramelising)*
 
-Up to four dishes are listed and **none is preselected**; the learner taps one, and only then can they continue. There is no shortcut to the recipe: the single way forward is **"Learn what to say at the market"** → step 6, then the ingredient words, then the recipe.
+The screen opens with a leading question in the language being learned (*"Què t'agradaria cuinar avui?"* / What would you like to cook today?). Up to four dishes are listed and **none is preselected**. **Tapping a dish is the answer and moves straight on**, like every other question; there is no continue button and no shortcut to the recipe.
 
 ### Step 6 — Shop and connect (about 15s)
+The screen has its own heading in the language being learned (*"Al mercat"* / At the market) and a line saying what it is for ("You are buying the ingredients for {dish}"), because nothing before it introduces it.
 A **small spoken lesson**, matched to level:
 - **Beginner:** three single phrases, said back one at a time: the greeting, *"Teniu…?"*, *"Quant costa?"*.
 - **Intermediate:** a short back and forth where the seller speaks first and the learner replies: greet and ask, ask for half a kilo, say that is all and ask the total, say goodbye.

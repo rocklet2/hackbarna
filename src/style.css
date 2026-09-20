@@ -2582,3 +2582,8 @@ body.lesson-brand .agent-status {
   background: rgba(18, 17, 23, .82); padding: 6px 10px; border-radius: 10px;
 }
 body.lesson-brand .agent-status:empty { display: none; }
+
+/* What the microphone heard for a quiz answer, so a misheard word is visible rather than
+   feeling like the app ignored you. */
+.quiz-heard { font-size: 14px; margin: 12px 0 0; color: #686e61; font-style: italic; }
+body.lesson-brand .quiz-heard { color: var(--pb-muted, rgba(18, 17, 23, .68)); }
