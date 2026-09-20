@@ -45,23 +45,10 @@ function loadProfile() {
 /* ---------- the listening agent ---------- */
 const SR = speechSupported;
 let micState = { on: false, hearing: false, text: "", error: null };
-const mic = createMic({ onState: (st) => { micState = st; paintMicBar(); } });
+const mic = createMic({ onState: (st) => { micState = st; } });
 
-/** The mic switch beside "Say it back" on the market screen; no transcript is shown. */
-function paintMicBar() {
-  const btn = document.getElementById("micoff");
-  if (!btn) return;
-  // The voice agent has its own mic track once connected — browser recognition steps aside
-  // (see the onState handler below), so this toggle would just re-introduce the two engines
-  // fighting over one microphone that caused steps to intermittently miss a spoken answer.
-  if (agentState.status === "connected") {
-    btn.textContent = "Voice guide listening";
-    btn.disabled = true;
-    return;
-  }
-  btn.textContent = micState.error === "blocked" ? "Mic blocked" : micState.on ? "Mic on · turn off" : "Mic off · turn on";
-  btn.disabled = micState.error === "blocked";
-}
+// There is no microphone toggle on any screen any more: tapping the guide's face turns it
+// off and on, and that is explained once, out loud, on the first screen.
 
 /* ---------- the voice agent: a tiny character, bottom-right ---------- */
 // OpenAI's Realtime API over WebRTC (see src/agent.js) — a real conversational agent,
@@ -103,11 +90,14 @@ function paintAgent() {
 /** Mounted once, outside #app, so re-rendering a screen never tears down the agent's audio. */
 function mountAgentWidget() {
   const wrap = document.createElement("div");
-  wrap.innerHTML = `<div id="agentStatus" class="agent-status" role="status" aria-live="polite"></div>
+  // The dock keeps the face inside the app frame's bottom-right, beside the screen's own action.
+  wrap.className = "agent-dock";
+  wrap.innerHTML = `<div class="agent-dock-inner">
+    <div id="agentStatus" class="agent-status" role="status" aria-live="polite"></div>
     <button type="button" id="agentOrb" class="agent-orb" data-status="idle" aria-label="Tap to turn on the voice guide">
       <span class="agent-face"><span class="agent-eye"></span><span class="agent-eye"></span><span class="agent-mouth"></span></span>
-    </button>`;
-  document.body.append(...wrap.children);
+    </button></div>`;
+  document.body.append(wrap);
   el("agentOrb").onclick = () => { if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect(); else agent.connect({ context: "onboarding" }); };
 }
 
@@ -142,7 +132,6 @@ function renderLanguage(message = "") {
   app.querySelectorAll("[data-lang]").forEach((b) => {
     b.onclick = () => chooseLanguage(b.dataset.lang);
   });
-  paintMicBar();
   // They answer before they have a language, so listen in their own.
   mic.setLang("en-US");
   mic.listenFor((text) => {
@@ -245,7 +234,6 @@ function renderLevel() {
   app.querySelectorAll("[data-level]").forEach((b) => {
     b.onclick = () => chooseLevel(Number(b.dataset.level));
   });
-  paintMicBar();
   mic.setLang(lang.speech);
   mic.listenFor((text) => {
     const level = matchLevel(text);
@@ -297,7 +285,6 @@ function renderPlace(message = "") {
   app.querySelectorAll("[data-place]").forEach((b) => {
     b.onclick = () => choosePlace(b.dataset.place);
   });
-  paintMicBar();
   mic.setLang(lang.speech);
   mic.listenFor((text) => {
     const place = matchPlace(text, state.language);
@@ -380,7 +367,6 @@ function renderDishes(ranked) {
   });
   const names = shown.map((r) => r.name).join(", ");
   const lang = byId(state.language);
-  paintMicBar();
   mic.setLang(lang.speech);
   mic.listenFor((text) => {
     const dish = matchDish(text, shown);
@@ -455,19 +441,16 @@ function renderLesson() {
     </div>
     <div class="thread" id="thread">${bubbles}</div>
     <div class="sayrow"><p class="hint centred">Say it back.</p>
-      ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
+</div>
     <div class="lesson-actions">
-      <button class="say" id="hear">▸ Hear it again</button>
-      <button class="say" id="skip">Skip ›</button>
+      <button class="btn btn-ghost" id="hear">▸ Hear it again</button>
+      <button class="btn btn-ghost" id="skip">Skip ›</button>
     </div>
   </div>`);
 
   el("thread").scrollTop = el("thread").scrollHeight;
   el("hear").onclick = () => agentSay(`Say exactly, in ${lang.name}: "${script[state.line]?.target}"`);
   el("skip").onclick = skipLesson;
-  const off = el("micoff");
-  if (off) off.onclick = () => mic.toggle();
-  paintMicBar();
   mic.setLang(lang.speech);
   mic.listenFor((text) => submitLesson(text), "answer");
 }
@@ -504,13 +487,18 @@ function submitLesson(text) {
 // learner says it back, and the row ticks off. The way out ("A cuinar!") is always
 // on screen, so nobody is held here.
 
-/** "Let's start cooking" appears only once the whole list has been learned. */
+/**
+ * "Let's start cooking" appears only once the whole list has been learned. The English sits
+ * under the button, not inside it, so the button itself is one clear phrase in the language.
+ */
 function cta(done) {
+  if (!done) return "";
   const c = cookCtaFor(state.language);
   const href = state.dishes[0] ? recipeUrl(state.dishes[0]) : "/";
-  return `${done ? `<a class="cta" href="${href}"><span class="cta-target">${esc(c.target)}</span>
-    <span class="cta-en">${esc(c.en)}</span></a>` : ""}
-    <button class="say" id="again">Start over</button>`;
+  return `<div class="ctarow">
+    <a class="btn btn-primary cta" href="${href}">${esc(c.target)}</a>
+    <p class="btn-caption">${esc(c.en)}</p>
+  </div>`;
 }
 
 /** Straight into the recipe: there is no screen between the last lesson and cooking. */
@@ -565,10 +553,11 @@ function renderWords() {
       </div>
       <div class="sayrow"><p class="hint centred">${state.wordLine === 0 && !state.wordAck
         ? "I say each word. You say it back, out loud." : "Say it out loud."}</p>
-        ${SR ? `<button type="button" class="micoff" id="micoff"></button>` : ""}</div>
+  </div>
       <div class="lesson-actions">
-        <button class="say" id="hear">▸ Hear it again</button>
-        <button class="say" id="skipword">Next ›</button>
+        ${state.wordLine > 0 ? `<button class="btn btn-ghost" id="prevword">‹ Previous</button>` : ""}
+        <button class="btn btn-ghost" id="hear">▸ Hear it again</button>
+        <button class="btn btn-ghost" id="skipword">Next ›</button>
       </div>`;
 
   app.innerHTML = chrome(`<div class="stage">
@@ -577,7 +566,9 @@ function renderWords() {
     ${cta(done)}
   </div>`);
 
-  el("again").onclick = restart;
+  // The caption under the button would leave the face hanging lower than the button it
+  // sits beside, so the dock rises by exactly that caption's height on this screen.
+  document.body.classList.toggle("cta-dock", done);
   if (done) {
     mic.listenFor(null);
     if (!state.listAnnounced) {
@@ -587,15 +578,20 @@ function renderWords() {
     return;
   }
   el("hear").onclick = () => agentSay(`Say exactly, in ${lang.name}: "${current.target}"`);
+  // Only this screen goes back a step: it is a list, and a word can be missed.
+  const back = el("prevword");
+  if (back) back.onclick = () => {
+    mic.listenFor(null);
+    state.wordLine = Math.max(0, state.wordLine - 1); state.tries = 0; state.wordAck = null;
+    renderWords();
+    setTimeout(() => sayWord(), 400);
+  };
   el("skipword").onclick = () => {
     mic.listenFor(null);
     state.wordLine += 1; state.tries = 0; state.wordAck = null;
     renderWords();
     setTimeout(() => sayWord(), 400);
   };
-  const off = el("micoff");
-  if (off) off.onclick = () => mic.toggle();
-  paintMicBar();
   mic.setLang(lang.speech);
   mic.listenFor((text) => submitWord(text), "answer");
 }
@@ -618,16 +614,6 @@ function submitWord(text) {
 }
 
 
-function restart() {
-  try { localStorage.removeItem(STORE); } catch {}
-  agent.clearQueue();
-  // Starting over is the one way to change language, so the lock comes off here.
-  agent.updateSession({ instructions: instructionsFor("onboarding"), transcriptionLanguage: null });
-  Object.assign(state, { step: "language", language: null,
-    level: null, place: null, plan: null, dishes: [], wordLine: 0, wordAck: null });
-  renderLanguage();
-}
-
 /** A returning learner is not asked again: the check is a first-visit thing. */
 function renderWelcomeBack(profile) {
   state.step = "start";
@@ -639,12 +625,10 @@ function renderWelcomeBack(profile) {
     <div class="hello">${esc(greetingFor(profile.language))}</div>
     <div class="sub">Starting point: ${esc(LEVEL_NAMES[profile.level])} in ${esc(lang.name)}.
       We only ask those questions once.</div>
-    <button class="next" id="go">Continue</button>
-    <button class="say" id="again" style="align-self:center">Start over</button>
+    <button class="btn btn-primary" id="go">Continue</button>
   </div>`);
   // Place and plan are per-session questions, so a returning learner still answers those.
   el("go").onclick = () => { state.level = profile.level; startPlace(); };
-  el("again").onclick = restart;
   agentSay(`Say exactly, in ${lang.name}: "${greetingFor(profile.language)}"`);
 }
 
@@ -680,17 +664,18 @@ function renderStart() {
     <div class="hello-cycle" id="hellocycle" aria-hidden="true"><span class="still">Hello</span></div>
     <div class="hello">Cook. Talk. Learn.</div>
     <div class="sub">Pick a place, cook its food, and pick up the language while you do.</div>
-    <button class="next" id="begin">${saved ? "Welcome back" : "Begin"}</button>
+    <button class="btn btn-primary" id="begin">${saved ? "Welcome back" : "Begin"}</button>
     <div class="sub small">${SR
-      ? "Talk to your coach as you cook. You can turn the microphone off at any point, and tapping always works."
+      ? "Answer out loud. Tap the face in the corner to mute your guide, and tapping the screen always works too."
       : "Voice is not available in this browser, so tap your answers instead. You still get every lesson, start to finish."}</div>
   </div>`);
-  paintMicBar();
   startHellos();
   el("begin").onclick = () => {
     stopHellos();
     mic.start();                    // must happen inside the gesture
     agent.connect({ context: "onboarding" }); // same gesture opens the realtime agent's mic track too
+    // How this works, said once, before the first question. Never repeated later.
+    agent.prompt(`Before anything else, in one short, warm English sentence: tell them they can just say their answers out loud, and that tapping your face in the corner mutes you and brings you back. Then stop.`);
     if (saved) { state.language = saved.language; renderWelcomeBack(saved); }
     else renderLanguage();
   };
@@ -699,6 +684,13 @@ function renderStart() {
 // Test seam: feed a transcript to whatever the current screen is listening for,
 // so the always-on path can be exercised where a microphone is unavailable.
 window.__hear = (text) => mic.feed(text);
+
+// With no "Start over" button anywhere, /welcome.html?reset is how a demo starts clean
+// (and how a returning learner changes their language, since that is asked only once).
+if (new URLSearchParams(window.location.search).has("reset")) {
+  try { localStorage.removeItem(STORE); } catch { /* private browsing: nothing to clear */ }
+  window.history.replaceState(null, "", window.location.pathname);
+}
 
 mountAgentWidget();
 renderStart();

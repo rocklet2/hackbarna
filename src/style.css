@@ -2549,11 +2549,22 @@ body.lesson-brand .completion { padding: calc(env(safe-area-inset-top) + 52px) 1
    outside the lesson screen — mounted once at module init, so it exists in
    the DOM the whole time, but only shown while body.lesson-brand is set.
 ------------------------------------------------------------------------ */
-.agent-orb, .agent-status { display: none; }
+.agent-dock { display: none; }
+/* Fixed and centred like the page itself, so the face sits at the bottom right INSIDE the
+   1120px lesson frame rather than at the corner of a desktop screen. */
+body.lesson-brand .agent-dock {
+  display: flex; justify-content: center; pointer-events: none;
+  position: fixed; left: 0; right: 0; bottom: 18px; z-index: 40;
+}
+/* The same 480px card the lesson itself is drawn in (body.lesson-brand #app), so the face
+   sits inside the app on a desktop instead of in the corner of the screen. */
+body.lesson-brand .agent-dock-inner {
+  width: 100%; max-width: 480px; padding: 0 18px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
 body.lesson-brand .agent-status { display: block; }
 body.lesson-brand .agent-orb {
-  display: grid;
-  position: fixed; right: 16px; bottom: 16px; z-index: 40;
+  display: grid; pointer-events: auto;
   width: 56px; height: 56px; border-radius: 50%; padding: 0;
   border: 2px solid var(--pb-white); background: var(--pb-ink); color: var(--pb-white);
   box-shadow: 0 4px 0 rgba(0, 0, 0, .35);
@@ -2577,7 +2588,7 @@ body.lesson-brand .agent-orb[data-status="connecting"] .agent-mouth { width: 12p
 @keyframes agentThinking { to { width: 4px; } }
 
 body.lesson-brand .agent-status {
-  position: fixed; right: 16px; bottom: 78px; z-index: 40; max-width: 220px;
+  pointer-events: auto; max-width: 220px;
   font-size: 11px; line-height: 1.4; text-align: right; color: var(--pb-white);
   background: rgba(18, 17, 23, .82); padding: 6px 10px; border-radius: 10px;
 }
@@ -2587,3 +2598,10 @@ body.lesson-brand .agent-status:empty { display: none; }
    feeling like the app ignored you. */
 .quiz-heard { font-size: 14px; margin: 12px 0 0; color: #686e61; font-style: italic; }
 body.lesson-brand .quiz-heard { color: var(--pb-muted, rgba(18, 17, 23, .68)); }
+
+/* The guide's face is docked at the frame's bottom right (.agent-dock), so the lesson's own
+   actions stop short of that column and the page ends above it. */
+body.lesson-brand .lesson-page { padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
+body.lesson-brand .step-footer { padding-right: 72px; }
+/* Above 700px the card is inset by 24px top and bottom, so the face follows it in. */
+@media (min-width: 700px) { body.lesson-brand .agent-dock { bottom: 42px; } }

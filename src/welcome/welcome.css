@@ -22,8 +22,9 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .app {
   width: 100%; max-width: 480px; min-height: 100dvh; background: var(--bg);
   display: flex; flex-direction: column;
-  /* 96px at the bottom keeps every control clear of the fixed voice orb (56px, 16px from the edge). */
-  padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 96px);
+  /* The bottom line is shared with the guide's face (.agent-dock), so the last row of the
+     screen lands beside it rather than under it. */
+  padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 18px);
 }
 .app[data-tone="mint"] { --bg: var(--mint); --accent: var(--pink); }
 .app[data-tone="pink"] { --bg: var(--pink); --accent: var(--mint); }
@@ -59,6 +60,23 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
   color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
 }
 
+/* ------------------------------------------------------------------
+   Buttons. One shape everywhere: same height, radius, border and type.
+   .btn-primary is the ink action (Begin, Continue, A cuinar); .btn-ghost
+   is the white secondary action (Hear it again, Next, Previous).
+------------------------------------------------------------------ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 56px; padding: 0 22px; border-radius: 18px; border: 2px solid var(--ink);
+  font-size: 17px; font-weight: 700; letter-spacing: -0.01em; text-decoration: none;
+  background: var(--white); color: var(--ink); text-align: center;
+}
+.btn-primary { background: var(--ink); color: var(--white); box-shadow: 0 4px 0 var(--white); }
+.btn-ghost { box-shadow: 0 4px 0 var(--ink); font-size: 15px; min-height: 48px; padding: 0 16px; }
+.btn:active { transform: translateY(2px); box-shadow: none; }
+.btn:disabled { opacity: .45; }
+.btn-caption { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--muted); text-align: center; }
+
 .mic-row { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 20px 0 6px; }
 .mic {
   width: 100%; min-height: 60px; border-radius: 18px; border: 2px solid var(--ink);
@@ -68,22 +86,17 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .mic.alt { background: var(--white); color: var(--ink); box-shadow: 0 4px 0 var(--ink); }
 
 
-.say, .micoff { background: transparent; border: 0; color: var(--ink); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; padding: 6px 0; align-self: flex-start; }
-.micoff { font-size: 13px; align-self: auto; }
-.micoff:disabled { color: var(--muted); text-decoration: none; }
-.sayrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sayrow { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .sayrow .hint { margin: 0; }
-.lesson-actions { display: flex; justify-content: space-between; align-items: center; }
+.lesson-actions { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding-right: 72px; }
+.cards { padding-bottom: 72px; }
 
 /* First screen: one big block, greetings fading through languages. */
-.greet { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 8px; }
+.greet { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 8px; padding-bottom: 72px; }
 .greet .hello { font-size: 44px; line-height: 1.02; font-weight: 800; letter-spacing: -0.04em; animation: rise .5s ease-out; }
 .greet .sub { color: var(--ink); font-size: 17px; font-weight: 500; max-width: 30ch; }
 .greet .sub.small { font-size: 13px; color: var(--muted); max-width: 34ch; margin-top: 14px; }
-.greet .next {
-  margin-top: 22px; min-height: 60px; padding: 0 34px; border-radius: 18px; border: 2px solid var(--ink);
-  background: var(--ink); color: var(--white); font-size: 18px; font-weight: 700; box-shadow: 0 4px 0 var(--white);
-}
+.greet .btn { margin-top: 22px; width: 100%; max-width: 320px; }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
 .hello-cycle { height: 84px; display: flex; align-items: center; justify-content: center; color: var(--white); font-size: 68px; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 2px; }
 .hello-cycle span { animation: hellofade 2s ease-in-out both; }
@@ -133,24 +146,31 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .wordcard .gloss { font-size: 19px; color: var(--muted); font-weight: 500; }
 .wordcard .qty { margin-top: 14px; display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--accent); font-size: 13px; font-weight: 700; }
 
-/* The last screen's one action, pinned to the bottom. */
-.cta {
-  margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 18px 20px;
-  border-radius: 20px; border: 2px solid var(--ink); background: var(--ink); color: var(--white); text-decoration: none; box-shadow: 0 5px 0 var(--white);
-}
-.cta-target { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
-.cta-en { font-size: 13px; font-weight: 500; opacity: .85; }
-.stage .cta + .say { align-self: center; margin-top: 14px; }
+/* The last screen's one action, pinned to the bottom and left of the guide's face
+   (.agent-dock reserves the right-hand 72px, so the two sit side by side). */
+.ctarow { margin-top: auto; padding-right: 72px; }
+.cta { width: 100%; font-size: 20px; }
+/* Set while that screen's caption is on: lifts the face so it is centred on the button. */
+body.cta-dock .agent-dock { bottom: calc(env(safe-area-inset-bottom) + 43px); }
 
 .mic:disabled { opacity: .35; cursor: not-allowed; }
 
 /* ---------------------------------------------------------------------
-   The SLNG voice agent's tiny character (src/welcome/agent.js). Fixed to
-   the viewport, not the 480px card, so it sits at the bottom-right of the
-   whole screen through every step of the onboarding.
+   The voice agent's tiny character (src/agent.js). It sits at the bottom
+   right INSIDE the 480px app frame, not at the corner of the screen, so on
+   a desktop it stays with the app. The dock is fixed and centred like the
+   frame itself; only the face takes clicks.
 --------------------------------------------------------------------- */
+.agent-dock {
+  position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 18px);
+  z-index: 40; display: flex; justify-content: center; pointer-events: none;
+}
+.agent-dock-inner {
+  width: 100%; max-width: 480px; padding: 0 18px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
 .agent-orb {
-  position: fixed; right: 16px; bottom: 16px; z-index: 40;
+  pointer-events: auto;
   width: 56px; height: 56px; border-radius: 50%; padding: 0;
   border: 2px solid var(--white); background: var(--ink); color: var(--white);
   box-shadow: 0 4px 0 rgba(0, 0, 0, .35);
@@ -174,7 +194,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 @keyframes agentThinking { to { width: 4px; } }
 
 .agent-status {
-  position: fixed; right: 16px; bottom: 78px; z-index: 40; max-width: 220px;
+  pointer-events: auto; max-width: 220px;
   font-size: 11px; line-height: 1.4; text-align: right; color: var(--white);
   background: rgba(18, 17, 23, .82); padding: 6px 10px; border-radius: 10px;
 }

@@ -340,7 +340,9 @@ function cookingLesson() {
       <section class="lesson-main" aria-label="Current recipe step">
         <div class="step-video" id="stepVideoMount"></div>
         ${quiz ? exercise(r, i) : `<div class="instruction-card"><div class="phrase-row"><h2 lang="${state.language}">${translated.title}</h2>${speakButton(translated.instruction, state.language)}</div><p class="target-instruction" lang="${state.language}">${targetHtml}</p>${state.level < 3 ? `<p class="english-translation" lang="en">${englishHtml}</p>` : ""}</div>${story}`}
-        <div class="step-footer">${i > 0 ? button(`${icon("back")} ${uiText("previous") || "Previous step"}`, "previous-step", "text-button") : ""}${quiz ? button(`${uiText("next") || "Next"} ${icon("arrow")}`, "next", "primary", stepPassed(state.journey, i) ? "" : 'disabled aria-describedby="challenge-feedback"') : button(`${uiText("next") || "Next"} ${icon("arrow")}`, "start-quiz")}</div>
+        <div class="step-footer">${quiz
+          ? button(`${icon("back")} ${uiText("previous") || "Back to the step"}`, "previous", "secondary")
+          : i > 0 ? button(`${icon("back")} ${uiText("previous") || "Back"}`, "previous-step", "secondary") : ""}${quiz ? button(`${uiText("next") || "Next"} ${icon("arrow")}`, "next", "primary", stepPassed(state.journey, i) ? "" : 'disabled aria-describedby="challenge-feedback"') : button(`${uiText("next") || "Next"} ${icon("arrow")}`, "start-quiz")}</div>
       </section>
     </div></main>`;
 }
@@ -501,11 +503,13 @@ function paintAgent() {
 /** Mounted once, outside #app, so re-rendering a screen never tears down the agent's audio. */
 function mountAgentWidget() {
   const wrap = document.createElement("div");
-  wrap.innerHTML = `<div id="agentStatus" class="agent-status" role="status" aria-live="polite"></div>
+  wrap.className = "agent-dock";
+  wrap.innerHTML = `<div class="agent-dock-inner">
+    <div id="agentStatus" class="agent-status" role="status" aria-live="polite"></div>
     <button type="button" id="agentOrb" class="agent-orb" data-status="idle" aria-label="Tap to turn on the voice guide">
       <span class="agent-face"><span class="agent-eye"></span><span class="agent-eye"></span><span class="agent-mouth"></span></span>
-    </button>`;
-  document.body.append(...wrap.children);
+    </button></div>`;
+  document.body.append(wrap);
   document.getElementById("agentOrb").onclick = () => {
     if (agentState.status === "connected" || agentState.status === "connecting") agent.disconnect();
     else agent.connect(agentOptions());
