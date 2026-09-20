@@ -63,13 +63,6 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
       clearTimeout(stuckTimer);
       responding = false;
       flush();
-    } else if (event.type === "output_audio_buffer.started") {
-      state.speaking = true;
-      emit();
-    } else if (event.type === "output_audio_buffer.stopped" || event.type === "output_audio_buffer.cleared") {
-      state.speaking = false;
-      emit();
-    } else if (event.type === "response.done") {
       // Tool calls surface here, not as their own event — see docs on function calling.
       for (const item of event.response?.output || []) {
         if (item.type !== "function_call") continue;
@@ -77,6 +70,12 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
         try { args = JSON.parse(item.arguments || "{}"); } catch { /* leave empty */ }
         onToolCall?.({ name: item.name, callId: item.call_id, args });
       }
+    } else if (event.type === "output_audio_buffer.started") {
+      state.speaking = true;
+      emit();
+    } else if (event.type === "output_audio_buffer.stopped" || event.type === "output_audio_buffer.cleared") {
+      state.speaking = false;
+      emit();
     } else if (event.type === "error") {
       // A rejected response.create leaves nothing in flight; carry on with the queue.
       if (event.error?.code === "conversation_already_has_active_response") return;
@@ -184,7 +183,6 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
     dc.send(JSON.stringify({ type: "response.create" }));
   }
 
-  return { connect, disconnect, prompt, respondToolCall };
   /** Drop lines that have not been spoken yet, e.g. when the screen they belonged to has gone. */
   function clearQueue() { queue = []; }
 
@@ -209,5 +207,5 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
 
   const isConnected = () => state.status === "connected";
 
-  return { connect, disconnect, prompt, clearQueue, updateSession, isConnected };
+  return { connect, disconnect, prompt, respondToolCall, clearQueue, updateSession, isConnected };
 }
