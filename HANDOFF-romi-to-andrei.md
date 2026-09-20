@@ -7,6 +7,12 @@
 - **Step checks rebuilt** in `src/lesson-challenge.js` (`challengeFor` has the same signature, `submitAnswer` now grades fuzzily, new `isCorrect`, `stepWords`, `stepVerb`). Beginner: recall a word from this step, three options. Intermediate: the step's sentence with the key word missing. Advanced: the verb goes too, asked in the target language only. The agent asks the question, a correct answer auto-advances, two misses give a clue, a third gives the answer.
 - Smaller: "or choose" divider gone from the language screen, the market lesson opens with a spoken introduction, "A cuinar!" only appears once the ingredient list is finished.
 
+## Latest (2026-09-20): UI pass
+- One button system in `src/welcome/welcome.css`: `.btn`, `.btn-primary`, `.btn-ghost`. Use those for any new onboarding button rather than a new shape.
+- The agent face moved into a `.agent-dock` wrapper (both `mountAgentWidget()`s build it). It is fixed, centred, and matches the 480px card, so it stays inside the app on desktop. Bottom rows reserve 72px on the right (`.lesson-actions`, `.ctarow`, `.step-footer`) so nothing sits under it.
+- Removed: all "Start over" buttons and all mic on/off buttons. `/welcome.html?reset` is the demo reset.
+- The recipe step footer now shows Back on every step: during the check it goes back to the step itself (action `previous`), otherwise to the previous step (`previous-step`).
+
 ## Latest (2026-09-20): market phrases per country
 - `src/welcome/shop.js` has `ES_VARIANT` (MX, PE, AR): the Spanish market lesson follows the dish's country. Your `phrases()` and `askPhraseFor` in `src/journey.js` are untouched; the beginner rows are overridden by index inside `shopScript` only. Spain uses the neutral lines.
 - Your `@fal-ai/server-proxy` dependency needed an `npm install` on my side before `vite` would start.
