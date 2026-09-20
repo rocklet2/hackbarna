@@ -475,6 +475,13 @@ const agent = createAgent({
   },
   // A spoken quiz answer is graded here, exactly like a tapped one. Anything else the learner
   // says is a question for the agent, which does not reply on its own (create_response: false).
+  // The guide's face follows its voice: --voice drives the mouth and the ring (see style.css).
+  onLevel: (v) => {
+    const orb = document.getElementById("agentOrb");
+    if (!orb) return;
+    orb.style.setProperty("--voice", v.toFixed(3));
+    if (v > 0.02) orb.dataset.meter = "on";
+  },
   onUserTranscript: (text) => {
     if (state.screen === 2 && state.journey.phase === "quiz" && !stepPassed(state.journey, state.step)) answerQuiz(text, true);
     else agent.prompt(`The learner said: "${text}". Reply briefly, following your language rules.`);

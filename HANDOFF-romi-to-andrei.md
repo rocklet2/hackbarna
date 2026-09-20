@@ -7,6 +7,11 @@
 - **Step checks rebuilt** in `src/lesson-challenge.js` (`challengeFor` has the same signature, `submitAnswer` now grades fuzzily, new `isCorrect`, `stepWords`, `stepVerb`). Beginner: recall a word from this step, three options. Intermediate: the step's sentence with the key word missing. Advanced: the verb goes too, asked in the target language only. The agent asks the question, a correct answer auto-advances, two misses give a clue, a third gives the answer.
 - Smaller: "or choose" divider gone from the language screen, the market lesson opens with a spoken introduction, "A cuinar!" only appears once the ingredient list is finished.
 
+## Latest (2026-09-20): the guide's face talks
+- `src/agent.js` has a loudness meter on the guide's audio (`onLevel`, 0 to 1). Both pages set `--voice` on the orb, which drives the mouth and a ring. Face is percentage-based now; sizes come from the orb's own size.
+- First visit only: `growOrb()` / `settleOrb()` in `src/welcome/welcome.js` make the guide swell on the opening screen while it introduces itself, then settle. Test seam: `window.__orbDemo`.
+- Please run it with a real microphone: the meter reads the guide's `MediaStream` through an AudioContext, which I could not exercise here.
+
 ## Latest (2026-09-20): lesson buttons match onboarding; spoken welcome
 - All lesson-page buttons (`.primary`, `.secondary`, `.text-button`, `.answer`) are restyled at the end of `src/style.css` to the onboarding sizes; use the `button()` helper and those classes for anything new, no new shapes.
 - Begin now starts a spoken introduction on the first screen instead of jumping to the next question (`startIntro` in `src/welcome/welcome.js`). It advances when the guide stops speaking, on a tap ("Skip intro"), or on failure/timeouts. Please listen to it once with a real mic.

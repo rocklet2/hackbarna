@@ -8,7 +8,7 @@
 // If OPENAI_API_KEY isn't set in .env, /api/realtime-session (scripts/openai-realtime-proxy.js)
 // answers 501 and connect() reports that as its error rather than throwing, so the rest of the
 // page works without it.
-export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
+export function createAgent({ onState, onUserTranscript, onToolCall, onLevel } = {}) {
   let pc = null;
   let dc = null;
   let micStream = null;
@@ -19,11 +19,52 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
   let responding = false;
   let stuckTimer = null;
   let unmuteTimer = null;
+  // Loudness of the guide's own voice, 0 to 1, so its face can move with what it says.
+  let meterCtx = null;
+  let meterFrame = 0;
+  let meterLevel = 0;
   let pendingSession = null; // a session.update asked for before the channel opened
   const state = { status: "idle", speaking: false, error: null }; // idle | connecting | connected | error
   const emit = () => onState?.({ ...state });
 
+  /** Watches the guide's audio and reports how loud it is while it speaks. Best effort: no meter, no problem. */
+  function startMeter(stream) {
+    try {
+      stopMeter();
+      meterCtx = new (window.AudioContext || window.webkitAudioContext)();
+      meterCtx.resume?.();
+      const analyser = meterCtx.createAnalyser();
+      analyser.fftSize = 256;
+      meterCtx.createMediaStreamSource(stream).connect(analyser); // not to the speakers: the <audio> element plays it
+      const samples = new Uint8Array(analyser.fftSize);
+      const tick = () => {
+        meterFrame = requestAnimationFrame(tick);
+        if (!state.speaking) {
+          if (meterLevel > 0.01) { meterLevel = 0; onLevel?.(0); }
+          return;
+        }
+        analyser.getByteTimeDomainData(samples);
+        let sum = 0;
+        for (const v of samples) { const d = (v - 128) / 128; sum += d * d; }
+        const raw = Math.min(1, Math.sqrt(sum / samples.length) * 4);
+        // Rise fast, fall slower: a mouth that flaps at 60 frames a second looks like a fault.
+        meterLevel = raw > meterLevel ? raw : meterLevel * 0.82 + raw * 0.18;
+        onLevel?.(meterLevel);
+      };
+      tick();
+    } catch { /* the face falls back to a looping animation */ }
+  }
+
+  function stopMeter() {
+    cancelAnimationFrame(meterFrame);
+    meterFrame = 0;
+    try { meterCtx?.close(); } catch { /* already closed */ }
+    meterCtx = null;
+    if (meterLevel) { meterLevel = 0; onLevel?.(0); }
+  }
+
   function cleanup() {
+    stopMeter();
     try { dc?.close(); } catch { /* already gone */ }
     try { pc?.close(); } catch { /* already gone */ }
     try { micStream?.getTracks().forEach((t) => t.stop()); } catch { /* already gone */ }
@@ -121,7 +162,7 @@ export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
       audioEl.autoplay = true;
       audioEl.dataset.realtimeAgentAudio = "true";
       document.body.appendChild(audioEl);
-      conn.ontrack = (e) => { audioEl.srcObject = e.streams[0]; };
+      conn.ontrack = (e) => { audioEl.srcObject = e.streams[0]; startMeter(e.streams[0]); };
 
       const channel = conn.createDataChannel("oai-events");
       channel.addEventListener("message", (e) => handleServerEvent(e.data));

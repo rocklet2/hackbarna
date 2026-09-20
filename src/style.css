@@ -2574,18 +2574,36 @@ body.lesson-brand .agent-orb {
 body.lesson-brand .agent-orb:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
 body.lesson-brand .agent-orb[data-status="connecting"] { opacity: .65; }
 body.lesson-brand .agent-orb[data-status="connected"] { background: var(--pb-mint); color: var(--pb-ink); }
-body.lesson-brand .agent-orb[data-status="speaking"] { background: var(--pb-pink); color: var(--pb-ink); animation: agentPulse .6s ease-in-out infinite alternate; }
+body.lesson-brand .agent-orb[data-status="speaking"] { background: var(--pb-white); color: var(--pb-ink); border-color: var(--pb-ink); }
 body.lesson-brand .agent-orb[data-status="error"] { background: var(--pb-white); color: var(--pb-ink); border-color: var(--pb-pink); }
-@keyframes agentPulse { from { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 0 0 rgba(255, 122, 172, .55); } to { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 0 8px rgba(255, 122, 172, 0); } }
 
-body.lesson-brand .agent-face { position: relative; width: 26px; height: 22px; }
-body.lesson-brand .agent-eye { position: absolute; top: 2px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-body.lesson-brand .agent-eye:first-child { left: 1px; }
-body.lesson-brand .agent-eye:last-child { right: 1px; }
-body.lesson-brand .agent-mouth { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 12px; height: 3px; border-radius: 3px; background: currentColor; transition: width .12s, height .12s, border-radius .12s; }
-body.lesson-brand .agent-orb[data-status="speaking"] .agent-mouth { width: 9px; height: 9px; border-radius: 50%; }
-body.lesson-brand .agent-orb[data-status="connecting"] .agent-mouth { width: 12px; border-radius: 3px; animation: agentThinking 1s steps(3) infinite; }
-@keyframes agentThinking { to { width: 4px; } }
+/* Same face as the onboarding's: percentages of the orb, a mouth and a ring that follow the voice. */
+body.lesson-brand .agent-face { position: relative; width: 46%; height: 39%; }
+body.lesson-brand .agent-eye { position: absolute; top: 9%; width: 19%; aspect-ratio: 1; border-radius: 50%; background: currentColor; }
+body.lesson-brand .agent-eye:first-child { left: 4%; }
+body.lesson-brand .agent-eye:last-child { right: 4%; }
+body.lesson-brand .agent-mouth {
+  position: absolute; bottom: 9%; left: 50%; transform: translateX(-50%);
+  width: 46%; height: 13.6%; border-radius: 999px; background: currentColor;
+  transition: height .07s linear, width .07s linear;
+}
+body.lesson-brand .agent-orb { position: relative; --voice: 0; }
+body.lesson-brand .agent-orb::after {
+  content: ""; position: absolute; inset: -9%; border-radius: 50%; border: 3px solid var(--pb-white);
+  opacity: 0; transform: scale(1); pointer-events: none; transition: opacity .2s;
+}
+body.lesson-brand .agent-orb[data-status="speaking"] .agent-mouth { width: calc(46% - var(--voice) * 14%); height: calc(13.6% + var(--voice) * 46%); }
+body.lesson-brand .agent-orb[data-status="speaking"]::after { opacity: calc(.3 + var(--voice) * .6); transform: scale(calc(1 + var(--voice) * .2)); transition: opacity .07s linear, transform .07s linear; }
+body.lesson-brand .agent-orb[data-status="speaking"]:not([data-meter="on"]) .agent-mouth { animation: mouthTalk .5s ease-in-out infinite alternate; }
+body.lesson-brand .agent-orb[data-status="speaking"]:not([data-meter="on"])::after { animation: ringTalk .9s ease-in-out infinite alternate; }
+@keyframes mouthTalk { from { height: 13.6%; width: 46%; } to { height: 44%; width: 34%; } }
+@keyframes ringTalk { from { opacity: .25; transform: scale(1); } to { opacity: .8; transform: scale(1.14); } }
+body.lesson-brand .agent-orb[data-status="connecting"] .agent-mouth { animation: agentThinking 1s steps(3) infinite; }
+@keyframes agentThinking { to { width: 16%; } }
+@media (prefers-reduced-motion: reduce) {
+  body.lesson-brand .agent-orb[data-status="speaking"]:not([data-meter="on"]) .agent-mouth,
+  body.lesson-brand .agent-orb[data-status="speaking"]:not([data-meter="on"])::after { animation: none; }
+}
 
 body.lesson-brand .agent-status {
   pointer-events: auto; max-width: 220px;

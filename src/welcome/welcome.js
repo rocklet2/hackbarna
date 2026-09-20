@@ -60,7 +60,7 @@ const mic = createMic({ onState: (st) => { micState = st; } });
 // (An earlier SLNG/LiveKit integration lived here; it never got a working connection.)
 let agentState = { status: "idle", speaking: false, error: null };
 // The spoken introduction on the very first screen. `advance` is what happens next.
-const intro = { active: false, heard: false, advance: null, timers: [] };
+const intro = { active: false, heard: false, advance: null, timers: [], big: false, grown: false };
 const agent = createAgent({
   onState: (st) => {
     const wasConnected = agentState.status === "connected";
@@ -68,7 +68,7 @@ const agent = createAgent({
     agentState = st;
     paintAgent();
     // The first screen's intro moves on by itself once the guide has finished speaking it.
-    if (intro.active && st.speaking) intro.heard = true;
+    if (intro.active && st.speaking) { intro.heard = true; if (intro.big) growOrb(); }
     if (intro.active && intro.heard && wasSpeaking && !st.speaking) finishIntro();
     mic.setDeaf(st.speaking);
     // Two speech-recognition engines fighting over the same microphone at once is exactly the
@@ -79,6 +79,13 @@ const agent = createAgent({
     else if (st.status !== "connected" && wasConnected) mic.start();
   },
   onUserTranscript: (text) => mic.feed(text),
+  // The guide's face follows its voice: --voice drives the mouth and the ring (see welcome.css).
+  onLevel: (v) => {
+    const orb = document.getElementById("agentOrb");
+    if (!orb) return;
+    orb.style.setProperty("--voice", v.toFixed(3));
+    if (v > 0.02) orb.dataset.meter = "on"; // a real meter is running, so the timer fallback stops
+  },
 });
 
 function paintAgent() {
@@ -732,6 +739,7 @@ function renderStart() {
  */
 function startIntro(returning, advance) {
   intro.active = true; intro.heard = false; intro.advance = advance;
+  intro.big = !returning; // only a first visit gets the big entrance; a returning welcome is one quiet sentence
   // A first visit's intro is long enough to skip; a returning learner's is one sentence, so
   // their button stays exactly as it was.
   const btn = el("begin");
@@ -748,9 +756,45 @@ function startIntro(returning, advance) {
   });
 }
 
+/**
+ * The guide's first words: it swells to a large circle above the button, so it is clearly
+ * the thing talking, then settles into the corner (settleOrb). Moved with a transform measured
+ * from where the orb already is, so nothing in the layout jumps, and skipped entirely for
+ * anyone who has asked for reduced motion.
+ */
+function growOrb() {
+  const orb = el("agentOrb");
+  if (intro.grown || !orb || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+  intro.grown = true;
+  const frame = app.firstElementChild.getBoundingClientRect();
+  const rest = orb.getBoundingClientRect();
+  const size = Math.min(frame.width * 0.78, 300, window.innerHeight * 0.4);
+  const btn = el("begin")?.getBoundingClientRect();
+  // Centred in the frame, sitting just above the button so the way to skip stays in view.
+  const cy = Math.max(size / 2 + 64, (btn ? btn.top : window.innerHeight * 0.6) - size / 2 - 28);
+  const dx = frame.left + frame.width / 2 - (rest.left + rest.width / 2);
+  const dy = cy - (rest.top + rest.height / 2);
+  const k = size / rest.width;
+  orb.style.setProperty("--k", k.toFixed(3));
+  orb.classList.add("grown");
+  document.body.classList.add("intro-big");
+  orb.style.transform = `translate(${dx}px, ${dy}px) scale(${k})`;
+}
+
+function settleOrb() {
+  const orb = el("agentOrb");
+  document.body.classList.remove("intro-big");
+  if (!orb || !intro.grown) return;
+  intro.grown = false;
+  orb.classList.replace("grown", "settling");
+  orb.style.transform = "";
+  setTimeout(() => { orb.classList.remove("settling"); orb.style.removeProperty("--k"); }, 800);
+}
+
 function finishIntro() {
   if (!intro.active) return;
   intro.active = false;
+  settleOrb();
   intro.timers.forEach(clearTimeout); intro.timers = [];
   const go = intro.advance; intro.advance = null;
   go?.();
@@ -759,6 +803,8 @@ function finishIntro() {
 // Test seam: feed a transcript to whatever the current screen is listening for,
 // so the always-on path can be exercised where a microphone is unavailable.
 window.__hear = (text) => mic.feed(text);
+// Same idea for the guide's swell: lets tooling see it without a microphone or a live voice.
+window.__orbDemo = { grow: growOrb, settle: settleOrb };
 
 // With no "Start over" button anywhere, /welcome.html?reset is how a demo starts clean
 // (and how a returning learner changes their language, since that is asked only once).

@@ -180,18 +180,46 @@ body.cta-dock .agent-dock { bottom: calc(env(safe-area-inset-bottom) + 43px); }
 .agent-orb:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
 .agent-orb[data-status="connecting"] { opacity: .65; }
 .agent-orb[data-status="connected"] { background: var(--mint); color: var(--ink); }
-.agent-orb[data-status="speaking"] { background: var(--pink); color: var(--ink); animation: agentPulse .6s ease-in-out infinite alternate; }
+.agent-orb[data-status="speaking"] { background: var(--white); color: var(--ink); border-color: var(--ink); }
 .agent-orb[data-status="error"] { background: var(--white); color: var(--ink); border-color: var(--pink); }
-@keyframes agentPulse { from { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 0 0 rgba(255, 122, 172, .55); } to { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 0 8px rgba(255, 122, 172, 0); } }
 
-.agent-face { position: relative; width: 26px; height: 22px; }
-.agent-eye { position: absolute; top: 2px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-.agent-eye:first-child { left: 1px; }
-.agent-eye:last-child { right: 1px; }
-.agent-mouth { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 12px; height: 3px; border-radius: 3px; background: currentColor; transition: width .12s, height .12s, border-radius .12s; }
-.agent-orb[data-status="speaking"] .agent-mouth { width: 9px; height: 9px; border-radius: 50%; }
-.agent-orb[data-status="connecting"] .agent-mouth { width: 12px; border-radius: 3px; animation: agentThinking 1s steps(3) infinite; }
-@keyframes agentThinking { to { width: 4px; } }
+/* The face is drawn in percentages of the orb, so it scales cleanly when the orb is enlarged. */
+.agent-face { position: relative; width: 46%; height: 39%; }
+.agent-eye { position: absolute; top: 9%; width: 19%; aspect-ratio: 1; border-radius: 50%; background: currentColor; }
+.agent-eye:first-child { left: 4%; }
+.agent-eye:last-child { right: 4%; }
+.agent-mouth {
+  position: absolute; bottom: 9%; left: 50%; transform: translateX(-50%);
+  width: 46%; height: 13.6%; border-radius: 999px; background: currentColor;
+  transition: height .07s linear, width .07s linear;
+}
+/* Speaking: the mouth and a ring follow how loud the voice is (--voice, 0 to 1, set by the
+   agent's meter). If no meter is available the same shapes loop on a timer instead. */
+.agent-orb { position: relative; --voice: 0; }
+.agent-orb::after {
+  content: ""; position: absolute; inset: -9%; border-radius: 50%; border: 3px solid var(--white);
+  opacity: 0; transform: scale(1); pointer-events: none; transition: opacity .2s;
+}
+.agent-orb[data-status="speaking"] .agent-mouth { width: calc(46% - var(--voice) * 14%); height: calc(13.6% + var(--voice) * 46%); }
+.agent-orb[data-status="speaking"]::after { opacity: calc(.3 + var(--voice) * .6); transform: scale(calc(1 + var(--voice) * .2)); transition: opacity .07s linear, transform .07s linear; }
+.agent-orb[data-status="speaking"]:not([data-meter="on"]) .agent-mouth { animation: mouthTalk .5s ease-in-out infinite alternate; }
+.agent-orb[data-status="speaking"]:not([data-meter="on"])::after { animation: ringTalk .9s ease-in-out infinite alternate; }
+@keyframes mouthTalk { from { height: 13.6%; width: 46%; } to { height: 44%; width: 34%; } }
+@keyframes ringTalk { from { opacity: .25; transform: scale(1); } to { opacity: .8; transform: scale(1.14); } }
+.agent-orb[data-status="connecting"] .agent-mouth { animation: agentThinking 1s steps(3) infinite; }
+@keyframes agentThinking { to { width: 16%; } }
+
+/* First visit only: the guide's first words happen big, then it settles into the corner.
+   welcome.js moves it with a transform (a FLIP), so nothing here changes layout. */
+.agent-orb.grown { transition: transform .75s cubic-bezier(.2, .8, .2, 1); z-index: 45; border-width: calc(2px / var(--k, 1)); box-shadow: 0 calc(4px / var(--k, 1)) 0 rgba(0, 0, 0, .35); }
+.agent-orb.grown::after { border-width: calc(3px / var(--k, 1)); }
+.agent-orb.settling { transition: transform .7s cubic-bezier(.4, 0, .2, 1); }
+body.intro-big .greet > :not(#begin) { opacity: 0; transition: opacity .35s; }
+@media (prefers-reduced-motion: reduce) {
+  .agent-orb.grown, .agent-orb.settling { transition: none; }
+  .agent-orb[data-status="speaking"]:not([data-meter="on"]) .agent-mouth,
+  .agent-orb[data-status="speaking"]:not([data-meter="on"])::after { animation: none; }
+}
 
 .agent-status {
   pointer-events: auto; max-width: 220px;
