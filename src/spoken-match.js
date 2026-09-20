@@ -45,11 +45,22 @@ export function sameWord(heard, wanted) {
   return a === b || (Math.abs(a.length - b.length) <= alike && distance(a, b) <= alike);
 }
 
-/** True when every word of `wanted` was heard somewhere in `said`. */
+/**
+ * True when every word of `wanted` was heard somewhere in `said`.
+ * A hyphenated Catalan verb ("Deixa-les", "Cou-los") is two words to us but often comes back
+ * from speech-to-text as one ("Deixales"), so a run of the answer's words also counts when it
+ * was heard joined up.
+ */
 export function saysAll(said, wanted) {
   const heard = tokens(said);
   const want = tokens(wanted);
-  return want.length > 0 && want.every((w) => heard.some((h) => sameWord(h, w)));
+  if (!want.length) return false;
+  if (want.every((w) => heard.some((h) => sameWord(h, w)))) return true;
+  if (want.length < 2) return false;
+  const joined = want.join("");
+  return heard.some((h) => sameWord(h, joined))
+    // ...or heard as a run of words that joins up to the answer ("deixa les" for "deixa-les").
+    || heard.some((_, i) => heard.slice(i, i + want.length).join("") === joined);
 }
 
 /** Share of `wanted`'s words that were heard, 0 to 1. */

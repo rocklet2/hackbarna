@@ -61,3 +61,25 @@ test('only an explicit skip cuts the first-visit introduction short', async () =
   // Noise, a cough transcribed as a word, "yes", or an answer to a later question must not skip it.
   for (const said of ['', 'hmm', 'yes', 'Catalan', 'thank you', 'the', 'uh huh']) assert.equal(matchSkip(said), false, said);
 });
+
+test('spoken answers survive the ways speech-to-text writes Catalan back', () => {
+  // Real transcripts captured from the live voice pipeline (see STATUS.md, voice agent test).
+  for (const [heard, wanted] of [['Sucra', 'sucre'], ['Pinyons', 'pinyons'], ['Daixa', 'deixa'],
+    ['A metlles.', 'ametlles'], ['Seba', 'ceba'], ['Oli', 'oli']]) {
+    assert.equal(saysAll(heard, wanted), true, `${heard} for ${wanted}`);
+  }
+  // A hyphenated verb comes back joined up, or as two words, and both are the same answer.
+  for (const heard of ['Deixales', 'Deixa les', 'Deixa-les']) assert.equal(saysAll(heard, 'Deixa-les'), true, heard);
+  assert.equal(saysAll('oli', 'Deixa-les'), false);
+});
+
+test('correcting yourself counts; reading the whole list does not', async () => {
+  const { challengeFor, isCorrect } = await import('./lesson-challenge.js');
+  const { recipes } = await import('./data.js');
+  const c = challengeFor(recipes.find((r) => r.id === 'escalivada'), 0, 0);
+  assert.equal(isCorrect(c, c.answer), true);
+  const other = c.options.map((o) => o.value).find((v) => v !== c.answer);
+  assert.equal(isCorrect(c, `${other}, no, ${c.answer}`), true, 'the last one named is the answer');
+  assert.equal(isCorrect(c, `${c.answer}, ${other}`), false, 'they ended on a different option');
+  assert.equal(isCorrect(c, other), false);
+});

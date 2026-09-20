@@ -1,7 +1,7 @@
 import { translatedStep } from "./lesson-translations.js";
 import { stepDirections } from "./lesson-copy.js";
 import { languageName } from "./agent-instructions.js";
-import { saysAll, flatten } from "./spoken-match.js";
+import { saysAll, flatten, tokens, sameWord } from "./spoken-match.js";
 // One short check after each cooking step, answered out loud (tapping or typing still works).
 // It asks about THIS step's own words, so it checks what the learner just did, and it gets
 // harder with the level. It invents no target-language text: questions are built from the
@@ -180,11 +180,26 @@ export function challengeFor(recipe, index, level = 0) {
   return level >= 2 ? cloze(recipe, index, level, name) : beginner(recipe, index, name);
 }
 
-/** Right when every word of the answer was said. Saying another option too does not count. */
+/**
+ * Right when every word of the answer was said. If more than one option was named — someone
+ * correcting themselves ("Escalfa... no, Prepara"), or reading the list aloud — the last one
+ * they named is taken as their answer, so a correction counts and a recital does not.
+ */
 export function isCorrect(challenge, said) {
   if (!saysAll(said, challenge.answer)) return false;
-  const others = (challenge.options || []).map((o) => o.value).filter((v) => lower(v) !== lower(challenge.answer));
-  return !others.some((o) => saysAll(said, o) && !saysAll(challenge.answer, o));
+  const others = (challenge.options || []).map((o) => o.value)
+    .filter((v) => lower(v) !== lower(challenge.answer) && !saysAll(challenge.answer, v));
+  const mentioned = others.filter((o) => saysAll(said, o));
+  if (!mentioned.length) return true;
+  const lastAt = (value) => {
+    const heard = tokens(said), want = tokens(value);
+    for (let i = heard.length - want.length; i >= 0; i -= 1) {
+      if (want.every((w, n) => sameWord(heard[i + n], w))) return i;
+    }
+    return -1;
+  };
+  const mine = lastAt(challenge.answer);
+  return mine >= 0 && mentioned.every((o) => lastAt(o) < mine);
 }
 
 export function submitAnswer(journey, recipe, index, answer, level = 0) {

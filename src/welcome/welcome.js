@@ -16,6 +16,7 @@ import { dishesFor, complexityLabel, matchDish } from "./dishes.js";
 import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, marketHeadingFor, gradeRepetition, feedbackFor } from "./shop.js";
 import { continueQuestionFor, answersFor, ANSWERS_EN, matchYesNo, matchSkip } from "./returning.js";
 import { createMic, speechSupported } from "./mic.js";
+import { overlap } from "../spoken-match.js";
 import { createAgent } from "../agent.js";
 import { instructionsFor } from "../agent-instructions.js";
 
@@ -78,7 +79,7 @@ const agent = createAgent({
     if (st.status === "connected" && !wasConnected) mic.stop();
     else if (st.status !== "connected" && wasConnected) mic.start();
   },
-  onUserTranscript: (text) => mic.feed(text),
+  onUserTranscript: (text) => { if (!isEcho(text)) mic.feed(text); },
   // The guide's face follows its voice: --voice drives the mouth and the ring (see welcome.css).
   onLevel: (v) => {
     const orb = document.getElementById("agentOrb");
@@ -210,8 +211,25 @@ function nudge(instruction) {
  */
 const agentReady = () => agentState.status === "connected" || agentState.status === "connecting";
 
+/**
+ * The microphone stays open while the guide speaks, so the learner can answer over it. On a
+ * laptop speaker its own voice can come back through the microphone, and on the screens where
+ * it reads the options aloud ("Principiant, Intermedi, Avançat") that echo would look exactly
+ * like an answer and choose for them. So while it is speaking, anything that is mostly made of
+ * the words it was told to say is thrown away. A real answer, which is one of those words on
+ * its own, still gets through.
+ */
+let spokenNow = "";
+function isEcho(text) {
+  if (!agentState.speaking || !spokenNow) return false;
+  const words = String(text).trim().split(/\s+/).length;
+  return words >= 3 && overlap(spokenNow, text) > 0.6;
+}
+
 function agentSay(instruction) {
   if (!agentReady()) return; // nothing is queued for an agent that is off, or that failed
+  // Whatever is inside quotes is what it will actually say out loud.
+  spokenNow = (instruction.match(/"([^"]+)"/g) || []).join(" ").replace(/"/g, "");
   const lang = state.language ? byId(state.language) : null;
   if (!lang) { agent.prompt(instruction); return; }
   agent.prompt(`(Language lock: ${lang.name}. Follow your English rule for this learner's level.) ${instruction}`);
