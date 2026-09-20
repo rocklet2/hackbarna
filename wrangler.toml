@@ -4,8 +4,10 @@ compatibility_date = "2026-09-20"
 
 [assets]
 directory = "./dist"
-# The Worker only implements /api/*; every other path should resolve to a static file (or dist's
-# own 404) without ever reaching fetch() above.
+binding = "ASSETS"
+# The Worker only implements /api/*, plus a couple of client-side routes (/recipes/*,
+# /collection) that need index.html's bundle even though no such file exists in dist/ — see
+# worker/index.js. Everything else resolves to a static file without ever reaching fetch() above.
 run_worker_first = false
 
 # Secrets (never put these here as plaintext vars — set them with `wrangler secret put`):

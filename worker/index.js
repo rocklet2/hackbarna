@@ -17,6 +17,16 @@ export default {
     if (url.pathname === FAL_PROXY_ROUTE) return handleFalRealtimeProxy(request, env);
     if (url.pathname === "/api/photo-check") return handlePhotoCheck(request, env);
 
+    // /recipes/{lang}/{slug} and /collection are client-side routes main.js's own router reads
+    // from location.pathname (see src/entry.js and the bottom of src/main.js) — there's no literal
+    // file for them in dist/, so the [assets] binding falls through to here instead of serving one.
+    // Fetch "/", not "/index.html": the assets binding 307s the .html path to its clean-URL form
+    // (the same redirect a request for /welcome.html gets to /welcome), which would otherwise send
+    // that redirect back to the client instead of the page.
+    if (url.pathname === "/collection" || url.pathname.startsWith("/recipes/")) {
+      return env.ASSETS.fetch(new Request(new URL("/", request.url), request));
+    }
+
     // Anything else that reaches the Worker has no matching static file either — the [assets]
     // binding already tried before falling through here (see run_worker_first in wrangler.toml).
     return new Response("Not found", { status: 404 });
