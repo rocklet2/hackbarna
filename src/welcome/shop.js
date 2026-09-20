@@ -81,6 +81,47 @@ const EXCHANGE = {
   },
 };
 
+/**
+ * Spanish is taught from four countries, so the market speaks the way that country's market does.
+ * Only what differs is listed; everything else falls back to the neutral `es` lines above.
+ * UNREVIEWED: written by Claude, needs a speaker from each country (see STATUS.md).
+ * `rows` overrides Andrei's phrases() rows by index for beginners (0 greeting, 1 "do you have X?",
+ * 2 "how much?"); the other keys override EXCHANGE.es for intermediate and advanced.
+ */
+const ES_VARIANT = {
+  MX: {
+    rows: { 2: ["¿A cómo está?", "How much is it?"] },
+    open: ["¡Buenos días! ¿Qué se le ofrece?", "Good morning! What can I get you?"],
+    sure: ["¡Claro! ¿Qué va a llevar?", "Of course! What are you having?"],
+    amount: ["Sí, tengo. ¿Cuánto va a querer?", "Yes, I have some! How much will you want?"],
+    total: "No, nada más, gracias. ¿Cuánto es?",
+    thanks: "¡Muchas gracias! ¡Que le vaya bien!",
+  },
+  PE: {
+    rows: { 0: ["¡Buenos días, casera!", "Good morning!"], 2: ["¿A cómo está el kilo?", "How much is the kilo?"] },
+    open: ["¡Buenos días! Dígame, ¿qué va a llevar?", "Good morning! Go ahead, what will you have?"],
+    askFor: (word) => `¡Buenos días, casera! ¿Tiene ${word}?`,
+    sure: ["¡Claro! ¿Qué le doy?", "Of course! What can I give you?"],
+    total: "No, nada más, gracias. ¿Cuánto es todo?",
+    thanks: "¡Muchas gracias! ¡Que le vaya bien!",
+  },
+  AR: {
+    rows: { 0: ["¡Buen día!", "Good morning!"], 1: (w, en) => [`¿Tenés ${w}?`, `Do you have ${en}?`], 2: ["¿Cuánto sale?", "How much is it?"] },
+    open: ["¡Buen día! ¿Qué te sirvo?", "Good morning! What can I get you?"],
+    sure: ["¡Dale! ¿Qué necesitás?", "Of course! What do you need?"],
+    best: ["Estos están buenísimos hoy.", "These are really good today."],
+    amount: ["Sí, tengo. ¿Cuánto querés?", "Yes, I have some! How much do you want?"],
+    bye: ["Acá tenés.", "Here you are."],
+    askFor: (word) => `¡Buen día! ¿Tenés ${word}?`,
+    half: "¿Me das medio kilo, por favor?",
+    total: "No, nada más, gracias. ¿Cuánto te debo?",
+    thanks: "¡Muchas gracias! ¡Que tengas un buen día!",
+    cooking: (dish) => `Esta noche cocino ${dish}. ¿Qué me recomendás?`,
+    perfect: "¡Perfecto! ¿Me das medio kilo, por favor?",
+  },
+};
+const regionOf = (recipe) => String(recipe?.regions?.[0] || "").split(",").pop().trim();
+
 const EN = {
   askFor: (en) => `Good morning! Do you have ${en}?`,
   half: "Could you give me half a kilo, please?",
@@ -102,8 +143,13 @@ const EN = {
  */
 export function shopScript(language, level, recipe) {
   const first = recipe?.words?.[0] || ["", ""];
-  const rows = phrases(language, first[0], first[1]);
-  if (!rows) return [];
+  const base = phrases(language, first[0], first[1]);
+  if (!base) return [];
+  const variant = language === "es" ? ES_VARIANT[regionOf(recipe)] : null;
+  const rows = base.map((row, i) => {
+    const o = variant?.rows?.[i];
+    return typeof o === "function" ? o(first[0], first[1] || first[0]) : o || row;
+  });
 
   const line = (i, why) => ({ target: rows[i][0], en: rows[i][1], why });
 
@@ -114,7 +160,7 @@ export function shopScript(language, level, recipe) {
       line(2, "You will hear a number back. You do not have to catch it the first time."),
     ];
   }
-  const x = EXCHANGE[language];
+  const x = EXCHANGE[language] && { ...EXCHANGE[language], ...(variant || {}) };
   if (!x) return [];
   const turn = (seller, target, en, why) => ({ seller: { target: seller[0], en: seller[1] }, target, en, why });
   const dish = (recipe?.name || "").toLowerCase();
