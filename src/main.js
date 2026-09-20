@@ -3,7 +3,7 @@ import { languages, levels, recommend, recipes } from "./data.js";
 import { STORAGE_KEY, freshJourney, readJourneys, restoreJourney, phrases, isWaitStep, waitMomentFor } from "./journey.js";
 
 import { welcomeLessonLevel } from "./learner-profile.js";
-import { challengeFor, stepPassed, submitAnswer } from "./lesson-challenge.js";
+import { challengeFor, stepPassed, submitAnswer, isCorrect } from "./lesson-challenge.js";
 import { translatedStep } from "./lesson-translations.js";
 import { stepDirections } from "./lesson-copy.js";
 import { setActiveStep, attachStepVideo, stopStepVideo, showAgentImage, dismissAgentImage } from "./step-video.js";
@@ -287,7 +287,10 @@ function answerQuiz(value, spoken = false) {
   next.disabled = !correct;
   if (correct) {
     next.removeAttribute("aria-describedby");
-    if (agent.isConnected()) agent.prompt("The learner answered correctly. Praise them in no more than four words, then stop.");
+    if (agent.isConnected()) {
+      agent.clearQueue(); // they answered over the question: stop it, then praise
+      agent.prompt("The learner answered correctly. Praise them in no more than four words, then stop.");
+    }
     // Getting it right is the answer: the lesson moves on by itself.
     const at = state.step;
     setTimeout(() => { if (state.screen === 2 && state.step === at && state.journey.phase === "quiz") goNext(); }, 1800);
@@ -483,8 +486,16 @@ const agent = createAgent({
     if (v > 0.02) orb.dataset.meter = "on";
   },
   onUserTranscript: (text) => {
-    if (state.screen === 2 && state.journey.phase === "quiz" && !stepPassed(state.journey, state.step)) answerQuiz(text, true);
-    else agent.prompt(`The learner said: "${text}". Reply briefly, following your language rules.`);
+    const inQuiz = state.screen === 2 && state.journey.phase === "quiz" && !stepPassed(state.journey, state.step);
+    if (inQuiz) {
+      // While the guide is still asking, only a right answer counts, and it cuts the question
+      // short. Anything else heard then is noise or a stray word: it is not a miss, and the
+      // guide keeps going.
+      if (agentState.speaking && !isCorrect(challengeFor(state.recipe, state.step, state.level), text)) return;
+      answerQuiz(text, true);
+    } else if (!agentState.speaking) {
+      agent.prompt(`The learner said: "${text}". Reply briefly, following your language rules.`);
+    }
   },
 });
 /** The lesson's four levels, as the agent's three (see src/agent-instructions.js). */
