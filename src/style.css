@@ -2605,3 +2605,40 @@ body.lesson-brand .lesson-page { padding-bottom: calc(env(safe-area-inset-bottom
 body.lesson-brand .step-footer { padding-right: 72px; }
 /* Above 700px the card is inset by 24px top and bottom, so the face follows it in. */
 @media (min-width: 700px) { body.lesson-brand .agent-dock { bottom: 42px; } }
+
+/* ------------------------------------------------------------------------
+   Buttons on the lesson pages match the onboarding's (.btn in welcome.css): the same height,
+   radius, border, type and shadows. Primary is the ink action (Next, Add to collection, See
+   what you learned); secondary and the old text buttons are the white ghost action (Back,
+   Your collection, Back to the menu). Every button here is made by the button() helper with
+   one of those three classes, so this is the one place they are defined for the lesson.
+------------------------------------------------------------------------ */
+body.lesson-brand .primary,
+body.lesson-brand .secondary,
+body.lesson-brand .text-button:not(.lesson-mobile-header .text-button) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 2px solid var(--pb-ink); border-radius: 18px; text-decoration: none; text-align: center;
+  letter-spacing: -0.01em; font-weight: 700; line-height: 1.2;
+}
+body.lesson-brand .primary {
+  min-height: 56px; padding: 0 22px; font-size: 17px;
+  background: var(--pb-ink); color: var(--pb-white); box-shadow: 0 4px 0 var(--pb-white);
+}
+body.lesson-brand .secondary,
+body.lesson-brand .text-button:not(.lesson-mobile-header .text-button) {
+  min-height: 48px; padding: 0 16px; font-size: 15px;
+  background: var(--pb-white); color: var(--pb-ink); box-shadow: 0 4px 0 var(--pb-ink);
+}
+body.lesson-brand .step-footer .primary { min-height: 56px; padding: 0 22px; font-size: 17px; }
+body.lesson-brand .step-footer .text-button,
+body.lesson-brand .step-footer .secondary { color: var(--pb-ink); font-size: 15px; font-weight: 700; }
+body.lesson-brand .primary:not(:disabled):active,
+body.lesson-brand .secondary:not(:disabled):active,
+body.lesson-brand .text-button:not(:disabled):active { transform: translateY(2px); box-shadow: none; }
+body.lesson-brand .primary:disabled { opacity: .45; }
+body.lesson-brand .secondary:hover:not(:disabled),
+body.lesson-brand .text-button:hover:not(:disabled) { background: var(--pb-mint); text-decoration: none; }
+/* Answer options are the same layered cards as the onboarding's choices. */
+body.lesson-brand .required-challenge .answer, body.lesson-brand .answer { border-radius: 16px; box-shadow: 0 4px 0 var(--pb-ink); }
+body.lesson-brand .video-dismiss { border-radius: 18px; box-shadow: 0 4px 0 var(--pb-ink); font-size: 15px; }
+body.lesson-brand .required-challenge .answer, body.lesson-brand .answer { font-size: 15px; font-weight: 700; min-height: 52px; }

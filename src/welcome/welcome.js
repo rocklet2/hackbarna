@@ -59,11 +59,17 @@ const mic = createMic({ onState: (st) => { micState = st; } });
 // answer means — the agent doesn't need to know our screens, it only needs to carry the audio.
 // (An earlier SLNG/LiveKit integration lived here; it never got a working connection.)
 let agentState = { status: "idle", speaking: false, error: null };
+// The spoken introduction on the very first screen. `advance` is what happens next.
+const intro = { active: false, heard: false, advance: null, timers: [] };
 const agent = createAgent({
   onState: (st) => {
     const wasConnected = agentState.status === "connected";
+    const wasSpeaking = agentState.speaking;
     agentState = st;
     paintAgent();
+    // The first screen's intro moves on by itself once the guide has finished speaking it.
+    if (intro.active && st.speaking) intro.heard = true;
+    if (intro.active && intro.heard && wasSpeaking && !st.speaking) finishIntro();
     mic.setDeaf(st.speaking);
     // Two speech-recognition engines fighting over the same microphone at once is exactly the
     // kind of thing that drops or garbles a turn intermittently — once the agent has its own
@@ -709,14 +715,43 @@ function renderStart() {
   </div>`);
   startHellos();
   el("begin").onclick = () => {
+    if (intro.active) { finishIntro(); return; } // tapping again skips the introduction
     stopHellos();
     mic.start();                    // must happen inside the gesture
-    agent.connect({ context: "onboarding" }); // same gesture opens the realtime agent's mic track too
-    // How this works, said once, before the first question. Never repeated later.
-    agent.prompt(`Before anything else, in one short, warm English sentence: tell them they can just say their answers out loud, and that tapping your face in the corner mutes you and brings you back. Then stop.`);
-    if (saved) { state.language = saved.language; renderWelcomeBack(saved); }
-    else renderLanguage();
+    const next = () => { if (saved) { state.language = saved.language; renderWelcomeBack(saved); } else renderLanguage(); };
+    startIntro(!!saved, next);
   };
+}
+
+/**
+ * The guide's welcome, spoken on the first screen once "Begin" is tapped (the tap is what lets
+ * the browser open the microphone and play sound). A first visit hears what this is and how to
+ * talk to it; a returning learner hears a couple of words. The screen moves on by itself when
+ * the guide stops speaking, or on a tap of the button, or after a safety timeout, and at once
+ * if the voice guide could not connect: the introduction never holds anyone up.
+ */
+function startIntro(returning, advance) {
+  intro.active = true; intro.heard = false; intro.advance = advance;
+  const btn = el("begin");
+  if (btn) btn.textContent = "Skip intro ›";
+  intro.timers.push(setTimeout(finishIntro, 45000)); // hard cap
+  agent.connect({ context: "onboarding" }).then((ok) => {
+    if (!intro.active) return;
+    if (!ok) { finishIntro(); return; }
+    agent.prompt(returning
+      ? "Say, in English, in one short friendly sentence: welcome back, answer out loud as before, and tap your face in the corner to mute you. Then stop."
+      : "You are meeting a new learner. In English, in three or four short, warm sentences, say: you are their guide in Taula, an app where they learn a language by cooking a real dish from a place; they will choose a language, then a place and a dish, practise the words for the market and the ingredients with you, and then cook step by step while you help; they can just answer out loud, and tapping your face in the corner mutes you and brings you back. Do not ask them anything and do not list any languages. Then stop.");
+    // If nothing has started to play soon, do not leave them staring at a screen.
+    intro.timers.push(setTimeout(() => { if (intro.active && !intro.heard) finishIntro(); }, 12000));
+  });
+}
+
+function finishIntro() {
+  if (!intro.active) return;
+  intro.active = false;
+  intro.timers.forEach(clearTimeout); intro.timers = [];
+  const go = intro.advance; intro.advance = null;
+  go?.();
 }
 
 // Test seam: feed a transcript to whatever the current screen is listening for,
