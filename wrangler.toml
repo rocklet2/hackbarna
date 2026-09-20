@@ -1,0 +1,13 @@
+name = "taula"
+main = "worker/index.js"
+compatibility_date = "2026-09-20"
+
+[assets]
+directory = "./dist"
+# The Worker only implements /api/*; every other path should resolve to a static file (or dist's
+# own 404) without ever reaching fetch() above.
+run_worker_first = false
+
+# Secrets (never put these here as plaintext vars — set them with `wrangler secret put`):
+#   OPENAI_API_KEY
+#   FAL_KEY
