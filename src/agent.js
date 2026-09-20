@@ -8,7 +8,7 @@
 // If OPENAI_API_KEY isn't set in .env, /api/realtime-session (scripts/openai-realtime-proxy.js)
 // answers 501 and connect() reports that as its error rather than throwing, so the rest of the
 // page works without it.
-export function createAgent({ onState, onUserTranscript } = {}) {
+export function createAgent({ onState, onUserTranscript, onToolCall } = {}) {
   let pc = null;
   let dc = null;
   let micStream = null;
@@ -48,6 +48,14 @@ export function createAgent({ onState, onUserTranscript } = {}) {
     } else if (event.type === "output_audio_buffer.stopped" || event.type === "output_audio_buffer.cleared") {
       state.speaking = false;
       emit();
+    } else if (event.type === "response.done") {
+      // Tool calls surface here, not as their own event — see docs on function calling.
+      for (const item of event.response?.output || []) {
+        if (item.type !== "function_call") continue;
+        let args = {};
+        try { args = JSON.parse(item.arguments || "{}"); } catch { /* leave empty */ }
+        onToolCall?.({ name: item.name, callId: item.call_id, args });
+      }
     } else if (event.type === "error") {
       state.error = event.error?.message || "The voice agent reported an error.";
       emit();
@@ -134,5 +142,15 @@ export function createAgent({ onState, onUserTranscript } = {}) {
     else pendingPrompt = text; // flushed on the data channel's "open" event
   }
 
-  return { connect, disconnect, prompt };
+  /** Close the loop on a tool call from onToolCall: hand back its result and let the agent continue. */
+  function respondToolCall(callId, output) {
+    if (dc?.readyState !== "open") return;
+    dc.send(JSON.stringify({
+      type: "conversation.item.create",
+      item: { type: "function_call_output", call_id: callId, output: typeof output === "string" ? output : JSON.stringify(output) },
+    }));
+    dc.send(JSON.stringify({ type: "response.create" }));
+  }
+
+  return { connect, disconnect, prompt, respondToolCall };
 }

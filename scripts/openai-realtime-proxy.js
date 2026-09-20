@@ -29,6 +29,8 @@ const LESSON_INSTRUCTIONS = `You are Taula's cooking companion, helping the lear
 
 You can also hear the learner directly. If they ask you something or seem confused about a word or a step, answer briefly and warmly — in English, unless they're clearly comfortable continuing in the target language. Keep your own remarks short, one or two sentences, like someone helping out in the kitchen, not a chatbot.
 
+You have a show_image tool: use it when a picture would genuinely help — they ask what an ingredient, technique, or finished result looks like, or seem unsure what something means visually. Don't overuse it; most turns need only your voice. It replaces the photo or video already showing for this step, so only call it when that's actually welcome.
+
 Never claim to certify a language level (no CEFR labels), never invent facts about the dish or its culture, and never judge whether food is safe to eat or fully cooked from what you hear — if asked, say to check with a thermometer or a trusted source instead of guessing.`;
 
 const CONTEXTS = {
@@ -36,12 +38,28 @@ const CONTEXTS = {
   lesson: LESSON_INSTRUCTIONS,
 };
 
+// Only the lesson page has somewhere to show a picture — the onboarding screens get no tools.
+const SHOW_IMAGE_TOOL = {
+  type: "function",
+  name: "show_image",
+  description: "Show the learner a quick photo in the recipe's visual area — e.g. they ask what an ingredient, technique, or result looks like. The description becomes an image-generation prompt, not something you say aloud.",
+  parameters: {
+    type: "object",
+    properties: {
+      description: { type: "string", description: "A vivid, specific visual description in English of what to depict." },
+    },
+    required: ["description"],
+  },
+};
+const CONTEXT_TOOLS = { lesson: [SHOW_IMAGE_TOOL] };
+
 function sessionConfig(context) {
   return {
     type: "realtime",
     model: "gpt-realtime",
     instructions: CONTEXTS[context] || ONBOARDING_INSTRUCTIONS,
     output_modalities: ["audio"],
+    tools: CONTEXT_TOOLS[context] || [],
     audio: {
       input: {
         transcription: { model: "gpt-4o-mini-transcribe" },

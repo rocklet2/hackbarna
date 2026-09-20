@@ -2196,7 +2196,7 @@ h1 em {
 .lesson-page .lesson-layout { grid-template-columns: minmax(0, 1fr) 240px; gap: 36px; }
 .lesson-page .lesson-main { min-width: 0; }
 .step-video { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 20px; background: #1b3022; color: white; }
-.step-video video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.step-video video, .step-video img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .video-shade { position: absolute; inset: 0; background: linear-gradient(0deg, #102619c9, #10261928); }
 .video-invite { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; gap: 16px; }
 .video-kicker { font-size: 10px; font-weight: 700; letter-spacing: 2px; }
@@ -2206,6 +2206,12 @@ h1 em {
 .video-invite p { font-size: 12px; margin: 0; max-width: 300px; }
 .video-caption { position: absolute; bottom: 14px; right: 16px; font-size: 10px; color: #fff; pointer-events: none; }
 .step-video:has(video[src]) .video-caption { display: none; }
+/* The agent's "shown by your voice guide" overlay — a text pill, not the round icon-only
+   .video-generate button (body.lesson-brand fixes that one at 64x64px for its ▶/↻ icon). */
+.video-invite.agent-shown { justify-content: flex-end; padding-bottom: 44px; }
+.video-invite.agent-shown .video-caption { position: static; pointer-events: auto; font-size: 12px; margin-bottom: 8px; }
+.video-dismiss { background: var(--paper); border: 0; border-radius: 50px; padding: 10px 20px; font-weight: 600; font-size: 13px; }
+.video-invite.agent-shown .video-generate { padding: 10px 20px; }
 .lesson-page .step-progress { margin: 22px 0 18px; }
 .lesson-page .instruction-card { background: transparent; padding: 0; border: 0; box-shadow: none; }
 .lesson-page .instruction-card h2 { margin: 0 0 12px; font-size: 27px; }
@@ -2471,6 +2477,15 @@ body.lesson-brand .video-generate > span {
   color: var(--pb-ink);
   font-size: 22px;
   line-height: 1;
+}
+body.lesson-brand .video-dismiss {
+  background: var(--pb-mint);
+  color: var(--pb-ink);
+  border: 2px solid var(--pb-ink);
+  border-radius: 999px;
+  box-shadow: 0 3px 0 var(--pb-ink);
+  padding: 10px 20px;
+  font-weight: 700;
 }
 .sr-only {
   position: absolute;

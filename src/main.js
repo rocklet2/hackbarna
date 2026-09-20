@@ -6,7 +6,7 @@ import { welcomeLessonLevel } from "./learner-profile.js";
 import { challengeFor, stepPassed, submitAnswer } from "./lesson-challenge.js";
 import { translatedStep } from "./lesson-translations.js";
 import { stepDirections } from "./lesson-copy.js";
-import { videoMarkup, requestStepVideo } from "./step-video.js";
+import { setActiveStep, attachStepVideo, stopStepVideo, showAgentImage, dismissAgentImage } from "./step-video.js";
 import { alignedInstruction } from "./word-align.js";
 import { createAgent } from "./agent.js";
 import { finishSummary, tutorBrief } from "./finish/finish.js";
@@ -282,7 +282,7 @@ function cookingLesson() {
     <div class="lesson-heading"><div class="eyebrow">${r.minutes} MIN · ${uiText("step") || "STEP"} ${i + 1}/${r.steps.length}</div><h1>${r.name}</h1></div>
     <div class="lesson-layout">
       <section class="lesson-main" aria-label="Current recipe step">
-        ${!quiz ? videoMarkup(r, i, stepDirections(r, i)) : ""}
+        <div class="step-video" id="stepVideoMount"></div>
         ${quiz ? exercise(r, i) : `<div class="instruction-card"><div class="phrase-row"><h2 lang="${state.language}">${translated.title}</h2>${speakButton(translated.instruction, state.language)}</div><p class="target-instruction" lang="${state.language}">${targetHtml}</p>${state.level < 3 ? `<p class="english-translation" lang="en">${englishHtml}</p>` : ""}</div>${story}`}
         <div class="step-footer">${i > 0 ? button(`${icon("back")} ${uiText("previous") || "Previous step"}`, "previous-step", "text-button") : ""}${quiz ? button(`${uiText("next") || "Next"} ${icon("arrow")}`, "next", "primary", stepPassed(state.journey, i) ? "" : 'disabled aria-describedby="challenge-feedback"') : button(`${uiText("next") || "Next"} ${icon("arrow")}`, "start-quiz")}</div>
       </section>
@@ -315,6 +315,12 @@ function render(focus = false) {
     h.focus({ preventScroll: true });
   }
   maybeAutoSpeakStep();
+  if (state.screen === 2 && state.recipe && !state.completed) {
+    attachStepVideo(document.getElementById("stepVideoMount"));
+    setActiveStep(state.recipe, Math.min(state.step, state.recipe.steps.length - 1));
+  } else {
+    stopStepVideo();
+  }
 }
 
 function timerText() {
@@ -343,7 +349,27 @@ function toast(message) {
 // instructions in scripts/openai-realtime-proxy.js. No browser speech-synthesis fallback — if
 // it can't connect, the step just stays silent and, for a manual tap, says so.
 let agentState = { status: "idle", speaking: false, error: null };
-const agent = createAgent({ onState: (st) => { agentState = st; paintAgent(); } });
+const agent = createAgent({
+  onState: (st) => { agentState = st; paintAgent(); },
+  // The agent's show_image tool (declared server-side for context=lesson, scripts/openai-
+  // realtime-proxy.js) — it decides when a picture would help; we just generate and show it.
+  onToolCall: async ({ name, callId, args }) => {
+    if (name !== "show_image" || !args.description) { agent.respondToolCall(callId, { shown: false, error: "Unsupported request" }); return; }
+    try {
+      const res = await fetch("/api/fal-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: `${args.description}. Professional food photography, appetizing, natural light, no text or watermarks.` }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { url } = await res.json();
+      if (state.recipe) showAgentImage(url);
+      agent.respondToolCall(callId, { shown: true });
+    } catch {
+      agent.respondToolCall(callId, { shown: false, error: "Could not create that image right now." });
+    }
+  },
+});
 const langName = (id) => languages.find((l) => l.id === id)?.name || id;
 
 function paintAgent() {
@@ -387,7 +413,7 @@ function maybeAutoSpeakStep() {
   const culture = state.level >= 3 ? ` ${cultureFact(state.recipe, i).text}` : "";
   speak(`${translatedStep(state.recipe, i).instruction}${culture}`, state.language, false);
 }
-const speakButton = (text, lang) => `<button class="speak-btn" data-action="speak" data-value="${escapeHtml(text)}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
+const speakButton =(text, lang) => `<button class="speak-btn" data-action="speak" data-value="${escapeHtml(text)}" data-lang="${lang}" aria-label="Hear this phrase">${icon("volume")}</button>`;
 function highlightAlign(word, on) {
   const card = word.closest(".instruction-card");
   if (!card) return;
@@ -420,8 +446,8 @@ app.addEventListener("click", (event) => {
     value = target.dataset.value;
   let focus = false;
   switch (action) {
-    case "generate-video":
-      requestStepVideo(state.recipe, state.step, stepDirections(state.recipe, state.step));
+    case "dismiss-agent-image":
+      dismissAgentImage();
       return;
     case "home":
       state.screen = 0;
