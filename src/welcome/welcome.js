@@ -148,7 +148,10 @@ function renderLanguage(message = "") {
   mic.listenFor((text) => {
     const lang = matchLanguage(text);
     if (lang) chooseLanguage(lang.id);
-    else nudge(`The learner said "${text}", which is not a language we recognise. In one short English sentence, ask them again which language they would like to cook in. Do not name or list any languages.`);
+    else {
+      console.debug("[welcome] no language match for heard text:", text);
+      nudge(`The learner said "${text}", which is not a language we recognise. Do not repeat it back, do not say "good" or otherwise sound like it was understood — you did not catch a language. In one short English sentence, ask them again which language they would like to cook in. Do not name or list any languages.`);
+    }
   });
   // The languages are on screen and the catalogue will grow, so the agent never reads them out.
   if (!message && agentReady()) agent.prompt("The learner is on the language screen. In one short, warm English sentence, ask which language they would like to cook in. Do not name or list any languages: they can see them on screen.");
@@ -247,7 +250,10 @@ function renderLevel() {
   mic.listenFor((text) => {
     const level = matchLevel(text);
     if (level) chooseLevel(level.id);
-    else nudge(`The learner said "${text}", which was not a level. Briefly ask again, in ${lang.name} and in English, whether they are a beginner, intermediate or advanced.`);
+    else {
+      console.debug("[welcome] no level match for heard text:", text);
+      nudge(`The learner said "${text}", which was not a level. Do not repeat it back or say "good" — you did not catch a level. Briefly ask again, in ${lang.name} and in English, whether they are a beginner, intermediate or advanced.`);
+    }
   });
 }
 
@@ -296,7 +302,10 @@ function renderPlace(message = "") {
   mic.listenFor((text) => {
     const place = matchPlace(text, state.language);
     if (place) choosePlace(place.id);
-    else nudge(`The learner said "${text}", which is not one of the places on screen. Briefly ask again where they would like to cook. Do not list the places.`);
+    else {
+      console.debug("[welcome] no place match for heard text:", text);
+      nudge(`The learner said "${text}", which is not one of the places on screen. Do not repeat it back or say "good" — you did not catch a place. Briefly ask again where they would like to cook. Do not list the places.`);
+    }
   });
   if (!message) agentSay(`Say exactly, in ${lang.name}: "${q.target}" Do not list the places: they are on screen.`);
 }
@@ -362,7 +371,10 @@ function renderDishes(ranked) {
 
   // Saying a dish, or tapping it, is the answer: it moves on.
   const shown = ranked.slice(0, 4);
-  const choose = (dish) => { mic.listenFor(null); agent.clearQueue(); state.dishes = [dish]; startShop(); };
+  const choose = (dish) => {
+    console.debug("[welcome] dish matched:", dish.id);
+    mic.listenFor(null); agent.clearQueue(); state.dishes = [dish]; startShop();
+  };
   app.querySelectorAll("[data-dish]").forEach((b) => {
     b.onclick = () => choose(ranked.find((r) => r.id === b.dataset.dish));
   });
@@ -373,7 +385,10 @@ function renderDishes(ranked) {
   mic.listenFor((text) => {
     const dish = matchDish(text, shown);
     if (dish) choose(dish);
-    else nudge(`The learner said "${text}", which did not clearly match one dish. Briefly ask again which of these they would like to cook: ${names}. Name no other dish.`);
+    else {
+      console.debug("[welcome] no dish match for heard text:", text, "options:", names);
+      nudge(`The learner said "${text}", which did not clearly match one dish. Do not repeat it back or say "good" or otherwise sound like it was understood — it did not match. Briefly ask again which of these they would like to cook: ${names}. Name no other dish.`);
+    }
   });
   // Only the dishes on screen: the agent must not suggest anything we cannot teach.
   agentSay(`Say exactly, in ${lang.name}: "${question.target}" Then mention these dishes, and only these, by exactly these names: ${names}. Never suggest, describe or name any other dish.`);
