@@ -708,7 +708,7 @@ function renderStart() {
     <div class="hello-cycle" id="hellocycle" aria-hidden="true"><span class="still">Hello</span></div>
     <div class="hello">Cook. Talk. Learn.</div>
     <div class="sub">Pick a place, cook its food, and pick up the language while you do.</div>
-    <button class="btn btn-primary" id="begin">${saved ? "Welcome back" : "Begin"}</button>
+    <button class="btn btn-primary" id="begin">${saved ? "Get started" : "Begin"}</button>
     <div class="sub small">${SR
       ? "Answer out loud. Tap the face in the corner to mute your guide, and tapping the screen always works too."
       : "Voice is not available in this browser, so tap your answers instead. You still get every lesson, start to finish."}</div>
@@ -732,8 +732,10 @@ function renderStart() {
  */
 function startIntro(returning, advance) {
   intro.active = true; intro.heard = false; intro.advance = advance;
+  // A first visit's intro is long enough to skip; a returning learner's is one sentence, so
+  // their button stays exactly as it was.
   const btn = el("begin");
-  if (btn) btn.textContent = "Skip intro ›";
+  if (btn && !returning) btn.textContent = "Skip intro ›";
   intro.timers.push(setTimeout(finishIntro, 45000)); // hard cap
   agent.connect({ context: "onboarding" }).then((ok) => {
     if (!intro.active) return;
