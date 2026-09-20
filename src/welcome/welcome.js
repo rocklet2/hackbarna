@@ -14,7 +14,7 @@ import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor, levelLabe
 import { placesFor, placeById, matchPlace, placeQuestionFor, dishQuestionFor } from "./places.js";
 import { dishesFor, complexityLabel, matchDish } from "./dishes.js";
 import { shopScript, ingredientWords, wordFeedback, listHeadingFor, cookCtaFor, marketHeadingFor, gradeRepetition, feedbackFor } from "./shop.js";
-import { continueQuestionFor, answersFor, ANSWERS_EN, matchYesNo } from "./returning.js";
+import { continueQuestionFor, answersFor, ANSWERS_EN, matchYesNo, matchSkip } from "./returning.js";
 import { createMic, speechSupported } from "./mic.js";
 import { createAgent } from "../agent.js";
 import { instructionsFor } from "../agent-instructions.js";
@@ -199,7 +199,9 @@ function lockAgent() {
 
 /** When nothing on screen matched what was heard, the agent asks again (only if it heard it). */
 function nudge(instruction) {
-  if (agentState.status === "connected") agentSay(instruction);
+  // While the guide is still talking, an unmatched sound or word is noise or a stray word, not
+  // a failed answer: let it carry on. It only asks again when it has finished and heard nothing usable.
+  if (agentState.status === "connected" && !agentState.speaking) agentSay(instruction);
 }
 
 /**
@@ -722,7 +724,7 @@ function renderStart() {
   </div>`);
   startHellos();
   el("begin").onclick = () => {
-    if (intro.active) { finishIntro(); return; } // tapping again skips the introduction
+    if (intro.active) { finishIntro(true); return; } // tapping again skips the introduction
     stopHellos();
     mic.start();                    // must happen inside the gesture
     const next = () => { if (saved) { state.language = saved.language; renderWelcomeBack(saved); } else renderLanguage(); };
@@ -744,17 +746,27 @@ function startIntro(returning, advance) {
   // their button stays exactly as it was.
   const btn = el("begin");
   if (btn && !returning) btn.textContent = "Skip intro ›";
-  intro.timers.push(setTimeout(finishIntro, 45000)); // hard cap
+  // The first-time intro is the one part of onboarding that explains how the product works, so it
+  // plays to the end. Only an explicit "skip" (said or tapped) cuts it: noise, coughs, "yes" and
+  // every other word are ignored, because nothing else is listening while it plays.
+  if (!returning) {
+    mic.setLang("en-US");
+    mic.listenFor((text) => { if (matchSkip(text)) finishIntro(true); });
+  }
   agent.connect({ context: "onboarding" }).then((ok) => {
     if (!intro.active) return;
     if (!ok) { finishIntro(); return; }
-    agent.prompt(returning
-      ? "Say, in English, in one short friendly sentence: welcome back, answer out loud as before, and tap your face in the corner to mute you. Then stop."
-      : "You are meeting a new learner. In English, in three or four short, warm sentences, say: you are their guide in Taula, an app where they learn a language by cooking a real dish from a place; they will choose a language, then a place and a dish, practise the words for the market and the ingredients with you, and then cook step by step while you help; they can just answer out loud, and they do not have to wait for you to finish: if they already know their answer they can speak over you at any moment and you will stop and listen; and tapping your face in the corner mutes you and brings you back. Do not ask them anything and do not list any languages. Then stop.");
-    // If nothing has started to play soon, do not leave them staring at a screen.
-    intro.timers.push(setTimeout(() => { if (intro.active && !intro.heard) finishIntro(); }, 12000));
+    agent.prompt(returning ? INTRO_RETURNING : INTRO_FIRST_VISIT);
+    // Safety nets, counted from when the guide is asked to speak (not from the tap, which would
+    // also count the time taken to connect): if nothing starts to play, do not leave them staring
+    // at a screen; and no introduction is allowed to run on forever.
+    intro.timers.push(setTimeout(() => { if (intro.active && !intro.heard) finishIntro(); }, 15000));
+    intro.timers.push(setTimeout(() => finishIntro(true), returning ? 30000 : 120000));
   });
 }
+
+const INTRO_RETURNING = "Say, in English, in one short friendly sentence: welcome back, answer out loud as before, and tap your face in the corner to mute you. Then stop.";
+const INTRO_FIRST_VISIT = "You are meeting a new learner and this introduction plays in full, so say all of it, calmly, in English, in about five short sentences. Say: you are their guide in Taula, an app where they learn a language by cooking a real dish from a place. They will choose a language, a place and a dish, practise the words for the market and the ingredients with you, and then cook step by step while you help. They can simply answer out loud. Later, when you list what is on screen, they do not have to wait for you to finish: as soon as they know their answer they can say it over you and you will stop and listen. Tapping your face in the corner mutes you and brings you back. Do not ask them anything and do not list any languages. Then stop.";
 
 /**
  * The guide's first words: it swells to a large circle above the button, so it is clearly
@@ -791,9 +803,12 @@ function settleOrb() {
   setTimeout(() => { orb.classList.remove("settling"); orb.style.removeProperty("--k"); }, 800);
 }
 
-function finishIntro() {
+function finishIntro(skipped = false) {
   if (!intro.active) return;
   intro.active = false;
+  mic.listenFor(null);
+  // Skipped, or timed out: stop talking now. When it simply finished there is nothing to stop.
+  if (skipped) agent.clearQueue();
   settleOrb();
   intro.timers.forEach(clearTimeout); intro.timers = [];
   const go = intro.advance; intro.advance = null;

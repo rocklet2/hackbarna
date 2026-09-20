@@ -55,3 +55,18 @@ export function matchYesNo(transcript) {
   }
   return best ? best.answer : null;
 }
+
+// Saying "skip" is how a first-time learner cuts the guide's introduction short. Nothing else
+// does: a cough, a "yes" or a stray word must never end the one part of onboarding that explains
+// how the product works. Only explicit words count.
+const SKIP = ["skip", "skip intro", "skip it", "next", "enough", "got it", "i know", "move on",
+  "continue", "go on", "saltar", "salta", "omitir", "passar", "saltare", "salto"];
+export function matchSkip(transcript) {
+  const said = flatten(transcript);
+  if (!said) return false;
+  const words = said.split(" ");
+  return SKIP.some((phrase) => {
+    const a = flatten(phrase);
+    return a.includes(" ") ? said.includes(a) : words.includes(a);
+  });
+}

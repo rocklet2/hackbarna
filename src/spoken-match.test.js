@@ -54,3 +54,10 @@ test('a returning learner is asked, and either answer is heard in both languages
     assert.ok(a.yes && a.no, `${id} labels both answers`);
   }
 });
+
+test('only an explicit skip cuts the first-visit introduction short', async () => {
+  const { matchSkip } = await import('./welcome/returning.js');
+  for (const said of ['skip', 'skip intro', 'ok next', 'I know, got it', 'saltar']) assert.equal(matchSkip(said), true, said);
+  // Noise, a cough transcribed as a word, "yes", or an answer to a later question must not skip it.
+  for (const said of ['', 'hmm', 'yes', 'Catalan', 'thank you', 'the', 'uh huh']) assert.equal(matchSkip(said), false, said);
+});

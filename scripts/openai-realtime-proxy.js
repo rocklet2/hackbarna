@@ -81,10 +81,10 @@ function sessionConfig(params) {
     audio: {
       input: {
         transcription,
-        // The learner can talk over the guide: interrupt_response stops its reply when they start.
-        // The threshold is a little above the default so a cough or the guide's own echo does not
-        // cut it off, and the silence window is short enough that a one-word answer lands quickly.
-        turn_detection: { type: "server_vad", create_response: false, interrupt_response: true, threshold: 0.65, prefix_padding_ms: 300, silence_duration_ms: 500 },
+        // The guide is NOT stopped by the server when it hears something: a cough, a chair or a
+        // stray word would cut it off mid-sentence. Instead the app stops it, and only when what
+        // was heard is a real answer to what is on screen (every selection calls clearQueue()).
+        turn_detection: { type: "server_vad", create_response: false, interrupt_response: false, threshold: 0.6, prefix_padding_ms: 300, silence_duration_ms: 500 },
       },
       output: { voice: "marin" },
     },
