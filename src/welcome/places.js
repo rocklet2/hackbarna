@@ -14,6 +14,7 @@ export const PLACE_QUESTION = {
   it: { target: "Dove ti piacerebbe cucinare oggi?", en: "Where would you like to cook today?" },
   pt: { target: "Onde gostarias de cozinhar hoje?", en: "Where would you like to cook today?" },
   es: { target: "¿Dónde te gustaría cocinar hoy?", en: "Where would you like to cook today?" },
+  ro: { target: "Unde ți-ar plăcea să gătești astăzi?", en: "Where would you like to cook today?" },
 };
 
 /** The dish screen's leading question, asked in the language being learned. UNREVIEWED. */
@@ -22,6 +23,7 @@ const DISH_QUESTION = {
   it: { target: "Cosa ti piacerebbe cucinare oggi?", en: "What would you like to cook today?" },
   pt: { target: "O que gostarias de cozinhar hoje?", en: "What would you like to cook today?" },
   es: { target: "¿Qué te gustaría cocinar hoy?", en: "What would you like to cook today?" },
+  ro: { target: "Ce ți-ar plăcea să gătești astăzi?", en: "What would you like to cook today?" },
 };
 export const dishQuestionFor = (languageId) => DISH_QUESTION[languageId] || DISH_QUESTION.ca;
 
@@ -110,6 +112,15 @@ const PLACES = {
       cities: ["Buenos Aires, AR"], ready: true,
       aliases: ["argentina", "argentinian", "argentine", "argentino", "argentina",
         "buenos aires", "rioplatense", "porteno", "porteño"],
+    },
+  ],
+  ro: [
+    {
+      id: "romania", name: "Romania", country: "Romania", endonym: "România",
+      detail: "Bucharest and Transylvania. Smoky aubergine salad, sour soups and mămăligă.",
+      cities: ["Bucharest, RO", "Cluj-Napoca, RO"], ready: true,
+      aliases: ["romania", "românia", "bucharest", "bucuresti", "bucurești", "transylvania",
+        "transilvania", "cluj", "cluj-napoca", "romanian"],
     },
   ],
 };

@@ -286,6 +286,9 @@ h1 em {
 .flag.pt {
   background: linear-gradient(90deg, #40865f 40%, #cb5a43 40%);
 }
+.flag.ro {
+  background: linear-gradient(90deg, #002b7f 33%, #fcd116 33% 66%, #ce1126 66%);
+}
 .selection-dot {
   width: 15px;
   height: 15px;

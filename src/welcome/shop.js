@@ -79,6 +79,20 @@ const EXCHANGE = {
     cooking: (dish) => `Esta noche cocino ${dish}. ¿Qué me recomienda?`,
     perfect: "¡Perfecto! ¿Me da medio kilo, por favor?",
   },
+  ro: {
+    open: ["Bună ziua! Spuneți.", "Good morning! Go ahead."],
+    more: ["Altceva?", "Anything else?"],
+    sure: ["Sigur! Ce vă trebuie?", "Of course! What do you need?"],
+    best: ["Astea sunt cele mai bune azi.", "These are the best today."],
+    amount: ["Da, avem! Cât doriți?", "Yes, we have some! How much do you want?"],
+    bye: ["Poftim.", "Here you are."],
+    askFor: (word) => `Bună ziua! Aveți ${word}?`,
+    half: "Îmi dați jumătate de kilogram, vă rog?",
+    total: "Nu, atât, mulțumesc. Cât costă tot?",
+    thanks: "Mulțumesc mult! O zi bună!",
+    cooking: (dish) => `În seara asta gătesc ${dish}. Ce îmi recomandați?`,
+    perfect: "Perfect! Îmi dați jumătate de kilogram, vă rog?",
+  },
 };
 
 /**
@@ -269,6 +283,7 @@ const LIST_HEADING = {
   it: { target: "La tua lista", en: "Your list, in Italian" },
   pt: { target: "A tua lista", en: "Your list, in Portuguese" },
   es: { target: "Tu lista", en: "Your list, in Spanish" },
+  ro: { target: "Lista ta", en: "Your list, in Romanian" },
 };
 export const listHeadingFor = (language) => LIST_HEADING[language] || LIST_HEADING.ca;
 
@@ -278,6 +293,7 @@ const COOK_CTA = {
   it: "A cucinare!",
   pt: "Vamos cozinhar!",
   es: "¡A cocinar!",
+  ro: "Să gătim!",
 };
 export const cookCtaFor = (language) => ({ target: COOK_CTA[language] || COOK_CTA.ca, en: "Let's start cooking!" });
 
@@ -287,5 +303,6 @@ const MARKET_HEADING = {
   it: "Al mercato",
   pt: "No mercado",
   es: "En el mercado",
+  ro: "La piață",
 };
 export const marketHeadingFor = (language) => ({ target: MARKET_HEADING[language] || MARKET_HEADING.ca, en: "At the market" });

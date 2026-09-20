@@ -6,6 +6,7 @@ const spain = ['Madrid, ES', 'Sevilla, ES', 'Valencia, ES'];
 const mexico = ['Ciudad de México, MX'];
 const peru = ['Lima, PE'];
 const argentina = ['Buenos Aires, AR'];
+const romania = ['Bucharest, RO', 'Cluj-Napoca, RO'];
 function dish(id, language, name, minLevel, minutes, regions, ingredients, words, directions, tags = ['vegetarian'], image = 'vegetables') {
   return { id, language, name, minLevel, minutes, regions, ingredients, words, tags, image,
     description: `${name}: a new plate, a new conversation, and a little local discovery.`,
@@ -167,4 +168,22 @@ export const moreRecipes = [
     ['4 corn cobs, or 500 g sweetcorn', '1 onion', '1 red pepper', '200 ml milk', '100 g grated cheese', '1 tsp sweet paprika', '2 tbsp oil', 'Salt'],
     [['choclo','corn'],['cebolla','onion'],['morrón','pepper'],['queso','cheese']],
     [['Grate the corn','Cut the kernels off the cobs and blend or grate them coarsely.'],['Soften the vegetables','Chop the onion and the pepper finely and cook them in oil over a medium heat for about 10 minutes.'],['Add the corn','Stir in the paprika, then the corn and the milk, and cook over a low heat for 15 minutes, stirring often, until thick.'],['Finish with cheese','Take it off the heat, stir in the cheese until it melts and add salt. Serve it hot.']], ['vegetarian','gluten-free']),
+
+  // Romania. Cornmeal, sour soups and cabbage, the crossroads UNESCO's neighbours describe (see data.js).
+  dish('salata-vinete', 'ro', 'Salată de vinete', 0, 25, romania,
+    ['2 large aubergines', '1 small onion', '3 tbsp sunflower oil', 'Salt'],
+    [['vinete','aubergines'],['ceapă','onion'],['ulei','oil'],['sare','salt']],
+    [['Roast the aubergines','Prick the aubergines and roast them directly over a flame or under a hot grill until the skin blisters and the flesh is soft, turning occasionally.'],['Cool and peel','Let them cool, then peel off the blackened skin and drain off any bitter liquid.'],['Chop and mix','Finely chop the flesh with a knife, or mash it, and stir in the finely chopped onion.'],['Season and serve','Whisk in the oil a little at a time until creamy, season with salt, and serve with bread.']], ['vegan','gluten-free']),
+  dish('ciorba-legume', 'ro', 'Ciorbă de legume', 1, 35, romania,
+    ['2 carrots', '2 celery stalks', '1 red pepper', '1 onion', '1 potato', '2 tomatoes', 'Juice of 1 lemon', 'Parsley', 'Salt'],
+    [['morcovi','carrots'],['cartof','potato'],['roșii','tomatoes'],['lămâie','lemon']],
+    [['Chop the vegetables','Dice the carrots, celery, pepper, onion and potato into small, even pieces.'],['Start the soup','Cook the onion, carrot and celery in a little oil for 5 minutes, then add the potato and pepper and cover with water.'],['Simmer until tender','Simmer for about 20 minutes until the vegetables are tender, then stir in the grated tomatoes for the last 5 minutes.'],['Sour it and serve','Season with salt, sharpen with lemon juice to taste, and finish with chopped parsley.']], ['vegan','gluten-free']),
+  dish('mamaliga', 'ro', 'Mămăligă cu brânză și smântână', 1, 25, romania,
+    ['250 g coarse cornmeal', '1 litre water', '1 tsp salt', '150 g telemea or feta cheese', '150 ml sour cream'],
+    [['mălai','cornmeal'],['brânză','cheese'],['smântână','sour cream'],['apă','water']],
+    [['Boil the water','Bring the water to a boil with the salt in a heavy pot.'],['Whisk in the cornmeal','Pour in the cornmeal in a thin stream while whisking constantly, to keep it free of lumps.'],['Cook and stir','Lower the heat and cook for about 15 minutes, stirring often with a wooden spoon, until it pulls away from the sides of the pot.'],['Serve with cheese and cream','Spoon it onto plates and top with crumbled cheese and a spoonful of sour cream.']], ['vegetarian','gluten-free']),
+  dish('sarmale-post', 'ro', 'Sarmale de post', 2, 60, romania,
+    ['1 jar pickled cabbage leaves, or 1 sour cabbage', '150 g rice', '200 g mushrooms', '1 onion', '2 tbsp oil', 'Dill', '2 tbsp tomato paste', 'Salt and pepper'],
+    [['varză','cabbage'],['orez','rice'],['ciuperci','mushrooms'],['mărar','dill']],
+    [['Prepare the cabbage','Separate the cabbage leaves, rinse off the excess brine, and trim their thick central ribs.'],['Make the filling','Finely chop the mushrooms and onion, soften them in oil, then stir in the rice, dill, salt and pepper.'],['Roll the sarmale','Place a spoonful of filling on each leaf and roll it into a tight parcel, tucking in the ends.'],['Layer and simmer','Layer the rolls in a pot, spoon over the tomato paste diluted with water, and simmer gently for about 40 minutes.'],['Rest and serve','Let them rest off the heat for 10 minutes before serving, so the rolls hold together.']], ['vegan','gluten-free']),
 ];

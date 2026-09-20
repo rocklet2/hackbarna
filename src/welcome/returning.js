@@ -10,6 +10,7 @@ const CONTINUE_QUESTION = {
   es: { target: "¿Quieres seguir cocinando en español hoy?", en: "Would you like to continue cooking in Spanish today?" },
   it: { target: "Vuoi continuare a cucinare in italiano oggi?", en: "Would you like to continue cooking in Italian today?" },
   pt: { target: "Queres continuar a cozinhar em português hoje?", en: "Would you like to continue cooking in Portuguese today?" },
+  ro: { target: "Vrei să continui să gătești în română astăzi?", en: "Would you like to continue cooking in Romanian today?" },
 };
 export const continueQuestionFor = (languageId) => CONTINUE_QUESTION[languageId] || CONTINUE_QUESTION.ca;
 
@@ -19,6 +20,7 @@ const ANSWERS = {
   es: { yes: "Sí", no: "No, cambiemos de idioma" },
   it: { yes: "Sì", no: "No, cambiamo lingua" },
   pt: { yes: "Sim", no: "Não, vamos mudar de idioma" },
+  ro: { yes: "Da", no: "Nu, schimbăm limba" },
 };
 export const answersFor = (languageId) => ANSWERS[languageId] || ANSWERS.ca;
 export const ANSWERS_EN = { yes: "Yes, carry on", no: "No, another language" };
@@ -26,11 +28,11 @@ export const ANSWERS_EN = { yes: "Yes, carry on", no: "No, another language" };
 // They may answer in their own language or in the one they are learning, so both count.
 const YES = ["yes", "yeah", "yep", "yup", "sure", "ok", "okay", "please", "carry on", "continue",
   "keep going", "same", "si", "sí", "sim", "sisi", "clar", "es clar", "és clar", "clar que si",
-  "vale", "claro", "dale", "certo", "va bene", "certamente", "por supuesto"];
+  "vale", "claro", "dale", "certo", "va bene", "certamente", "por supuesto", "da"];
 const NO = ["no", "nope", "nah", "not today", "another", "another one", "another language",
   "different", "different language", "change", "change language", "switch", "canviem", "canviar",
   "cambiemos", "cambiar", "otro idioma", "otra lengua", "cambiamo", "altra lingua", "mudar",
-  "vamos mudar", "outro idioma", "nao", "não"];
+  "vamos mudar", "outro idioma", "nao", "não", "nu", "schimbam limba", "schimbăm limba"];
 
 const flatten = (s) =>
   String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")

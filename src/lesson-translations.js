@@ -292,6 +292,33 @@ const copy = {
     'Agregá el choclo|Sumá el pimentón, después el choclo y la leche, y cociná a fuego bajo 15 minutos, revolviendo seguido, hasta que espese.',
     'Terminá con el queso|Sacala del fuego, mezclá el queso hasta que se derrita y agregá sal. Serví bien caliente.',
   ],
+
+  // Romania. UNREVIEWED.
+  'salata-vinete': [
+    'Coace vinetele|Găurește vinetele și coace-le direct pe flacără sau sub grătarul încins până când coaja se umflă și miezul se înmoaie, întorcându-le din când în când.',
+    'Lasă-le să se răcească și curăță-le|Lasă-le să se răcească, apoi curăță coaja înnegrită și scurge lichidul amar.',
+    'Taie și amestecă|Taie miezul mărunt cu cuțitul, sau zdrobește-l, și adaugă ceapa tăiată fin.',
+    'Asezonează și serveşte|Adaugă uleiul puțin câte puțin, amestecând, până devine cremos, sărează și serveşte cu pâine.',
+  ],
+  'ciorba-legume': [
+    'Taie legumele|Taie morcovii, țelina, ardeiul, ceapa și cartofii în bucăți mici și egale.',
+    'Începe supa|Călește ceapa, morcovul și țelina în puțin ulei timp de 5 minute, apoi adaugă cartoful și ardeiul și acoperă cu apă.',
+    'Fierbe până se înmoaie|Fierbe circa 20 de minute până legumele se înmoaie, apoi adaugă roșiile rase în ultimele 5 minute.',
+    'Acrește și serveşte|Sărează, acrește cu zeamă de lămâie după gust și presară pătrunjel tăiat.',
+  ],
+  mamaliga: [
+    'Fierbe apa|Pune apa la fiert cu sarea într-o oală mai groasă.',
+    'Adaugă mălaiul|Toarnă mălaiul într-un fir fin, amestecând continuu, ca să nu se formeze cocoloașe.',
+    'Fierbe și amestecă|Dă focul mai mic și fierbe circa 15 minute, amestecând des cu o lingură de lemn, până se desprinde de marginile oalei.',
+    'Serveşte cu brânză și smântână|Pune-o în farfurii și adaugă brânza sfărâmată și o lingură de smântână.',
+  ],
+  'sarmale-post': [
+    'Pregătește foile de varză|Desprinde foile de varză, clătește saramura în exces și taie codița groasă din mijloc.',
+    'Pregătește umplutura|Taie mărunt ciupercile și ceapa, călește-le în ulei, apoi adaugă orezul, mărarul, sarea și piperul.',
+    'Rulează sarmalele|Pune o lingură de umplutură pe fiecare foaie și rulează-o strâns, îndoind marginile spre interior.',
+    'Aranjează și fierbe înăbuşit|Aranjează sarmalele într-o oală, adaugă pasta de tomate diluată cu apă și fierbe înăbuşit circa 40 de minute.',
+    'Lasă-le să se odihnească și serveşte|Lasă-le să se odihnească 10 minute înainte de a servi, ca sarmalele să-şi ţină forma.',
+  ],
 };
 
 export function translatedStep(recipe, index) {

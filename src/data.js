@@ -66,6 +66,21 @@ export const languages = [
     ],
     review: "unreviewed",
   },
+  {
+    id: "ro",
+    name: "Romanian",
+    hello: "Salut!",
+    flag: "◨",
+    regionLabel: "Romania",
+    regions: ["Bucharest, RO", "Cluj-Napoca, RO"],
+    words: [
+      ["pâine", "bread"],
+      ["roșie", "tomato"],
+      ["ulei", "oil"],
+      ["sare", "salt"],
+    ],
+    review: "unreviewed",
+  },
 ];
 export const levels = [
   {
@@ -619,6 +634,14 @@ const portugueseTable = {
     url: "https://www.visitportugal.com/en/content/portugal-unwritten-recipe",
   },
 };
+const romanianTable = {
+  title: "A table shaped by many neighbors.",
+  text: "Romanian cuisine sits at a crossroads of Ottoman, Slavic, Austro-Hungarian and Balkan influences, built around staples such as cornmeal mămăligă, sour ciorbă soups, and cabbage. Many festive dishes, sarmale among them, also have a meatless version for the Orthodox fasting calendar — the version this lesson uses.",
+  source: {
+    name: "Wikipedia · Romanian cuisine",
+    url: "https://en.wikipedia.org/wiki/Romanian_cuisine",
+  },
+};
 for (const r of recipes) {
   if (r.language === "ca" && !r.story) r.story = { title: "A table full of Catalan traditions.", text: "Barcelona’s traditional cooking includes roasted vegetables, bean salads and sweet dishes such as crema catalana and panellets. Use this recipe as a starting point to explore that wider food culture.", source: vegetablesSource };
   if (r.id === "risotto")
@@ -641,6 +664,7 @@ for (const r of recipes) {
       },
     };
   else if (r.language === "pt" && !r.story) r.story = portugueseTable;
+  else if (r.language === "ro" && !r.story) r.story = romanianTable;
   else if (r.language === "es" && !r.story) {
     // Which country's table this dish belongs to, so the culture note matches the place.
     const where = r.regions?.[0] || "";

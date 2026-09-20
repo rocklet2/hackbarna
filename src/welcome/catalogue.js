@@ -47,6 +47,16 @@ export const SUPPORTED = [
     voice: "pt",
     speech: "pt-PT",
   },
+  {
+    id: "ro",
+    name: "Romanian",
+    endonym: "Română",
+    mark: "◨",
+    aliases: ["romanian", "romana", "română", "romania"],
+    greeting: (name) => (name ? `Salut, ${name}!` : "Salut!"),
+    voice: "ro",
+    speech: "ro-RO",
+  },
 ];
 
 /** Shown so the catalogue reads like a real product. Not selectable: we have no content for these. */
