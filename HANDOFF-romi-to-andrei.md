@@ -7,6 +7,10 @@
 - **Step checks rebuilt** in `src/lesson-challenge.js` (`challengeFor` has the same signature, `submitAnswer` now grades fuzzily, new `isCorrect`, `stepWords`, `stepVerb`). Beginner: recall a word from this step, three options. Intermediate: the step's sentence with the key word missing. Advanced: the verb goes too, asked in the target language only. The agent asks the question, a correct answer auto-advances, two misses give a clue, a third gives the answer.
 - Smaller: "or choose" divider gone from the language screen, the market lesson opens with a spoken introduction, "A cuinar!" only appears once the ingredient list is finished.
 
+## Latest (2026-09-20): market phrases per country
+- `src/welcome/shop.js` has `ES_VARIANT` (MX, PE, AR): the Spanish market lesson follows the dish's country. Your `phrases()` and `askPhraseFor` in `src/journey.js` are untouched; the beginner rows are overridden by index inside `shopScript` only. Spain uses the neutral lines.
+- Your `@fal-ai/server-proxy` dependency needed an `npm install` on my side before `vite` would start.
+
 ## Also in this pass: Spanish is now four countries
 - The place question for Spanish is Spain, Mexico, Peru and Argentina. Twelve new dishes, four per country, in `src/more-recipes.js`, with Spanish step copy per country in `src/lesson-translations.js` (Argentina in voseo). Spain's dishes now carry Spanish regions instead of an empty list, so they stop showing up everywhere.
 - Each country has its own sourced culture note in `src/data.js` (`mexicanTable`, `peruvianTable`, `argentineTable`).
