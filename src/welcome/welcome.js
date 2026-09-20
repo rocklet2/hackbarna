@@ -9,7 +9,7 @@ import { recipeUrl } from "../learner-profile.js";
 // Self-contained on purpose: this does not touch src/main.js, so Andrei's wizard
 // keeps working while this is built. Entry page is welcome.html.
 import "./welcome.css";
-import { SUPPORTED, COMING_SOON, matchLanguage, greetingFor, byId } from "./catalogue.js";
+import { SUPPORTED, COMING_SOON, matchLanguage, byId } from "./catalogue.js";
 import { LEVELS, LEVEL_NAMES, matchLevel, levelById, levelQuestionFor, levelLabelFor } from "./levelcheck.js";
 import { placesFor, placeById, matchPlace, placeQuestionFor, dishQuestionFor } from "./places.js";
 import { dishesFor, complexityLabel, matchDish } from "./dishes.js";
@@ -630,7 +630,6 @@ function renderWelcomeBack(profile) {
   const a = answersFor(profile.language);
 
   app.innerHTML = chrome(`<div class="stage">
-    <div class="hello back">${esc(greetingFor(profile.language))}</div>
     <h1 class="ask">
       <span class="target">${esc(q.target)}</span>
       <span class="en">${esc(q.en)}</span>
