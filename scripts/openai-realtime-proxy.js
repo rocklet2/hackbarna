@@ -81,7 +81,10 @@ function sessionConfig(params) {
     audio: {
       input: {
         transcription,
-        turn_detection: { type: "server_vad", create_response: false },
+        // The learner can talk over the guide: interrupt_response stops its reply when they start.
+        // The threshold is a little above the default so a cough or the guide's own echo does not
+        // cut it off, and the silence window is short enough that a one-word answer lands quickly.
+        turn_detection: { type: "server_vad", create_response: false, interrupt_response: true, threshold: 0.65, prefix_padding_ms: 300, silence_duration_ms: 500 },
       },
       output: { voice: "marin" },
     },

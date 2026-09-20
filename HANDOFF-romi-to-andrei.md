@@ -7,6 +7,10 @@
 - **Step checks rebuilt** in `src/lesson-challenge.js` (`challengeFor` has the same signature, `submitAnswer` now grades fuzzily, new `isCorrect`, `stepWords`, `stepVerb`). Beginner: recall a word from this step, three options. Intermediate: the step's sentence with the key word missing. Advanced: the verb goes too, asked in the target language only. The agent asks the question, a correct answer auto-advances, two misses give a clue, a third gives the answer.
 - Smaller: "or choose" divider gone from the language screen, the market lesson opens with a spoken introduction, "A cuinar!" only appears once the ingredient list is finished.
 
+## Latest (2026-09-20): talk over the guide
+- Barge-in is on. `src/agent.js` no longer mutes the mic while the guide speaks; `scripts/openai-realtime-proxy.js` sets `interrupt_response` with a 0.65 threshold; `clearQueue()` now also cancels the reply in flight, so choosing something ends whatever was still being said. If the guide starts cutting itself off on speakers (echo), raise `threshold` there.
+- Anything that needs the guide to finish a sentence before the next screen must not rely on it any more: it can now be cut off at any moment.
+
 ## Latest (2026-09-20): the guide's face talks
 - `src/agent.js` has a loudness meter on the guide's audio (`onLevel`, 0 to 1). Both pages set `--voice` on the orb, which drives the mouth and a ring. Face is percentage-based now; sizes come from the orb's own size.
 - First visit only: `growOrb()` / `settleOrb()` in `src/welcome/welcome.js` make the guide swell on the opening screen while it introduces itself, then settle. Test seam: `window.__orbDemo`.

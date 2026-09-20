@@ -18,7 +18,6 @@ export function createAgent({ onState, onUserTranscript, onToolCall, onLevel } =
   let queue = [];
   let responding = false;
   let stuckTimer = null;
-  let unmuteTimer = null;
   // Loudness of the guide's own voice, 0 to 1, so its face can move with what it says.
   let meterCtx = null;
   let meterFrame = 0;
@@ -114,19 +113,18 @@ export function createAgent({ onState, onUserTranscript, onToolCall, onLevel } =
       }
     } else if (event.type === "output_audio_buffer.started") {
       state.speaking = true;
-      // The guide's own voice must never be transcribed as the learner's answer.
-      clearTimeout(unmuteTimer);
-      micStream?.getAudioTracks().forEach((t) => { t.enabled = false; });
+      // The microphone stays open while the guide talks: the learner can interrupt it by
+      // speaking (the server stops the reply the moment it hears them, see interrupt_response
+      // in scripts/openai-realtime-proxy.js). Echo cancellation keeps its own voice out.
       emit();
     } else if (event.type === "output_audio_buffer.stopped" || event.type === "output_audio_buffer.cleared") {
       state.speaking = false;
-      // A short tail so the end of the guide's sentence has left the room before we listen again.
-      clearTimeout(unmuteTimer);
-      unmuteTimer = setTimeout(() => micStream?.getAudioTracks().forEach((t) => { t.enabled = true; }), 350);
       emit();
     } else if (event.type === "error") {
       // A rejected response.create leaves nothing in flight; carry on with the queue.
       if (event.error?.code === "conversation_already_has_active_response") return;
+      // Cancelling something that had already finished is harmless.
+      if (event.error?.code === "response_cancel_not_active" || /no active response/i.test(event.error?.message || "")) return;
       state.error = event.error?.message || "The voice agent reported an error.";
       emit();
     }
@@ -152,7 +150,11 @@ export function createAgent({ onState, onUserTranscript, onToolCall, onLevel } =
     try {
       const conn = new RTCPeerConnection();
       if (listen) {
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStream = await navigator.mediaDevices.getUserMedia({
+          // Because the learner may talk over the guide, its voice coming out of the speakers
+          // must not be heard as the learner: ask the browser to cancel that echo.
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        });
         conn.addTrack(micStream.getTracks()[0], micStream);
       } else {
         conn.addTransceiver("audio", { direction: "recvonly" });
@@ -231,8 +233,20 @@ export function createAgent({ onState, onUserTranscript, onToolCall, onLevel } =
     dc.send(JSON.stringify({ type: "response.create" }));
   }
 
-  /** Drop lines that have not been spoken yet, e.g. when the screen they belonged to has gone. */
-  function clearQueue() { queue = []; }
+  /**
+   * Drop lines that have not been spoken yet AND stop the one being spoken: used when the
+   * screen they belonged to has gone, e.g. the learner answered before the guide finished
+   * listing the options. (If they simply talked over it, the server has already stopped it.)
+   */
+  function clearQueue() {
+    queue = [];
+    if (dc?.readyState === "open" && (responding || state.speaking)) {
+      try {
+        dc.send(JSON.stringify({ type: "response.cancel" }));
+        dc.send(JSON.stringify({ type: "output_audio_buffer.clear" }));
+      } catch { /* the channel closed under us */ }
+    }
+  }
 
   /**
    * Tighten the live session, e.g. the language lock once the learner has chosen.

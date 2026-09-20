@@ -717,7 +717,7 @@ function renderStart() {
     <div class="sub">Pick a place, cook its food, and pick up the language while you do.</div>
     <button class="btn btn-primary" id="begin">${saved ? "Get started" : "Begin"}</button>
     <div class="sub small">${SR
-      ? "Answer out loud. Tap the face in the corner to mute your guide, and tapping the screen always works too."
+      ? "Answer out loud, even while your guide is still talking. Tap the face in the corner to mute it, and tapping the screen always works too."
       : "Voice is not available in this browser, so tap your answers instead. You still get every lesson, start to finish."}</div>
   </div>`);
   startHellos();
@@ -750,7 +750,7 @@ function startIntro(returning, advance) {
     if (!ok) { finishIntro(); return; }
     agent.prompt(returning
       ? "Say, in English, in one short friendly sentence: welcome back, answer out loud as before, and tap your face in the corner to mute you. Then stop."
-      : "You are meeting a new learner. In English, in three or four short, warm sentences, say: you are their guide in Taula, an app where they learn a language by cooking a real dish from a place; they will choose a language, then a place and a dish, practise the words for the market and the ingredients with you, and then cook step by step while you help; they can just answer out loud, and tapping your face in the corner mutes you and brings you back. Do not ask them anything and do not list any languages. Then stop.");
+      : "You are meeting a new learner. In English, in three or four short, warm sentences, say: you are their guide in Taula, an app where they learn a language by cooking a real dish from a place; they will choose a language, then a place and a dish, practise the words for the market and the ingredients with you, and then cook step by step while you help; they can just answer out loud, and they do not have to wait for you to finish: if they already know their answer they can speak over you at any moment and you will stop and listen; and tapping your face in the corner mutes you and brings you back. Do not ask them anything and do not list any languages. Then stop.");
     // If nothing has started to play soon, do not leave them staring at a screen.
     intro.timers.push(setTimeout(() => { if (intro.active && !intro.heard) finishIntro(); }, 12000));
   });
