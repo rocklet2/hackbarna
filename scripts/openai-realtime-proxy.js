@@ -84,7 +84,9 @@ function sessionConfig(params) {
         // The guide is NOT stopped by the server when it hears something: a cough, a chair or a
         // stray word would cut it off mid-sentence. Instead the app stops it, and only when what
         // was heard is a real answer to what is on screen (every selection calls clearQueue()).
-        turn_detection: { type: "server_vad", create_response: false, interrupt_response: false, threshold: 0.6, prefix_padding_ms: 300, silence_duration_ms: 500 },
+        // Sensitivity (threshold/prefix_padding_ms/silence_duration_ms) is left at OpenAI's own
+        // server_vad defaults rather than tuned here.
+        turn_detection: { type: "server_vad", create_response: false, interrupt_response: false },
       },
       output: { voice: "marin" },
     },
